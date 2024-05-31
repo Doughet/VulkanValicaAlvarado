@@ -5,10 +5,12 @@
 set($ENV{VULKAN_SDK} "C:/VulkanSDK/1.3.275.0") # Vulkan SDK
 set(GLFW "C:/Users/adria/OneDrive/Documents/Visual Studio 2022/Libraries/glfw-3.3.9.bin.WIN64") # GLFW
 set(GLM "C:/Users/adria/OneDrive/Documents/Visual Studio 2022/Libraries/glm") # GLM
+set(STB "C:/Users/adria/OneDrive/Documents/Visual Studio 2022/Libraries/stb") # STB
 # List of directories to add to the include path:
 # all headers in these directories can be included in the source code
 # (Vulkan headers must be omitted from here)
 list(APPEND INCLUDE_DIRS "${GLFW}/include" ${GLM} headers)
+list(APPEND INCLUDE_DIRS "${STB}")
 # List of libraries to link to the executable:
 # all these libraries will be linked to the compiled executable
 # (Vulkan library must be omitted from here)

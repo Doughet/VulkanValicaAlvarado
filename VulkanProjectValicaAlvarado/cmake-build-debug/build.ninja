@@ -52,7 +52,7 @@ build cmake_object_order_depends_target_VulkanProjectValicaAlvarado: phony || CM
 build CMakeFiles/VulkanProjectValicaAlvarado.dir/main.cpp.obj: CXX_COMPILER__VulkanProjectValicaAlvarado_unscanned_Debug D$:/Data/Adrian/Github/VulkanValicaAlvarado/VulkanProjectValicaAlvarado/main.cpp || cmake_object_order_depends_target_VulkanProjectValicaAlvarado
   DEP_FILE = CMakeFiles\VulkanProjectValicaAlvarado.dir\main.cpp.obj.d
   FLAGS = -g -fdiagnostics-color=always
-  INCLUDES = -IC:/VulkanSDK/1.3.275.0/Include -I"C:/Users/adria/OneDrive/Documents/Visual Studio 2022/Libraries/glfw-3.3.9.bin.WIN64/include" -I"C:/Users/adria/OneDrive/Documents/Visual Studio 2022/Libraries/glm" -ID:/Data/Adrian/Github/VulkanValicaAlvarado/VulkanProjectValicaAlvarado/headers
+  INCLUDES = -IC:/VulkanSDK/1.3.275.0/Include -I"C:/Users/adria/OneDrive/Documents/Visual Studio 2022/Libraries/glfw-3.3.9.bin.WIN64/include" -I"C:/Users/adria/OneDrive/Documents/Visual Studio 2022/Libraries/glm" -ID:/Data/Adrian/Github/VulkanValicaAlvarado/VulkanProjectValicaAlvarado/headers -I"C:/Users/adria/OneDrive/Documents/Visual Studio 2022/Libraries/stb"
   OBJECT_DIR = CMakeFiles\VulkanProjectValicaAlvarado.dir
   OBJECT_FILE_DIR = CMakeFiles\VulkanProjectValicaAlvarado.dir
 
