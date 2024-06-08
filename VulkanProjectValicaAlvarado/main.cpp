@@ -32,8 +32,8 @@
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
-const std::string MODEL_PATH = "models/viking_room.obj";
-const std::string TEXTURE_PATH = "textures/viking_room.png";
+const std::string MODEL_PATH = "models/";
+const std::string TEXTURE_PATH = "textures/";
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -205,6 +205,11 @@ private:
     VkDeviceMemory textureImageMemory;
     VkImageView textureImageView;
     VkSampler textureSampler;
+
+    std::vector<VkImage> textureImages;
+    std::vector<VkImageView> textureImageViews;
+    std::vector<VkSampler> textureSamplers;
+
 
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
@@ -748,6 +753,7 @@ private:
         rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
         rasterizer.lineWidth = 1.0f;
         rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+        //rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
         rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -895,9 +901,31 @@ private:
         return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
     }
 
+    void loadTextures(std::vector<tinyobj::material_t> materials){
+        textureImages.resize(materials.size());
+        textureImageViews.resize(materials.size());
+        textureSamplers.resize(materials.size());
+
+        //std::vector<std::string> = {};
+
+        for (size_t i = 0; i < materials.size(); ++i) {
+            const std::string& textureFile = materials[i].diffuse_texname;
+            if (!textureFile.empty()) {
+                // Load the texture using your preferred image loading library (e.g., stb_image)
+                // Create Vulkan image, image view, and sampler for each texture
+                //loadTexture(textureFile, textureImages[i], textureImageViews[i], textureSamplers[i]);
+            }
+        }
+    }
+
+
     void createTextureImage() {
         int texWidth, texHeight, texChannels;
-        stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+        std::string texturePath = "textures/furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png";
+
+        std::cout << texturePath + "\n";
+
+        stbi_uc* pixels = stbi_load(texturePath.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
         VkDeviceSize imageSize = texWidth * texHeight * 4;
         mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
 
@@ -1229,19 +1257,19 @@ private:
         vertices.resize(2*slices +1);
         indices.resize(3 * 2 * slices);
 
-        vertices[2*slices] = Vertex{{0.0f, height/2, 0.0f}, {1.0, 1.0, 1.0}, {0.0, 0.0}, {0.0f, 1.0f, 0.0f}};
+        vertices[2*slices] = Vertex{{0.0f, height/2, 0.0f}, {1.0, 1.0, 1.0}, {0.5, 1.0}, {0.0f, 1.0f, 0.0f}};
         //vertices[2*slices] = {0.0f, height/2, 0.0f, 0.0f, 1.0f, 0.0f};
         for(int i = 0; i < slices; i++) {
             float ang = 2*M_PI * (float)i / (float)slices;
 
             // BASE POINT
-            vertices[i] = Vertex{{radius * cos(ang), -height/2.0f, radius * sin(ang)}, {1.0, 1.0, 1.0}, {0.0, 0.0}, {0.0f, -1.0f, 0.0f}};
+            vertices[i] = Vertex{{radius * cos(ang), -height/2.0f, radius * sin(ang)}, {1.0, 1.0, 1.0}, {0.5f + 0.5f * cos(ang), 0.5f + 0.5f * sin(ang)}, {0.0f, -1.0f, 0.0f}};
             //vertices[i] = {radius * cos(ang), -height/2.0f, radius * sin(ang), 0.0f, -1.0f, 0.0f};
 
             // SIDES BASE
             glm::vec3 sideNormal = glm::normalize(glm::vec3(radius * cos(ang), radius, radius * sin(ang)));
 
-            vertices[slices + i] = Vertex{{radius * cos(ang), -height/2.0f, radius * sin(ang)}, {1.0, 1.0, 1.0}, {0.0, 0.0}, {sideNormal.x, sideNormal.y, sideNormal.z}};
+            vertices[slices + i] = Vertex{{radius * cos(ang), -height/2.0f, radius * sin(ang)}, {1.0, 1.0, 1.0}, {i / (float)slices, 0.0f}, {sideNormal.x, sideNormal.y, sideNormal.z}};
             //vertices[slices + i] = {radius * cos(ang), -height/2.0f, radius * sin(ang), sideNormal.x, sideNormal.y, sideNormal.z};
 
             // BOTTOM BASE
@@ -1314,7 +1342,10 @@ private:
         std::vector<tinyobj::material_t> materials;
         std::string warn, err;
 
-        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, MODEL_PATH.c_str())) {
+        std::string modelPath = "models/furniture/MorrisChair/morrisChair.obj";
+        std::string modelPath1 = "models/viking_room.obj";
+
+        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, modelPath.c_str())) {
             throw std::runtime_error(warn + err);
         }
 
@@ -1323,25 +1354,25 @@ private:
         for (const auto& shape : shapes) {
             for (size_t i = 0; i < shape.mesh.indices.size(); i += 3) {
                 tinyobj::index_t idx0 = shape.mesh.indices[i];
-                tinyobj::index_t idx1 = shape.mesh.indices[i + 1];
-                tinyobj::index_t idx2 = shape.mesh.indices[i + 2];
+                tinyobj::index_t idx1 = shape.mesh.indices[i + 2];
+                tinyobj::index_t idx2 = shape.mesh.indices[i + 1];
 
                 glm::vec3 v0 = {
                         attrib.vertices[3 * idx0.vertex_index + 0],
-                        attrib.vertices[3 * idx0.vertex_index + 1],
-                        attrib.vertices[3 * idx0.vertex_index + 2]
+                        attrib.vertices[3 * idx0.vertex_index + 2],
+                        attrib.vertices[3 * idx0.vertex_index + 1]
                 };
 
                 glm::vec3 v1 = {
                         attrib.vertices[3 * idx1.vertex_index + 0],
-                        attrib.vertices[3 * idx1.vertex_index + 1],
-                        attrib.vertices[3 * idx1.vertex_index + 2]
+                        attrib.vertices[3 * idx1.vertex_index + 2],
+                        attrib.vertices[3 * idx1.vertex_index + 1]
                 };
 
                 glm::vec3 v2 = {
                         attrib.vertices[3 * idx2.vertex_index + 0],
-                        attrib.vertices[3 * idx2.vertex_index + 1],
-                        attrib.vertices[3 * idx2.vertex_index + 2]
+                        attrib.vertices[3 * idx2.vertex_index + 2],
+                        attrib.vertices[3 * idx2.vertex_index + 1]
                 };
 
                 glm::vec3 normal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
@@ -1367,7 +1398,7 @@ private:
                         1.0f - attrib.texcoords[2 * idx2.texcoord_index + 1]
                 };
 
-                vertex0.color = vertex1.color = vertex2.color = {1.0f, 1.0f, 1.0f};
+                vertex0.color = vertex1.color = vertex2.color = {1.0f, 0.0f, 1.0f};
                 vertex0.normal = vertex1.normal = vertex2.normal = normal;
 
                 if (uniqueVertices.count(vertex0) == 0) {
@@ -1712,8 +1743,26 @@ private:
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
         UniformBufferObject ubo{};
-        ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        ubo.model = glm::rotate(glm::mat4(1.0f), time * 0.5f * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) * ubo.model;
+
+        float scaleFactor = 0.01f; // Change this value to scale down
+
+// Model matrix with scaling
+        glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scaleFactor));
+
+        ubo.model = scaleMatrix * ubo.model;
+
+// Other transformations (e.g., rotation, translation) can be applied here
+        ubo.model =  ubo.model;
+
+        ubo.view = glm::lookAt(glm::vec3(-5.0f, -5.0f, -5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        glm::mat4 rotateMatrix = glm::rotate(glm::mat4(1.0f), time * 0.5f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+        ubo.view =  ubo.view;
+
+
         ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 10.0f);
         ubo.proj[1][1] *= -1;
 
