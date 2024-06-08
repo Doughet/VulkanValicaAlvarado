@@ -146,6 +146,8 @@ struct UniformBufferObject {
     alignas(16) glm::mat4 proj;
 };
 
+UniformBufferObject ubo{};
+
 struct LightsBufferObject {
     glm::vec3 lightPos;
     glm::vec3 viewPos;
@@ -1221,6 +1223,103 @@ private:
         }
     }*/
 
+    // Control Wrapper
+    void handleGamePad(int id,  glm::vec3 &m, glm::vec3 &r, bool &fire) {
+        const float deadZone = 0.1f;
+        if(glfwJoystickIsGamepad(id)) {
+            GLFWgamepadstate state;
+            if (glfwGetGamepadState(id, &state)) {
+                if(fabs(state.axes[GLFW_GAMEPAD_AXIS_LEFT_X]) > deadZone) {
+                    m.x += state.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
+                }
+                if(fabs(state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y]) > deadZone) {
+                    m.z += state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
+                }
+                if(fabs(state.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER]) > deadZone) {
+                    m.y -= state.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER];
+                }
+                if(fabs(state.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER]) > deadZone) {
+                    m.y += state.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER];
+                }
+                if(fabs(state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X]) > deadZone) {
+                    r.y += state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X];
+                }
+                if(fabs(state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y]) > deadZone) {
+                    r.x += state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y];
+                }
+                r.z += state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] ? 1.0f : 0.0f;
+                r.z -= state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] ? 1.0f : 0.0f;
+                fire = fire | (bool)state.buttons[GLFW_GAMEPAD_BUTTON_A] | (bool)state.buttons[GLFW_GAMEPAD_BUTTON_B];
+            }
+        }
+    }
+    void getSixAxis(float &deltaT,
+                    glm::vec3 &m,
+                    glm::vec3 &r,
+                    bool &fire) {
+        static auto startTime = std::chrono::high_resolution_clock::now();
+        static float lastTime = 0.0f;
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration<float, std::chrono::seconds::period>
+                (currentTime - startTime).count();
+        deltaT = time - lastTime;
+        lastTime = time;
+        static double old_xpos = 0, old_ypos = 0;
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+        double m_dx = xpos - old_xpos;
+        double m_dy = ypos - old_ypos;
+        old_xpos = xpos; old_ypos = ypos;
+        const float MOUSE_RES = 10.0f;
+        glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
+        if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+            r.y = -m_dx / MOUSE_RES;
+            r.x = -m_dy / MOUSE_RES;
+        }
+        if(glfwGetKey(window, GLFW_KEY_LEFT)) {
+            r.y = -1.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_RIGHT)) {
+            r.y = 1.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_UP)) {
+            r.x = -1.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_DOWN)) {
+            r.x = 1.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_Q)) {
+            r.z = 1.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_E)) {
+            r.z = -1.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_A)) {
+            m.x = -1.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_D)) {
+            m.x = 1.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_S)) {
+            m.z = 1.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_W)) {
+            m.z = -1.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_R)) {
+            m.y = 1.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_F)) {
+            m.y = -1.0f;
+        }
+        fire = glfwGetKey(window, GLFW_KEY_SPACE) | (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
+        handleGamePad(GLFW_JOYSTICK_1,m,r,fire);
+        handleGamePad(GLFW_JOYSTICK_2,m,r,fire);
+        handleGamePad(GLFW_JOYSTICK_3,m,r,fire);
+        handleGamePad(GLFW_JOYSTICK_4,m,r,fire);
+    }
+
+
     void loadSceneCone(){
         int slices = 40;
         float height = 0.5f;
@@ -1432,6 +1531,14 @@ private:
     }
 
     void createUniformBuffers() {
+        static auto startTime = std::chrono::high_resolution_clock::now();
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+        ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 30.0f);
+        ubo.proj[1][1] *= -1;
+        ubo.view = glm::lookAt(glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
         VkDeviceSize bufferSize1 = sizeof(UniformBufferObject);
         VkDeviceSize bufferSize2 = sizeof(LightsBufferObject);
 
@@ -1706,16 +1813,62 @@ private:
     }
 
     void updateUniformBuffer(uint32_t currentImage) {
-        static auto startTime = std::chrono::high_resolution_clock::now();
+        static bool debounce = false;
+        static int curDebounce = 0;
 
+        float deltaT;
+        glm::vec3 m = glm::vec3(0.0f), r = glm::vec3(0.0f);
+        bool fire = false;
+        getSixAxis(deltaT, m, r, fire);
+
+        static float autoTime = true;
+        static float cTime = 0.0;
+        const float turnTime = 72.0f;
+        const float angTurnTimeFact = 2.0f * M_PI / turnTime;
+
+        if(autoTime) {
+            cTime = cTime + deltaT;
+            cTime = (cTime > turnTime) ? (cTime - turnTime) : cTime;
+        }
+        static float tTime = 0.0;
+        const float TturnTime = 60.0f;
+        const float TangTurnTimeFact = 1.0f / TturnTime;
+
+        if(autoTime) {
+            tTime = tTime + deltaT;
+            tTime = (tTime > TturnTime) ? (tTime - TturnTime) : tTime;
+        }
+
+        const float ROT_SPEED = glm::radians(120.0f);
+        const float MOVE_SPEED = 2.0f;
+        static float ShowCloud = 1.0f;
+        static float ShowTexture = 1.0f;
+        static float subpassTimer = 0.0;
+
+        static auto startTime = std::chrono::high_resolution_clock::now();
         auto currentTime = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-        UniformBufferObject ubo{};
-        ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 10.0f);
-        ubo.proj[1][1] *= -1;
+        // Standard procedure to quit when the ESC key is pressed
+        if(glfwGetKey(window, GLFW_KEY_ESCAPE)) {
+            glfwSetWindowShouldClose(window, GL_TRUE);
+        }
+
+        /*   ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+           ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 30.0f);
+           ubo.proj[1][1] *= -1;
+   */
+
+        // The Fly model update proc.
+        ubo.view = glm::rotate(glm::mat4(1), ROT_SPEED * r.x * deltaT,
+                               glm::vec3(1, 0, 0)) * ubo.view;
+        ubo.view = glm::rotate(glm::mat4(1), ROT_SPEED * r.y * deltaT,
+                               glm::vec3(0, 1, 0)) * ubo.view;
+        ubo.view = glm::rotate(glm::mat4(1), -ROT_SPEED * r.z * deltaT,
+                               glm::vec3(0, 0, 1)) * ubo.view;
+        ubo.view = glm::translate(glm::mat4(1), -glm::vec3(
+                MOVE_SPEED * m.x * deltaT, /*MOVE_SPEED * m.y * deltaT*/0.0f, MOVE_SPEED * m.z * deltaT))
+                   * ubo.view;
 
         LightsBufferObject lbo{};
         lbo.lightPos = glm::vec3(0.0f, 0.2f, 0.0f);
