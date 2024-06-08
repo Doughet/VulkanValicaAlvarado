@@ -86,6 +86,7 @@ struct Vertex {
     glm::vec3 pos;
     glm::vec3 color;
     glm::vec2 texCoord;
+    glm::vec3 normal; // Add normal vector
 
     static VkVertexInputBindingDescription getBindingDescription() {
         VkVertexInputBindingDescription bindingDescription{};
@@ -96,8 +97,8 @@ struct Vertex {
         return bindingDescription;
     }
 
-    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
-        std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
+    static std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions{};
 
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
@@ -114,18 +115,27 @@ struct Vertex {
         attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
         attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
 
+        attributeDescriptions[3].binding = 0;
+        attributeDescriptions[3].location = 3;
+        attributeDescriptions[3].format = VK_FORMAT_R32G32B32_SFLOAT; // Add format for normal
+        attributeDescriptions[3].offset = offsetof(Vertex, normal);
+
         return attributeDescriptions;
     }
 
     bool operator==(const Vertex& other) const {
-        return pos == other.pos && color == other.color && texCoord == other.texCoord;
+        return pos == other.pos && color == other.color && texCoord == other.texCoord && normal == other.normal;
     }
 };
 
 namespace std {
     template<> struct hash<Vertex> {
         size_t operator()(Vertex const& vertex) const {
-            return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.texCoord) << 1);
+            size_t hash1 = hash<glm::vec3>()(vertex.pos);
+            size_t hash2 = hash<glm::vec3>()(vertex.color);
+            size_t hash3 = hash<glm::vec2>()(vertex.texCoord);
+            size_t hash4 = hash<glm::vec3>()(vertex.normal);
+            return ((hash1 ^ (hash2 << 1)) >> 1) ^ (hash3 << 1) ^ hash4;
         }
     };
 }
@@ -260,6 +270,9 @@ private:
         createTextureImageView();
         createTextureSampler();
         loadModel();
+        //loadSceneSphereElements();
+
+        //loadSceneCone();
         createVertexBuffer();
         createIndexBuffer();
         createUniformBuffers();
@@ -1166,6 +1179,135 @@ private:
         endSingleTimeCommands(commandBuffer);
     }
 
+    /*void loadSceneElements(std::vector<std::array<float,6>> &vertices){
+
+        vertices.clear();
+        indices.clear();
+
+        // Generate vertices
+        for (int i = 0; i <= rings; ++i) {
+            float theta = i * M_PI / rings;
+            float sinTheta = sin(theta);
+            float cosTheta = cos(theta);
+
+            for (int j = 0; j < slices; ++j) {
+                float phi = j * 2.0f * M_PI / slices;
+                float sinPhi = sin(phi);
+                float cosPhi = cos(phi);
+
+                float x = radius * cosPhi * sinTheta;
+                float y = radius * cosTheta;
+                float z = radius * sinPhi * sinTheta;
+
+                std::array<float, 6> vertex = {x, y, z, x / radius, y / radius, z / radius};
+                vertices.push_back(vertex);
+            }
+        }
+
+        // Generate indices
+        for (int i = 0; i < rings; ++i) {
+            for (int j = 0; j < slices; ++j) {
+                int first = (i * slices) + j;
+                int second = first + slices;
+
+                indices.push_back(first);
+                indices.push_back((second + 1) % (rings * slices));
+                indices.push_back(second);
+
+                indices.push_back(first);
+                indices.push_back((first + 1) % (rings * slices));
+                indices.push_back((second + 1) % (rings * slices));
+            }
+        }
+    }*/
+
+    void loadSceneCone(){
+        int slices = 40;
+        float height = 0.5f;
+        float radius = 0.33f;
+
+        vertices.resize(2*slices +1);
+        indices.resize(3 * 2 * slices);
+
+        vertices[2*slices] = Vertex{{0.0f, height/2, 0.0f}, {1.0, 1.0, 1.0}, {0.0, 0.0}, {0.0f, 1.0f, 0.0f}};
+        //vertices[2*slices] = {0.0f, height/2, 0.0f, 0.0f, 1.0f, 0.0f};
+        for(int i = 0; i < slices; i++) {
+            float ang = 2*M_PI * (float)i / (float)slices;
+
+            // BASE POINT
+            vertices[i] = Vertex{{radius * cos(ang), -height/2.0f, radius * sin(ang)}, {1.0, 1.0, 1.0}, {0.0, 0.0}, {0.0f, -1.0f, 0.0f}};
+            //vertices[i] = {radius * cos(ang), -height/2.0f, radius * sin(ang), 0.0f, -1.0f, 0.0f};
+
+            // SIDES BASE
+            glm::vec3 sideNormal = glm::normalize(glm::vec3(radius * cos(ang), radius, radius * sin(ang)));
+
+            vertices[slices + i] = Vertex{{radius * cos(ang), -height/2.0f, radius * sin(ang)}, {1.0, 1.0, 1.0}, {0.0, 0.0}, {sideNormal.x, sideNormal.y, sideNormal.z}};
+            //vertices[slices + i] = {radius * cos(ang), -height/2.0f, radius * sin(ang), sideNormal.x, sideNormal.y, sideNormal.z};
+
+            // BOTTOM BASE
+            indices[3*i  ] = 0;
+            indices[3*i+1] = i;
+            indices[3*i+2] = (i+1) % slices;
+
+            // TRIANGLES
+            indices[3*(i + slices)  ] = 2*slices;
+            indices[3*(i + slices) + 1] = ((i+1) % slices) + slices;
+            indices[3*(i + slices) + 2] = i + slices;
+        }
+    }
+
+
+    void loadSceneSphereElements(){
+        int amountverts = 40 * (40 - 1) + 2;
+        int amountinds = 3 * (40 - 1) * (40 * 2);
+        vertices.resize(amountverts);
+        indices.resize(amountinds);
+
+        vertices[amountverts - 2] = Vertex{{0.0f,-0.5,0.0f}, {1.0, 1.0, 1.0}, {0.0, 0.0}, {0.0f, -1.0f, 0.0f}};
+
+        vertices[amountverts - 1] = Vertex{{0.0f,0.5,0.0f}, {1.0, 1.0, 1.0}, {0.0, 0.0}, {0.0f, 1.0f, 0.0f}};
+
+
+        for(int i = 1; i < 40; i++) {
+            float angi = M_PI * (float)i / (float)40;
+
+            for(int j = 0; j < 40; j++) {
+                int offset = (i-1) * 40;
+                float angj = 2*M_PI * (float)j / (float)40;
+
+                glm::vec3 norma = glm::normalize(glm::vec3(0.25* cos(angj) * sin(angi), 0.25* cos(angi), 0.25* sin(angj) * sin(angi)));
+                vertices[j + offset] = Vertex{{0.25* cos(angj) * sin(angi), 0.25* cos(angi), 0.25* sin(angj) * sin(angi)}, {1.0, 1.0, 1.0}, {0.0, 0.0}, {0.25* cos(angj) * sin(angi), 0.25* cos(angi), 0.25* sin(angj) * sin(angi)}};
+
+
+                if(j + offset + 40 <= amountverts - 2){
+                    indices[2 * 3 * (j + offset)] = (j+1) % 40 + offset;
+                    indices[2 * 3 * (j + offset) + 2] = j + offset;
+                    indices[2 * 3 * (j + offset) + 1] = j + 40 + offset;
+
+                    indices[2 * 3 * (j + offset) + 3] = j + 40 + offset;
+                    indices[2 * 3 * (j + offset) + 5] = (j+1) % 40 + offset + 40;
+                    indices[2 * 3 * (j + offset) + 4] = (j+1) % 40 + offset;
+                }
+            }
+        }
+
+
+
+        for(int j = 0; j < 40; j++) {
+            //TOP CONE
+            int offsetTop = (40-2) * (40 * 2);
+            indices[3 * (j + offsetTop)] = amountverts - 1;
+            indices[3 * (j + offsetTop) + 1] = (j+1) % 40;
+            indices[3 * (j + offsetTop) + 2] = j;
+
+            //BOTTOM CONE
+            int offsetBottom = (40-2) * (40 * 2) + 10;
+            indices[3 * (j + offsetBottom)] = amountverts - 2;
+            indices[3 * (j + offsetBottom) + 1] = j + (40-2) * 10;
+            indices[3 * (j + offsetBottom) + 2] = (j + 1) % 10 + (40-2) * 10;
+        }
+    }
+
     void loadModel() {
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
@@ -1179,30 +1321,74 @@ private:
         std::unordered_map<Vertex, uint32_t> uniqueVertices{};
 
         for (const auto& shape : shapes) {
-            for (const auto& index : shape.mesh.indices) {
-                Vertex vertex{};
+            for (size_t i = 0; i < shape.mesh.indices.size(); i += 3) {
+                tinyobj::index_t idx0 = shape.mesh.indices[i];
+                tinyobj::index_t idx1 = shape.mesh.indices[i + 1];
+                tinyobj::index_t idx2 = shape.mesh.indices[i + 2];
 
-                vertex.pos = {
-                        attrib.vertices[3 * index.vertex_index + 0],
-                        attrib.vertices[3 * index.vertex_index + 1],
-                        attrib.vertices[3 * index.vertex_index + 2]
+                glm::vec3 v0 = {
+                        attrib.vertices[3 * idx0.vertex_index + 0],
+                        attrib.vertices[3 * idx0.vertex_index + 1],
+                        attrib.vertices[3 * idx0.vertex_index + 2]
                 };
 
-                vertex.texCoord = {
-                        attrib.texcoords[2 * index.texcoord_index + 0],
-                        1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+                glm::vec3 v1 = {
+                        attrib.vertices[3 * idx1.vertex_index + 0],
+                        attrib.vertices[3 * idx1.vertex_index + 1],
+                        attrib.vertices[3 * idx1.vertex_index + 2]
                 };
 
-                vertex.color = {1.0f, 1.0f, 1.0f};
+                glm::vec3 v2 = {
+                        attrib.vertices[3 * idx2.vertex_index + 0],
+                        attrib.vertices[3 * idx2.vertex_index + 1],
+                        attrib.vertices[3 * idx2.vertex_index + 2]
+                };
 
-                if (uniqueVertices.count(vertex) == 0) {
-                    uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
-                    vertices.push_back(vertex);
+                glm::vec3 normal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
+
+                Vertex vertex0{}, vertex1{}, vertex2{};
+
+                vertex0.pos = v0;
+                vertex1.pos = v1;
+                vertex2.pos = v2;
+
+                vertex0.texCoord = {
+                        attrib.texcoords[2 * idx0.texcoord_index + 0],
+                        1.0f - attrib.texcoords[2 * idx0.texcoord_index + 1]
+                };
+
+                vertex1.texCoord = {
+                        attrib.texcoords[2 * idx1.texcoord_index + 0],
+                        1.0f - attrib.texcoords[2 * idx1.texcoord_index + 1]
+                };
+
+                vertex2.texCoord = {
+                        attrib.texcoords[2 * idx2.texcoord_index + 0],
+                        1.0f - attrib.texcoords[2 * idx2.texcoord_index + 1]
+                };
+
+                vertex0.color = vertex1.color = vertex2.color = {1.0f, 1.0f, 1.0f};
+                vertex0.normal = vertex1.normal = vertex2.normal = normal;
+
+                if (uniqueVertices.count(vertex0) == 0) {
+                    uniqueVertices[vertex0] = static_cast<uint32_t>(vertices.size());
+                    vertices.push_back(vertex0);
+                }
+                if (uniqueVertices.count(vertex1) == 0) {
+                    uniqueVertices[vertex1] = static_cast<uint32_t>(vertices.size());
+                    vertices.push_back(vertex1);
+                }
+                if (uniqueVertices.count(vertex2) == 0) {
+                    uniqueVertices[vertex2] = static_cast<uint32_t>(vertices.size());
+                    vertices.push_back(vertex2);
                 }
 
-                indices.push_back(uniqueVertices[vertex]);
+                indices.push_back(uniqueVertices[vertex0]);
+                indices.push_back(uniqueVertices[vertex1]);
+                indices.push_back(uniqueVertices[vertex2]);
             }
         }
+
     }
 
     void createVertexBuffer() {
