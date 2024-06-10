@@ -29,7 +29,7 @@
 #include <set>
 #include <unordered_map>
 
-#include "controller.hpp"
+
 #include "uniformBuffer.hpp"
 
 
@@ -54,6 +54,8 @@ const bool enableValidationLayers = false;
 #else
 const bool enableValidationLayers = true;
 #endif
+
+//UniformBufferObject ubo{};
 
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
@@ -144,18 +146,6 @@ namespace std {
     };
 }
 
-
-
-struct LightsBufferObject {
-    glm::vec3 lightPos;
-    glm::vec3 viewPos;
-    glm::vec3 lightColor;
-    glm::vec3 ambientColor;
-    glm::vec3 diffuseColor;
-    glm::vec3 specularColor;
-    float shininess;
-};
-
 class HelloTriangleApplication {
 public:
     void run() {
@@ -240,7 +230,6 @@ private:
 
     VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
-
     void initWindow() {
         glfwInit();
 
@@ -283,7 +272,7 @@ private:
         createUniformBuffers();
         createDescriptorPool();
         createDescriptorSets();
-        createCommandBuffers();
+        createCommandBuffers(device, commandBuffers, commandPool, MAX_FRAMES_IN_FLIGHT);
         createSyncObjects();
     }
 
@@ -490,7 +479,6 @@ private:
 
         return VK_SAMPLE_COUNT_1_BIT;
     }
-
 
     void createLogicalDevice() {
         QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
@@ -918,7 +906,6 @@ private:
         }
     }
 
-
     void createTextureImage() {
         int texWidth, texHeight, texChannels;
         std::string texturePath = "textures/furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png";
@@ -974,7 +961,7 @@ private:
             throw std::runtime_error("texture image format does not support linear blitting!");
         }
 
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+        VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandPool, device);
 
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -1049,7 +1036,7 @@ private:
                              0, nullptr,
                              1, &barrier);
 
-        endSingleTimeCommands(commandBuffer);
+        endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
     }
 
     void createTextureImageView() {
@@ -1139,7 +1126,7 @@ private:
     }
 
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels) {
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+        VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandPool, device);
 
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -1182,11 +1169,11 @@ private:
                 1, &barrier
         );
 
-        endSingleTimeCommands(commandBuffer);
+        endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
     }
 
     void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) {
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+        VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandPool, device);
 
         VkBufferImageCopy region{};
         region.bufferOffset = 0;
@@ -1205,7 +1192,7 @@ private:
 
         vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-        endSingleTimeCommands(commandBuffer);
+        endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
     }
 
     /*void loadSceneElements(std::vector<std::array<float,6>> &vertices){
@@ -1284,7 +1271,6 @@ private:
             indices[3*(i + slices) + 2] = i + slices;
         }
     }
-
 
     void loadSceneSphereElements(){
         int amountverts = 40 * (40 - 1) + 2;
@@ -1438,7 +1424,8 @@ private:
 
         createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
 
-        copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+        copyBuffer(stagingBuffer, vertexBuffer, bufferSize,
+                   commandPool, device, graphicsQueue);
 
         vkDestroyBuffer(device, stagingBuffer, nullptr);
         vkFreeMemory(device, stagingBufferMemory, nullptr);
@@ -1458,7 +1445,8 @@ private:
 
         createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
 
-        copyBuffer(stagingBuffer, indexBuffer, bufferSize);
+        copyBuffer(stagingBuffer, indexBuffer, bufferSize,
+                   commandPool, device, graphicsQueue);
 
         vkDestroyBuffer(device, stagingBuffer, nullptr);
         vkFreeMemory(device, stagingBufferMemory, nullptr);
@@ -1604,49 +1592,6 @@ private:
         vkBindBufferMemory(device, buffer, bufferMemory, 0);
     }
 
-    VkCommandBuffer beginSingleTimeCommands() {
-        VkCommandBufferAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = commandPool;
-        allocInfo.commandBufferCount = 1;
-
-        VkCommandBuffer commandBuffer;
-        vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
-
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
-        return commandBuffer;
-    }
-
-    void endSingleTimeCommands(VkCommandBuffer commandBuffer) {
-        vkEndCommandBuffer(commandBuffer);
-
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
-
-        vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-        vkQueueWaitIdle(graphicsQueue);
-
-        vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
-    }
-
-    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
-
-        VkBufferCopy copyRegion{};
-        copyRegion.size = size;
-        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-
-        endSingleTimeCommands(commandBuffer);
-    }
-
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
         VkPhysicalDeviceMemoryProperties memProperties;
         vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
@@ -1658,77 +1603,6 @@ private:
         }
 
         throw std::runtime_error("failed to find suitable memory type!");
-    }
-
-    void createCommandBuffers() {
-        commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-
-        VkCommandBufferAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.commandPool = commandPool;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandBufferCount = (uint32_t) commandBuffers.size();
-
-        if (vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
-            throw std::runtime_error("failed to allocate command buffers!");
-        }
-    }
-
-    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-        if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-            throw std::runtime_error("failed to begin recording command buffer!");
-        }
-
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = renderPass;
-        renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
-        renderPassInfo.renderArea.offset = {0, 0};
-        renderPassInfo.renderArea.extent = swapChainExtent;
-
-        std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
-        clearValues[1].depthStencil = {1.0f, 0};
-
-        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-        renderPassInfo.pClearValues = clearValues.data();
-
-        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = (float) swapChainExtent.width;
-        viewport.height = (float) swapChainExtent.height;
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-        VkRect2D scissor{};
-        scissor.offset = {0, 0};
-        scissor.extent = swapChainExtent;
-        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-        VkBuffer vertexBuffers[] = {vertexBuffer};
-        VkDeviceSize offsets[] = {0};
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-
-        vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
-
-        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
-
-        vkCmdEndRenderPass(commandBuffer);
-
-        if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-            throw std::runtime_error("failed to record command buffer!");
-        }
     }
 
     void createSyncObjects() {
@@ -1752,77 +1626,6 @@ private:
         }
     }
 
-    void updateUniformBuffer(uint32_t currentImage) {
-        static bool debounce = false;
-        static int curDebounce = 0;
-
-        float deltaT;
-        glm::vec3 m = glm::vec3(0.0f), r = glm::vec3(0.0f);
-        bool fire = false;
-        getSixAxis(deltaT, m, r, fire, window);
-
-        static float autoTime = true;
-        static float cTime = 0.0;
-        const float turnTime = 72.0f;
-        const float angTurnTimeFact = 2.0f * M_PI / turnTime;
-
-        if(autoTime) {
-            cTime = cTime + deltaT;
-            cTime = (cTime > turnTime) ? (cTime - turnTime) : cTime;
-        }
-        static float tTime = 0.0;
-        const float TturnTime = 60.0f;
-        const float TangTurnTimeFact = 1.0f / TturnTime;
-
-        if(autoTime) {
-            tTime = tTime + deltaT;
-            tTime = (tTime > TturnTime) ? (tTime - TturnTime) : tTime;
-        }
-
-        const float ROT_SPEED = glm::radians(120.0f);
-        const float MOVE_SPEED = 2.0f;
-        static float ShowCloud = 1.0f;
-        static float ShowTexture = 1.0f;
-        static float subpassTimer = 0.0;
-
-        static auto startTime = std::chrono::high_resolution_clock::now();
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
-        // Standard procedure to quit when the ESC key is pressed
-        if(glfwGetKey(window, GLFW_KEY_ESCAPE)) {
-            glfwSetWindowShouldClose(window, GL_TRUE);
-        }
-
-        /*   ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-           ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 30.0f);
-           ubo.proj[1][1] *= -1;
-   */
-
-        // The Fly model update proc.
-        ubo.view = glm::rotate(glm::mat4(1), ROT_SPEED * r.x * deltaT,
-                               glm::vec3(1, 0, 0)) * ubo.view;
-        ubo.view = glm::rotate(glm::mat4(1), ROT_SPEED * r.y * deltaT,
-                               glm::vec3(0, 1, 0)) * ubo.view;
-        ubo.view = glm::rotate(glm::mat4(1), -ROT_SPEED * r.z * deltaT,
-                               glm::vec3(0, 0, 1)) * ubo.view;
-        ubo.view = glm::translate(glm::mat4(1), -glm::vec3(
-                MOVE_SPEED * m.x * deltaT, /*MOVE_SPEED * m.y * deltaT*/0.0f, MOVE_SPEED * m.z * deltaT))
-                   * ubo.view;
-
-        LightsBufferObject lbo{};
-        lbo.lightPos = glm::vec3(0.0f, 0.2f, 0.0f);
-        lbo.viewPos = glm::vec3(0.0f, 0.0f, 0.0f);
-        lbo.lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-        lbo.ambientColor = glm::vec3(0.1f, 0.1f, 0.1f);
-        lbo.diffuseColor = glm::vec3(0.5f, 0.5f, 0.5f);
-        lbo.specularColor = glm::vec3(1.0f, 1.0f, 1.0f);
-        lbo.shininess = 32.0f;
-
-        memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
-        memcpy(lightsBuffersMapped[currentImage], &lbo, sizeof(lbo));
-    }
-
     void drawFrame() {
         vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
@@ -1836,12 +1639,14 @@ private:
             throw std::runtime_error("failed to acquire swap chain image!");
         }
 
-        updateUniformBuffer(currentFrame);
+        updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped);
 
         vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
         vkResetCommandBuffer(commandBuffers[currentFrame], /*VkCommandBufferResetFlagBits*/ 0);
-        recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
+        recordCommandBuffer(commandBuffers[currentFrame], imageIndex, renderPass, swapChainFramebuffers,
+                            swapChainExtent, graphicsPipeline, vertexBuffer, indexBuffer, pipelineLayout, indices,
+                            descriptorSets, currentFrame);
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -2086,7 +1891,10 @@ private:
         return buffer;
     }
 
-    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                                        VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                                        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                                        void* pUserData) {
         std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
 
         return VK_FALSE;
