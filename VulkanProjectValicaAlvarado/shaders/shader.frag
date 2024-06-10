@@ -43,6 +43,6 @@ void main() {
     // Ensure the color does not exceed white
     finalColor = clamp(finalColor, 0.0, 1.0);
 
-    outColor = vec4(texture(texSampler, fragTexCoord).rgb * fragColor, 1.0);
+    outColor = vec4(texture(texSampler, fragTexCoord).rgb, 1.0);
 
 }

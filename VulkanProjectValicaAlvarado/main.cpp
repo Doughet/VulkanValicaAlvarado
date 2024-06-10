@@ -922,10 +922,11 @@ private:
     void createTextureImage() {
         int texWidth, texHeight, texChannels;
         std::string texturePath = "textures/furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png";
+        std::string texturePathWaterMelon = "textures/furniture/Laptop/SLT_Dif.png";
 
         std::cout << texturePath + "\n";
 
-        stbi_uc* pixels = stbi_load(texturePath.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+        stbi_uc* pixels = stbi_load(texturePathWaterMelon.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
         VkDeviceSize imageSize = texWidth * texHeight * 4;
         mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
 
@@ -1343,9 +1344,10 @@ private:
         std::string warn, err;
 
         std::string modelPath = "models/furniture/MorrisChair/morrisChair.obj";
+        std::string modelPathWaterMelon = "models/furniture/Laptop/SAMSUNG_Laptop.obj";
         std::string modelPath1 = "models/viking_room.obj";
 
-        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, modelPath.c_str())) {
+        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, modelPathWaterMelon.c_str())) {
             throw std::runtime_error(warn + err);
         }
 
