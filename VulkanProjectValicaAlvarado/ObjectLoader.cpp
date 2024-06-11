@@ -4,6 +4,7 @@
 
 #include "ObjectLoader.h"
 
+
 //
 // Created by adria on 10/06/2024.
 
@@ -156,3 +157,4 @@ void ObjectLoader::fillVertexAndIndices(){
     }
 
 }
+

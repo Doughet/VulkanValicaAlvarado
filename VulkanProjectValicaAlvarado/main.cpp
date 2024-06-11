@@ -27,7 +27,6 @@
 #include <unordered_map>
 
 
-#include "uniformBuffer.h"
 #include "ObjectLoader.h"
 #include "texturesManagement.h"
 
@@ -212,17 +211,13 @@ private:
         createCommandPool();
         createColorResources();
         createDepthResources();
-        createFramebuffers(device, renderPass, swapChainFramebuffers, swapChainImageViews,
-                swapChainExtent, colorImageView, depthImageView);
+        createFramebuffers(/*device, renderPass, swapChainFramebuffers, swapChainImageViews,
+                swapChainExtent, colorImageView, depthImageView*/);
         createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImage,
                            textureImageMemory);
         createTextureImageView(device, textureImage, mipLevels, textureImageView);
         createTextureSampler(physicalDevice, device, textureSampler);
-        loadModel();
-      //  createFramebuffers();
-       // createTextureImage();
-       // createTextureImageView();
-      //  createTextureSampler();
+
 
         createObjectLoader();
         launchObjectLoader();
@@ -231,8 +226,7 @@ private:
         //loadSceneSphereElements();
 
         //loadSceneCone();
-        createVertexBuffer(device, physicalDevice, commandPool, graphicsQueue,
-                           vertexBuffer, vertexBufferMemory, vertices);
+        createVertexBuffer();
         createIndexBuffer(device, physicalDevice, indices, commandPool, graphicsQueue,
                           indexBuffer, indexBufferMemory);
         createUniformBuffers(device, physicalDevice, swapChainExtent, uniformBuffers, uniformBuffersMemory,
@@ -342,8 +336,8 @@ private:
         createImageViews();
         createColorResources();
         createDepthResources();
-        createFramebuffers(device, renderPass, swapChainFramebuffers, swapChainImageViews, swapChainExtent,
-                           colorImageView, depthImageView);
+        createFramebuffers(/*device, renderPass, swapChainFramebuffers, swapChainImageViews, swapChainExtent,
+                           colorImageView, depthImageView*/);
     }
 
     void createInstance() {
@@ -1105,7 +1099,7 @@ private:
 
     }
 
-
+*/
     void createObjectLoader(){
         objectLoader = ObjectLoader(&listObjectInfos, &vertices, &indices);
     }
@@ -1138,7 +1132,7 @@ private:
         objectLoader.fillVertexAndIndices();
     }
 
-
+/*
     void createUniformBuffers() {
         static auto startTime = std::chrono::high_resolution_clock::now();
         auto currentTime = std::chrono::high_resolution_clock::now();
@@ -1173,7 +1167,7 @@ private:
             vkMapMemory(device, lightsBuffersMemory[i], 0, bufferSize2, 0, &lightsBuffersMapped[i]);
         }
     }
-
+*/
     void createDescriptorPool() {
         std::array<VkDescriptorPoolSize, 3> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -1339,6 +1333,32 @@ private:
 
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
+
+
+    void createVertexBuffer() {
+        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                     stagingBuffer, stagingBufferMemory, device, physicalDevice);
+
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        memcpy(data, vertices.data(), (size_t) bufferSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                     vertexBuffer, vertexBufferMemory, device, physicalDevice);
+
+        copyBuffer(stagingBuffer, vertexBuffer, bufferSize,
+                   commandPool, device, graphicsQueue);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+    }
+
 
     VkShaderModule createShaderModule(const std::vector<char>& code) {
         VkShaderModuleCreateInfo createInfo{};
