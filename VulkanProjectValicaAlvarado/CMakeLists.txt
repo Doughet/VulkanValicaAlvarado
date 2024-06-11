@@ -21,7 +21,7 @@ list(APPEND LINK_LIBS "${GLFW}/lib-mingw-w64/libglfw3.a")
 # and will be the name of the executable
 set(PROJ_NAME VulkanProjectValicaAlvarado)
 # Name of the source file containing the main() function
-set(MAIN main.cpp)
+set(MAIN main.cpp ObjectLoader.cpp)
 #########################################################
 # CMake configuration #
 # You shouldn't need to modify anything past this point #

@@ -1,0 +1,74 @@
+//
+// Created by adria on 10/06/2024.
+//
+
+#ifndef VULKANPROJECTVALICAALVARADO_OBJECTLOADER_H
+#define VULKANPROJECTVALICAALVARADO_OBJECTLOADER_H
+
+#include <tiny_obj_loader.h>
+
+#include <GLFW/glfw3.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/hash.hpp>
+
+
+#include <iostream>
+#include <fstream>
+#include <stdexcept>
+#include <algorithm>
+#include <chrono>
+#include <vector>
+#include <cstring>
+#include <cstdlib>
+#include <cstdint>
+#include <limits>
+#include <array>
+#include <optional>
+#include <set>
+#include <unordered_map>
+#include "VertexStructure.h"
+
+const std::string MODEL_PATH = "models/";
+
+struct ObjectInformation{
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> localIndices;
+
+    //If the object is to be loaded
+    bool mustBeLoaded;
+    std::string modelPath;
+
+    //TEMPORARY
+    glm::mat4 modelMatrix;
+    std::string texturePath;
+};
+
+
+class ObjectLoader {
+
+private:
+    std::vector<ObjectInformation *> * listObjects;
+    std::vector<Vertex> * vertices;
+    std::vector<uint32_t> * indices;
+
+
+public:
+
+    ObjectLoader();
+
+    ObjectLoader(
+            std::vector<ObjectInformation *> * listObjects,
+            std::vector<Vertex> * vertices,
+            std::vector<uint32_t> * indices
+    );
+
+    void loadModel(ObjectInformation* objectInformation);
+    void loadAllElements();
+    void fillVertexAndIndices();
+
+};
+
+
+#endif //VULKANPROJECTVALICAALVARADO_OBJECTLOADER_H
