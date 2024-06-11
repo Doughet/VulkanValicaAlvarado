@@ -160,6 +160,11 @@ private:
     VkBuffer indexBuffer;
     VkDeviceMemory indexBufferMemory;
 
+    //Model buffer
+    std::vector<VkBuffer> matrixUniformBuffers;
+    std::vector<VkDeviceMemory> matrixUniformBuffersMemory;
+    std::vector<void*> matrixUniformBuffersMapped;
+
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VkDeviceMemory> uniformBuffersMemory;
     std::vector<void*> uniformBuffersMapped;
@@ -232,6 +237,8 @@ private:
         createUniformBuffers(device, physicalDevice, swapChainExtent, uniformBuffers, uniformBuffersMemory,
                              uniformBuffersMapped, lightsBuffers, lightsBuffersMemory, lightsBuffersMapped,
                              MAX_FRAMES_IN_FLIGHT);
+        createMatrixUniformBuffer(device, physicalDevice, swapChainExtent, matrixUniformBuffers, matrixUniformBuffersMemory,
+                                  matrixUniformBuffersMapped, MAX_FRAMES_IN_FLIGHT);
         createDescriptorPool();
         createDescriptorSets();
         createCommandBuffers(device, commandBuffers, commandPool, MAX_FRAMES_IN_FLIGHT);
@@ -280,6 +287,9 @@ private:
 
             vkDestroyBuffer(device, lightsBuffers[i], nullptr);
             vkFreeMemory(device, lightsBuffersMemory[i], nullptr);
+
+            vkDestroyBuffer(device, matrixUniformBuffers[i], nullptr);
+            vkFreeMemory(device, matrixUniformBuffersMemory[i], nullptr);
         }
 
         vkDestroyDescriptorPool(device, descriptorPool, nullptr);
@@ -644,8 +654,14 @@ private:
         lightLayoutBinding.pImmutableSamplers = nullptr;
         lightLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+        VkDescriptorSetLayoutBinding matrixLayoutBinding{};
+        matrixLayoutBinding.binding = 3;
+        matrixLayoutBinding.descriptorCount = 1;
+        matrixLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        matrixLayoutBinding.pImmutableSamplers = nullptr;
+        matrixLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-        std::array<VkDescriptorSetLayoutBinding, 3> bindings = {uboLayoutBinding, samplerLayoutBinding, lightLayoutBinding};
+        std::array<VkDescriptorSetLayoutBinding, 4> bindings = {uboLayoutBinding, samplerLayoutBinding, lightLayoutBinding, matrixLayoutBinding};
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
@@ -1169,13 +1185,16 @@ private:
     }
 */
     void createDescriptorPool() {
-        std::array<VkDescriptorPoolSize, 3> poolSizes{};
+        std::array<VkDescriptorPoolSize, 4> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
         poolSizes[2].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[3].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[3].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -1217,7 +1236,12 @@ private:
             imageInfo.imageView = textureImageView;
             imageInfo.sampler = textureSampler;
 
-            std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+            VkDescriptorBufferInfo matrixBufferInfo{};
+            matrixBufferInfo.buffer = matrixUniformBuffers[i];
+            matrixBufferInfo.offset = 0;
+            matrixBufferInfo.range = sizeof(MatrixBufferObject);
+
+            std::array<VkWriteDescriptorSet, 4> descriptorWrites{};
 
             descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptorWrites[0].dstSet = descriptorSets[i];
@@ -1242,6 +1266,14 @@ private:
             descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptorWrites[2].descriptorCount = 1;
             descriptorWrites[2].pBufferInfo = &bufferInfo2;
+
+            descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[3].dstSet = descriptorSets[i];
+            descriptorWrites[3].dstBinding = 3;
+            descriptorWrites[3].dstArrayElement = 0;
+            descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptorWrites[3].descriptorCount = 1;
+            descriptorWrites[3].pBufferInfo = &matrixBufferInfo;
 
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
@@ -1282,6 +1314,7 @@ private:
         }
 
         updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped);
+        updateMatrixUniformBuffer(currentFrame, matrixUniformBuffersMapped);
 
         vkResetFences(device, 1, &inFlightFences[currentFrame]);
 

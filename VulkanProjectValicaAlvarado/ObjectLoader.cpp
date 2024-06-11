@@ -22,7 +22,7 @@ ObjectLoader::ObjectLoader(std::vector<ObjectInformation *> *listObjects,
 
 }
 
-void ObjectLoader::loadModel(ObjectInformation* objectInformation) {
+void ObjectLoader::loadModel(ObjectInformation* objectInformation, uint32_t index = 0) {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
@@ -87,6 +87,8 @@ void ObjectLoader::loadModel(ObjectInformation* objectInformation) {
 
             vertex0.color = vertex1.color = vertex2.color = {1.0f, 0.0f, 1.0f};
             vertex0.normal = vertex1.normal = vertex2.normal = normal;
+            vertex0.objectIndex = vertex1.objectIndex = vertex2.objectIndex = index;
+
 
             objectInformation->vertices.push_back(vertex0);
             objectInformation->vertices.push_back(vertex1);
@@ -129,9 +131,9 @@ void ObjectLoader::loadAllElements(){
     objTurret.modelMatrix = glm::mat4(1.0f);
 
 
-    for(ObjectInformation* objectInformation : *listObjects){
-        if(objectInformation->mustBeLoaded){
-            loadModel(objectInformation);
+    for (int i = 0; i < listObjects->size(); ++i) {
+        if(listObjects->at(i)->mustBeLoaded){
+            loadModel(listObjects->at(i), i);
         }
     }
 }

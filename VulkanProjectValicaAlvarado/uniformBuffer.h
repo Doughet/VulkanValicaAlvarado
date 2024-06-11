@@ -41,6 +41,10 @@ struct LightsBufferObject {
     float shininess;
 };
 
+struct MatrixBufferObject{
+    glm::mat4 model[5];
+};
+
 UniformBufferObject ubo{};
 
 /*
@@ -81,6 +85,15 @@ uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, V
     }
 
     throw std::runtime_error("failed to find suitable memory type!");
+}
+
+void updateMatrixUniformBuffer(uint32_t currentImage, std::vector<void*> &matrixBufferMapped){
+    MatrixBufferObject mubo{};
+    mubo.model[0] = glm::scale(glm::mat4(1.0f), glm::vec3(15.0f, 15.0f, 15.0f));
+    mubo.model[1] = glm::translate(glm::mat4(1.0f), glm::vec3(60, 0, 0));
+    mubo.model[2] = glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 1.50f, 12.0f));
+
+    memcpy(matrixBufferMapped[currentImage], &mubo, sizeof(mubo));
 }
 
 void updateUniformBuffer(uint32_t currentImage, GLFWwindow * &window,
@@ -302,6 +315,32 @@ void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkCom
 
     endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
 }
+
+void createMatrixUniformBuffer(VkDevice &device, VkPhysicalDevice &physicalDevice, VkExtent2D &swapChainExtent,
+                          std::vector<VkBuffer> &uniformBuffers, std::vector<VkDeviceMemory> &uniformBuffersMemory,
+                          std::vector<void*> &uniformBuffersMapped,
+                          const int maxFramesInFlight) {
+
+    MatrixBufferObject mubo {};
+    mubo.model[0] = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 10.0f, 10.0f));
+    mubo.model[1] = glm::translate(glm::mat4(1.0f), glm::vec3(15, 0, 0));
+    mubo.model[2] = glm::translate(glm::mat4(1.0f), glm::vec3(15, 0, 0));
+
+    VkDeviceSize bufferSize1 = sizeof(MatrixBufferObject);
+
+    uniformBuffers.resize(maxFramesInFlight);
+    uniformBuffersMemory.resize(maxFramesInFlight);
+    uniformBuffersMapped.resize(maxFramesInFlight);
+
+    for (size_t i = 0; i < maxFramesInFlight; i++) {
+        createBuffer(bufferSize1, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                     uniformBuffers[i], uniformBuffersMemory[i], device, physicalDevice);
+        vkMapMemory(device, uniformBuffersMemory[i], 0, bufferSize1, 0, &uniformBuffersMapped[i]);
+    }
+    std::cout << "Buffer Matrix Created \n";
+}
+
 
 void createUniformBuffers(VkDevice &device, VkPhysicalDevice &physicalDevice, VkExtent2D &swapChainExtent,
                           std::vector<VkBuffer> &uniformBuffers, std::vector<VkDeviceMemory> &uniformBuffersMemory,

@@ -65,7 +65,7 @@ public:
             std::vector<uint32_t> * indices
     );
 
-    void loadModel(ObjectInformation* objectInformation);
+    void loadModel(ObjectInformation* objectInformation, uint32_t index);
     void loadAllElements();
     void fillVertexAndIndices();
 };
