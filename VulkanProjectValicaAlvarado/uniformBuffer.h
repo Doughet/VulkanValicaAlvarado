@@ -8,7 +8,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
 
-
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
@@ -24,7 +23,7 @@
 #include <set>
 #include <unordered_map>
 
-#include "controller.hpp"
+#include "controller.h"
 
 struct UniformBufferObject {
     alignas(16) glm::mat4 model;
@@ -485,45 +484,6 @@ void createIndexBuffer(VkDevice &device, VkPhysicalDevice &physicalDevice, std::
     vkDestroyBuffer(device, stagingBuffer, nullptr);
     vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
-/*
-void createUniformBuffers() {
-    static auto startTime = std::chrono::high_resolution_clock::now();
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    float scaleFactor = 0.01f; // Change this value to scale down
-
-    // Model matrix with scaling
-    glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scaleFactor));
-
-    ubo.model = scaleMatrix * ubo.model;
-    ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 30.0f);
-    ubo.proj[1][1] *= -1;
-    ubo.view = glm::lookAt(glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
-    VkDeviceSize bufferSize1 = sizeof(UniformBufferObject);
-    VkDeviceSize bufferSize2 = sizeof(LightsBufferObject);
-
-    uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-    uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
-    uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
-
-    lightsBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-    lightsBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
-    lightsBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
-
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        createBuffer(bufferSize1, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                     uniformBuffers[i], uniformBuffersMemory[i], device, physicalDevice);
-        createBuffer(bufferSize2, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                     lightsBuffers[i], lightsBuffersMemory[i], device, physicalDevice);
-
-        vkMapMemory(device, uniformBuffersMemory[i], 0, bufferSize1, 0, &uniformBuffersMapped[i]);
-        vkMapMemory(device, lightsBuffersMemory[i], 0, bufferSize2, 0, &lightsBuffersMapped[i]);
-    }
-}*/
 
 void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height,
                        VkCommandPool &commandPool, VkDevice &device, VkQueue &graphicsQueue) {
