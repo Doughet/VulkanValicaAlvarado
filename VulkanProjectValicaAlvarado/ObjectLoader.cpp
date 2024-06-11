@@ -92,8 +92,8 @@ void ObjectLoader::loadModel(ObjectInformation* objectInformation) {
             objectInformation->vertices.push_back(vertex2);
 
             objectInformation->localIndices.push_back(i);
-            objectInformation->localIndices.push_back(i+2);
             objectInformation->localIndices.push_back(i+1);
+            objectInformation->localIndices.push_back(i+2);
 
             /*
             if (uniqueVertices.count(vertex0) == 0) {

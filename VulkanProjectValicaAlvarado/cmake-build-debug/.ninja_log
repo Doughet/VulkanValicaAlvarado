@@ -1,9 +1,14 @@
 # ninja log v6
-7	4170	7397380443254091	CMakeFiles/VulkanProjectValicaAlvarado.dir/main.cpp.obj	8f66e5b327a7c77c
-4171	6389	7397380484894102	VulkanProjectValicaAlvarado.exe	347cbddf85316919
-43	944	7397951586441161	build.ninja	d8ca76f377c3f873
-1	284	7397951586441161	build.ninja	d8ca76f377c3f873
-2	2602	7397951586691164	CMakeFiles/VulkanProjectValicaAlvarado.dir/main.cpp.obj	8f66e5b327a7c77c
-21	2584	7397952921295119	CMakeFiles/VulkanProjectValicaAlvarado.dir/ObjectLoader.cpp.obj	59be1d2574098e40
 8	2876	7397952921175203	CMakeFiles/VulkanProjectValicaAlvarado.dir/main.cpp.obj	8f66e5b327a7c77c
+21	2584	7397952921295119	CMakeFiles/VulkanProjectValicaAlvarado.dir/ObjectLoader.cpp.obj	59be1d2574098e40
 2877	4096	7397952949855114	VulkanProjectValicaAlvarado.exe	833793649f78757e
+1	284	7397962881034015	build.ninja	d8ca76f377c3f873
+17	2317	7397963256106870	CMakeFiles/VulkanProjectValicaAlvarado.dir/ObjectLoader.cpp.obj	59be1d2574098e40
+8	2603	7397963256006985	CMakeFiles/VulkanProjectValicaAlvarado.dir/main.cpp.obj	8f66e5b327a7c77c
+2604	3714	7397963281967423	VulkanProjectValicaAlvarado.exe	833793649f78757e
+10	2281	7397964183582122	CMakeFiles/VulkanProjectValicaAlvarado.dir/ObjectLoader.cpp.obj	59be1d2574098e40
+2282	3425	7397964206302986	VulkanProjectValicaAlvarado.exe	833793649f78757e
+11	3388	7397964866333252	CMakeFiles/VulkanProjectValicaAlvarado.dir/main.cpp.obj	8f66e5b327a7c77c
+3388	5057	7397964900103223	VulkanProjectValicaAlvarado.exe	833793649f78757e
+8	3818	7397965080489628	CMakeFiles/VulkanProjectValicaAlvarado.dir/main.cpp.obj	8f66e5b327a7c77c
+3819	5438	7397965118597165	VulkanProjectValicaAlvarado.exe	833793649f78757e
