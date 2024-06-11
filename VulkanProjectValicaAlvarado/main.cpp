@@ -11,9 +11,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#define TINYOBJLOADER_IMPLEMENTATION
-#include <tiny_obj_loader.h>
-
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
@@ -29,12 +26,14 @@
 #include <set>
 #include <unordered_map>
 
+
+#include "uniformBuffer.h"
+#include "ObjectLoader.h"
 #include "texturesManagement.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
-const std::string MODEL_PATH = "models/";
 const std::string TEXTURE_PATH = "textures/";
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -85,6 +84,7 @@ struct SwapChainSupportDetails {
     std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR> presentModes;
 };
+
 
 namespace std {
     template<> struct hash<Vertex> {
@@ -152,7 +152,8 @@ private:
     std::vector<VkImageView> textureImageViews;
     std::vector<VkSampler> textureSamplers;
 
-
+    std::vector<ObjectInformation*> listObjectInfos;
+    ObjectLoader objectLoader;
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
     VkBuffer vertexBuffer;
@@ -218,6 +219,15 @@ private:
         createTextureImageView(device, textureImage, mipLevels, textureImageView);
         createTextureSampler(physicalDevice, device, textureSampler);
         loadModel();
+      //  createFramebuffers();
+       // createTextureImage();
+       // createTextureImageView();
+      //  createTextureSampler();
+
+        createObjectLoader();
+        launchObjectLoader();
+
+
         //loadSceneSphereElements();
 
         //loadSceneCone();
@@ -701,7 +711,6 @@ private:
         rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
         rasterizer.lineWidth = 1.0f;
         rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-        //rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
         rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -776,6 +785,31 @@ private:
 
         vkDestroyShaderModule(device, fragShaderModule, nullptr);
         vkDestroyShaderModule(device, vertShaderModule, nullptr);
+    }
+
+    void createFramebuffers() {
+        swapChainFramebuffers.resize(swapChainImageViews.size());
+
+        for (size_t i = 0; i < swapChainImageViews.size(); i++) {
+            std::array<VkImageView, 3> attachments = {
+                    colorImageView,
+                    depthImageView,
+                    swapChainImageViews[i]
+            };
+
+            VkFramebufferCreateInfo framebufferInfo{};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = renderPass;
+            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+            framebufferInfo.pAttachments = attachments.data();
+            framebufferInfo.width = swapChainExtent.width;
+            framebufferInfo.height = swapChainExtent.height;
+            framebufferInfo.layers = 1;
+
+            if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) {
+                throw std::runtime_error("failed to create framebuffer!");
+            }
+        }
     }
 
     void createCommandPool() {
@@ -897,6 +931,7 @@ private:
         }
     }*/
 
+    /*
     void loadSceneCone(){
         int slices = 40;
         float height = 0.5f;
@@ -1068,6 +1103,75 @@ private:
             }
         }
 
+    }
+
+
+    void createObjectLoader(){
+        objectLoader = ObjectLoader(&listObjectInfos, &vertices, &indices);
+    }
+
+    void launchObjectLoader(){
+
+        ObjectInformation objTurret {};
+        objTurret.modelPath = "turret.obj";
+        objTurret.texturePath = "";
+        objTurret.mustBeLoaded = true;
+        objTurret.modelMatrix = glm::mat4(1.0f);
+
+        ObjectInformation objHouse {};
+        objHouse.modelPath = "furniture/House/house_04.obj";
+        objHouse.texturePath = "";
+        objHouse.mustBeLoaded = true;
+        objHouse.modelMatrix = glm::mat4(1.0f);
+
+        ObjectInformation objMorris {};
+        objMorris.modelPath = "furniture/MorrisChair/morrisChair.obj";
+        objMorris.texturePath = "";
+        objMorris.mustBeLoaded = true;
+        objMorris.modelMatrix = glm::mat4(1.0f);
+
+        listObjectInfos.push_back(&objTurret);
+        listObjectInfos.push_back(&objHouse);
+        listObjectInfos.push_back(&objMorris);
+
+        objectLoader.loadAllElements();
+        objectLoader.fillVertexAndIndices();
+    }
+
+
+    void createUniformBuffers() {
+        static auto startTime = std::chrono::high_resolution_clock::now();
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+        ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        float scaleFactor = 0.01f; // Change this value to scale down
+
+        // Model matrix with scaling
+        glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scaleFactor));
+
+        ubo.model = scaleMatrix * ubo.model;
+        ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 30.0f);
+        ubo.proj[1][1] *= -1;
+        ubo.view = glm::lookAt(glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        VkDeviceSize bufferSize1 = sizeof(UniformBufferObject);
+        VkDeviceSize bufferSize2 = sizeof(LightsBufferObject);
+
+        uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+        uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
+        uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+
+        lightsBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+        lightsBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
+        lightsBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            createBuffer(bufferSize1, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
+            createBuffer(bufferSize2, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, lightsBuffers[i], lightsBuffersMemory[i]);
+
+            vkMapMemory(device, uniformBuffersMemory[i], 0, bufferSize1, 0, &uniformBuffersMapped[i]);
+            vkMapMemory(device, lightsBuffersMemory[i], 0, bufferSize2, 0, &lightsBuffersMapped[i]);
+        }
     }
 
     void createDescriptorPool() {
