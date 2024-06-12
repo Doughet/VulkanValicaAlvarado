@@ -285,7 +285,7 @@ void createTextureImage(uint32_t &mipLevels, VkDevice &device, VkPhysicalDevice 
     std::string texturePath = "textures/furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png";
     std::string texturePathWaterMelon = "textures/furniture/Laptop/SLT_Dif.png";
 
-    std::cout << texturePath + "\n";
+    //std::cout << texturePath + "\n";
 
     stbi_uc* pixels = stbi_load(texturePathWaterMelon.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     VkDeviceSize imageSize = texWidth * texHeight * 4;

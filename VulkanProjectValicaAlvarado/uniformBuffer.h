@@ -42,7 +42,7 @@ struct LightsBufferObject {
 };
 
 struct MatrixBufferObject{
-    glm::mat4 model[5];
+    glm::mat4 model[5]; // Increase the number if I want to add more models
 };
 
 UniformBufferObject ubo{};

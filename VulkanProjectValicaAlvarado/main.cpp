@@ -26,14 +26,11 @@
 #include <set>
 #include <unordered_map>
 
-
 #include "ObjectLoader.h"
 #include "texturesManagement.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
-
-const std::string TEXTURE_PATH = "textures/";
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -83,7 +80,6 @@ struct SwapChainSupportDetails {
     std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR> presentModes;
 };
-
 
 namespace std {
     template<> struct hash<Vertex> {
@@ -187,12 +183,33 @@ private:
 
     VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
+    // Callback function for key events
+    void keyCallback(ObjectInformation &objectInformation) {
+       // if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+            updateTransformationData(objectInformation);
+        //}
+    }
+
+// Function to update the model matrix based on input
+    void updateTransformationData(ObjectInformation &objectInformation) {
+        if (glfwGetKey(window, GLFW_KEY_1)) {
+            objectInformation.modelMatrix = glm::translate(objectInformation.modelMatrix, glm::vec3(0.0f, 0.1f, 0.0f));
+        } else if (glfwGetKey(window, GLFW_KEY_2)) {
+            objectInformation.modelMatrix = glm::translate(objectInformation.modelMatrix, glm::vec3(0.0f, -0.1f, 0.0f));
+        } else if (glfwGetKey(window, GLFW_KEY_3)) {
+            objectInformation.modelMatrix = glm::translate(objectInformation.modelMatrix, glm::vec3(-0.1f, 0.0f, 0.0f));
+        } else if (glfwGetKey(window, GLFW_KEY_4)) {
+            objectInformation.modelMatrix = glm::translate(objectInformation.modelMatrix, glm::vec3(0.1f, 0.0f, 0.0f));
+        }
+    }
+
     void initWindow() {
         glfwInit();
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
         window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+        //glfwSetKeyCallback(window, );
         glfwSetWindowUserPointer(window, this);
         glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
     }
@@ -209,6 +226,7 @@ private:
         pickPhysicalDevice();
         createLogicalDevice();
         createSwapChain();
+
         createImageViews();
         createRenderPass();
         createDescriptorSetLayout();
@@ -223,10 +241,8 @@ private:
         createTextureImageView(device, textureImage, mipLevels, textureImageView);
         createTextureSampler(physicalDevice, device, textureSampler);
 
-
         createObjectLoader();
         launchObjectLoader();
-
 
         //loadSceneSphereElements();
 
@@ -246,8 +262,14 @@ private:
     }
 
     void mainLoop() {
+
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
+
+
+          // updateTransformationData(listObjectInfos.at(1));
+           //updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped);
+
             drawFrame();
         }
 
@@ -1124,7 +1146,7 @@ private:
 
         ObjectInformation objTurret {};
         objTurret.modelPath = "turret.obj";
-        objTurret.texturePath = "";
+        objTurret.texturePath = "furniture/PoolFloats/Rainbow.png";
         objTurret.mustBeLoaded = true;
         objTurret.modelMatrix = glm::mat4(1.0f);
 
@@ -1369,6 +1391,7 @@ private:
 
 
     void createVertexBuffer() {
+
         VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
         VkBuffer stagingBuffer;
@@ -1601,6 +1624,8 @@ private:
         return VK_FALSE;
     }
 };
+
+
 
 int main() {
     HelloTriangleApplication app;
