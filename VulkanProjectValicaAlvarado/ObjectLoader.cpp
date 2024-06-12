@@ -124,12 +124,6 @@ void ObjectLoader::loadModel(ObjectInformation* objectInformation, uint32_t inde
 }
 
 void ObjectLoader::loadAllElements(){
-    ObjectInformation objTurret {};
-    objTurret.modelPath = "turret.obj";
-    objTurret.texturePath = "";
-    objTurret.mustBeLoaded = true;
-    objTurret.modelMatrix = glm::mat4(1.0f);
-
 
     for (int i = 0; i < listObjects->size(); ++i) {
         if(listObjects->at(i)->mustBeLoaded){

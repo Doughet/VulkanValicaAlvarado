@@ -42,7 +42,7 @@ struct LightsBufferObject {
 };
 
 struct MatrixBufferObject{
-    glm::mat4 model[5]; // Increase the number if I want to add more models
+    glm::mat4 model[20]; // Increase the number if I want to add more models
 };
 
 UniformBufferObject ubo{};
@@ -89,9 +89,21 @@ uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, V
 
 void updateMatrixUniformBuffer(uint32_t currentImage, std::vector<void*> &matrixBufferMapped){
     MatrixBufferObject mubo{};
+
+
+    for (size_t i = 0; i < 3; ++i) {
+        mubo.model[i] = listActualObjectInfos.at(i).modelMatrix;
+    }
+
+
+
+    /*
     mubo.model[0] = glm::scale(glm::mat4(1.0f), glm::vec3(15.0f, 15.0f, 15.0f));
     mubo.model[1] = glm::translate(glm::mat4(1.0f), glm::vec3(60, 0, 0));
     mubo.model[2] = glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 1.50f, 12.0f));
+*/
+
+    //mubo.model[0] = listObjectInfos.at(0)->modelMatrix;
 
     memcpy(matrixBufferMapped[currentImage], &mubo, sizeof(mubo));
 }
