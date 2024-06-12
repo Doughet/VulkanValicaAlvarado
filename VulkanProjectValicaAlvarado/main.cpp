@@ -152,6 +152,7 @@ private:
     std::vector<VkSampler> textureSamplers;
 
     std::vector<ObjectInformation*> listObjectInfos;
+    std::vector<ObjectInformation> listActualObjectInfos;
     ObjectLoader objectLoader;
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
@@ -1126,26 +1127,36 @@ private:
         objTurret.modelPath = "turret.obj";
         objTurret.texturePath = "";
         objTurret.mustBeLoaded = true;
-        objTurret.modelMatrix = glm::mat4(1.0f);
+        objTurret.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(15.0f, 15.0f, 15.0f));
+        objTurret.texturePath = "tititiitit";
 
         ObjectInformation objHouse {};
         objHouse.modelPath = "furniture/House/house_04.obj";
         objHouse.texturePath = "";
         objHouse.mustBeLoaded = true;
-        objHouse.modelMatrix = glm::mat4(1.0f);
+        objHouse.modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(60, 0, 0));
+        objHouse.texturePath = "tititiitit";
 
         ObjectInformation objMorris {};
         objMorris.modelPath = "furniture/MorrisChair/morrisChair.obj";
         objMorris.texturePath = "";
         objMorris.mustBeLoaded = true;
-        objMorris.modelMatrix = glm::mat4(1.0f);
+        objMorris.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 3.0f, 3.0f));
+        objMorris.texturePath = "tititiitit";
 
-        listObjectInfos.push_back(&objTurret);
-        listObjectInfos.push_back(&objHouse);
-        listObjectInfos.push_back(&objMorris);
+
+        listActualObjectInfos.push_back(objTurret);
+        listActualObjectInfos.push_back(objHouse);
+        listActualObjectInfos.push_back(objMorris);
+
+        listObjectInfos.push_back(&listActualObjectInfos[0]);
+        listObjectInfos.push_back(&listActualObjectInfos[1]);
+        listObjectInfos.push_back(&listActualObjectInfos[2]);
 
         objectLoader.loadAllElements();
         objectLoader.fillVertexAndIndices();
+
+
     }
 
 /*
@@ -1314,7 +1325,7 @@ private:
         }
 
         updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped);
-        updateMatrixUniformBuffer(currentFrame, matrixUniformBuffersMapped);
+        updateMatrixUniformBuffer(currentFrame, listActualObjectInfos, matrixUniformBuffersMapped);
 
         vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
