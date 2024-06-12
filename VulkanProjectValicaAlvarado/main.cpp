@@ -147,8 +147,11 @@ private:
     VkImageView textureImageView;
     VkSampler textureSampler;
 
+
+    //TEXTURES
     std::vector<VkImage> textureImages;
     std::vector<VkImageView> textureImageViews;
+    std::vector<VkDeviceMemory> textureImageMemorys;
     std::vector<VkSampler> textureSamplers;
 
     std::vector<ObjectInformation*> listObjectInfos;
@@ -188,6 +191,13 @@ private:
 
     VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
+
+
+
+
+    std::vector<std::string> texturePaths;
+
+
     void initWindow() {
         glfwInit();
 
@@ -221,8 +231,19 @@ private:
                 swapChainExtent, colorImageView, depthImageView*/);
         createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImage,
                            textureImageMemory);
+
+        texturePaths.push_back("furniture/House/mondrian.png");
+        texturePaths.push_back("furniture/House/mondrian.png");
+        texturePaths.push_back("furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png");
+
+        createTextureImages(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImages,
+                           textureImageMemorys, texturePaths);
+
         createTextureImageView(device, textureImage, mipLevels, textureImageView);
+        createTextureImageViews(device, textureImages, mipLevels, textureImageViews);
+
         createTextureSampler(physicalDevice, device, textureSampler);
+        createTextureSamplers(physicalDevice, device, textureSamplers);
 
 
         createObjectLoader();
@@ -295,11 +316,13 @@ private:
 
         vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 
-        vkDestroySampler(device, textureSampler, nullptr);
-        vkDestroyImageView(device, textureImageView, nullptr);
+        for (int i = 0; i < textureImages.size(); ++i) {
+            vkDestroySampler(device, textureSamplers[i], nullptr);
+            vkDestroyImageView(device, textureImageViews[i], nullptr);
 
-        vkDestroyImage(device, textureImage, nullptr);
-        vkFreeMemory(device, textureImageMemory, nullptr);
+            vkDestroyImage(device, textureImages[i], nullptr);
+            vkFreeMemory(device, textureImageMemorys[i], nullptr);
+        }
 
         vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
@@ -662,7 +685,14 @@ private:
         matrixLayoutBinding.pImmutableSamplers = nullptr;
         matrixLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-        std::array<VkDescriptorSetLayoutBinding, 4> bindings = {uboLayoutBinding, samplerLayoutBinding, lightLayoutBinding, matrixLayoutBinding};
+        VkDescriptorSetLayoutBinding samplersLayoutBinding{};
+        samplersLayoutBinding.binding = 4;
+        samplersLayoutBinding.descriptorCount = 3;
+        samplersLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplersLayoutBinding.pImmutableSamplers = nullptr;
+        samplersLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 5> bindings = {uboLayoutBinding, samplerLayoutBinding, lightLayoutBinding, matrixLayoutBinding, samplersLayoutBinding};
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
@@ -1196,7 +1226,7 @@ private:
     }
 */
     void createDescriptorPool() {
-        std::array<VkDescriptorPoolSize, 4> poolSizes{};
+        std::array<VkDescriptorPoolSize, 5> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -1205,6 +1235,8 @@ private:
         poolSizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
         poolSizes[3].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[3].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[4].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[4].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT) * 3;
 
 
         VkDescriptorPoolCreateInfo poolInfo{};
@@ -1223,6 +1255,7 @@ private:
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = descriptorPool;
+        //MAYBE HERE
         allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
         allocInfo.pSetLayouts = layouts.data();
 
@@ -1252,7 +1285,19 @@ private:
             matrixBufferInfo.offset = 0;
             matrixBufferInfo.range = sizeof(MatrixBufferObject);
 
-            std::array<VkWriteDescriptorSet, 4> descriptorWrites{};
+            std::vector<VkDescriptorImageInfo> imageInfos;
+
+            for (size_t j = 0; j < 3; ++j) {
+                VkDescriptorImageInfo imageInfo;
+
+                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfo.imageView = textureImageViews[j];
+                imageInfo.sampler = textureSamplers[j];
+
+                imageInfos.push_back(imageInfo);
+            }
+
+            std::array<VkWriteDescriptorSet, 5> descriptorWrites{};
 
             descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptorWrites[0].dstSet = descriptorSets[i];
@@ -1285,6 +1330,14 @@ private:
             descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptorWrites[3].descriptorCount = 1;
             descriptorWrites[3].pBufferInfo = &matrixBufferInfo;
+
+            descriptorWrites[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[4].dstSet = descriptorSets[i];
+            descriptorWrites[4].dstBinding = 4; // The same as the layout binding index
+            descriptorWrites[4].dstArrayElement = 0;
+            descriptorWrites[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            descriptorWrites[4].descriptorCount = 3;
+            descriptorWrites[4].pImageInfo = imageInfos.data();
 
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
