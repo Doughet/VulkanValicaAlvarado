@@ -87,7 +87,8 @@ uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, V
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-void updateMatrixUniformBuffer(uint32_t currentImage, std::vector<void*> &matrixBufferMapped){
+void updateMatrixUniformBuffer(uint32_t currentImage, std::vector<ObjectInformation> listActualObjectInfos,
+                               std::vector<void*> &matrixBufferMapped){
     MatrixBufferObject mubo{};
 
 
@@ -107,6 +108,7 @@ void updateMatrixUniformBuffer(uint32_t currentImage, std::vector<void*> &matrix
 
     memcpy(matrixBufferMapped[currentImage], &mubo, sizeof(mubo));
 }
+
 
 void updateUniformBuffer(uint32_t currentImage, GLFWwindow * &window,
                          std::vector<void*> &uniformBuffersMapped, std::vector<void*> &lightsBuffersMapped) {
@@ -329,9 +331,9 @@ void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkCom
 }
 
 void createMatrixUniformBuffer(VkDevice &device, VkPhysicalDevice &physicalDevice, VkExtent2D &swapChainExtent,
-                          std::vector<VkBuffer> &uniformBuffers, std::vector<VkDeviceMemory> &uniformBuffersMemory,
-                          std::vector<void*> &uniformBuffersMapped,
-                          const int maxFramesInFlight) {
+                               std::vector<VkBuffer> &uniformBuffers, std::vector<VkDeviceMemory> &uniformBuffersMemory,
+                               std::vector<void*> &uniformBuffersMapped,
+                               const int maxFramesInFlight) {
 
     MatrixBufferObject mubo {};
     mubo.model[0] = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 10.0f, 10.0f));

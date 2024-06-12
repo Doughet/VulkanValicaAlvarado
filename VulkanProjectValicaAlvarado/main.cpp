@@ -182,27 +182,10 @@ private:
 
     bool framebufferResized = false;
 
+    bool keyPressed = false;
+    int currentTransformationModel = 0;
+
     VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
-
-    // Callback function for key events
-    void keyCallback(ObjectInformation &objectInformation) {
-       // if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-            updateTransformationData(objectInformation);
-        //}
-    }
-
-// Function to update the model matrix based on input
-    void updateTransformationData(ObjectInformation &objectInformation) {
-        if (glfwGetKey(window, GLFW_KEY_1)) {
-            objectInformation.modelMatrix = glm::translate(objectInformation.modelMatrix, glm::vec3(0.0f, 0.1f, 0.0f));
-        } else if (glfwGetKey(window, GLFW_KEY_2)) {
-            objectInformation.modelMatrix = glm::translate(objectInformation.modelMatrix, glm::vec3(0.0f, -0.1f, 0.0f));
-        } else if (glfwGetKey(window, GLFW_KEY_3)) {
-            objectInformation.modelMatrix = glm::translate(objectInformation.modelMatrix, glm::vec3(-0.1f, 0.0f, 0.0f));
-        } else if (glfwGetKey(window, GLFW_KEY_4)) {
-            objectInformation.modelMatrix = glm::translate(objectInformation.modelMatrix, glm::vec3(0.1f, 0.0f, 0.0f));
-        }
-    }
 
     void initWindow() {
         glfwInit();
@@ -267,9 +250,10 @@ private:
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
 
+            changeCurrentModel(keyPressed, window, currentTransformationModel, listObjectInfos);
 
-          // updateTransformationData(listObjectInfos.at(1));
-           //updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped);
+            updateTransformationData(currentTransformationModel, window, listObjectInfos);
+            updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped);
 
             drawFrame();
         }
