@@ -191,12 +191,10 @@ private:
 
     VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
-
-
-
+    bool keyPressed = false;
+    int currentTransformationModel = 0;
 
     std::vector<std::string> texturePaths;
-
 
     void initWindow() {
         glfwInit();
@@ -270,6 +268,12 @@ private:
     void mainLoop() {
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
+
+            changeCurrentModel(keyPressed, window, currentTransformationModel, listObjectInfos);
+
+            updateTransformationData(currentTransformationModel, window, listObjectInfos);
+            updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped);
+
             drawFrame();
         }
 
