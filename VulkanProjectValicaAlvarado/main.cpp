@@ -157,7 +157,9 @@ private:
 
     std::vector<ObjectInformation*> listObjectInfos;
     std::vector<ObjectInformation> listActualObjectInfos;
+    bool isStart = true;
     ObjectLoader objectLoader;
+
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
     VkBuffer vertexBuffer;
@@ -223,6 +225,10 @@ private:
         createSwapChain();
         createImageViews();
         createRenderPass();
+
+        //Create object vector
+        createObjectVector();
+
         createDescriptorSetLayout();
         createGraphicsPipeline();
         createCommandPool();
@@ -230,9 +236,6 @@ private:
         createDepthResources();
         createFramebuffers(/*device, renderPass, swapChainFramebuffers, swapChainImageViews,
                 swapChainExtent, colorImageView, depthImageView*/);
-
-        //Create object vector
-        createObjectVector();
 
         createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImage,
                            textureImageMemory);
@@ -278,6 +281,26 @@ private:
             updateTransformationData(currentTransformationModel, window, listObjectInfos, deltaTime);
             updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped);
             glfwPollEvents();
+
+            if(isStart){
+                uint32_t verticesSize = sizeof(vertices[0]) * vertices.size();
+                uint32_t indicesSize = sizeof(indices[0]) * indices.size();
+
+                ObjectInformation objectInformation {};
+                objectInformation.modelMatrix = glm::mat4(1.0f);
+                objectInformation.texturePath = "";
+                objectInformation.modelPath = "furniture/CoconutTree/coconutTree.obj";
+                objectInformation.mustBeLoaded = true;
+
+                listActualObjectInfos.push_back(objectInformation);
+                objectLoader.addObject(&listActualObjectInfos[listActualObjectInfos.size() - 1]);
+
+
+                updateVertexBuffer(listActualObjectInfos[listActualObjectInfos.size() - 1].vertices, verticesSize);
+                updateIndexBuffer(listActualObjectInfos[listActualObjectInfos.size() - 1].localIndices, indicesSize);
+
+                isStart = false;
+            }
 
             drawFrame();
         }
@@ -332,6 +355,12 @@ private:
             vkDestroyImage(device, textureImages[i], nullptr);
             vkFreeMemory(device, textureImageMemorys[i], nullptr);
         }
+
+        vkDestroySampler(device, textureSampler, nullptr);
+        vkDestroyImageView(device, textureImageView, nullptr);
+
+        vkDestroyImage(device, textureImage, nullptr);
+        vkFreeMemory(device, textureImageMemory, nullptr);
 
         vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
@@ -696,7 +725,7 @@ private:
 
         VkDescriptorSetLayoutBinding samplersLayoutBinding{};
         samplersLayoutBinding.binding = 4;
-        samplersLayoutBinding.descriptorCount = 3;
+        samplersLayoutBinding.descriptorCount = texturePaths.size();
         samplersLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         samplersLayoutBinding.pImmutableSamplers = nullptr;
         samplersLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -864,9 +893,12 @@ private:
         listObjectInfos.push_back(&listActualObjectInfos[1]);
         listObjectInfos.push_back(&listActualObjectInfos[2]);
 
+        isStart = true;
+
         for (int i = 0; i < listObjectInfos.size(); ++i) {
             texturePaths.push_back(listActualObjectInfos.at(i).texturePath);
         }
+        texturePaths.push_back("furniture/CoconutTree/coconutTreeTexture.jpg");
     }
 
     void createFramebuffers() {
@@ -1200,6 +1232,71 @@ private:
 
     }
 
+    void updateIndexBuffer(const std::vector<uint32_t>& newIndices, uint32_t currentIndicesSize){
+        VkDeviceSize newSize = sizeof(newIndices[0]) * newIndices.size();
+        VkDeviceSize currentSize = currentIndicesSize;
+        VkDeviceSize totalSize = newSize + currentSize;
+
+        // Create a staging buffer for the new data
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(newSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                     stagingBuffer, stagingBufferMemory, device, physicalDevice);
+
+        // Map and copy the new data to the staging buffer
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, newSize, 0, &data);
+        memcpy(data, newIndices.data(), (size_t) newSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        // Copy the new data from the staging buffer to the index buffer
+        VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandPool, device);
+        VkBufferCopy copyRegion{};
+        copyRegion.srcOffset = 0;
+        copyRegion.dstOffset = currentSize; // Append the new data at the end of the existing data
+        copyRegion.size = newSize;
+        vkCmdCopyBuffer(commandBuffer, stagingBuffer, indexBuffer, 1, &copyRegion);
+        endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
+
+        // Clean up the staging buffer
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+    }
+
+    //TODO CHECK BUFFER SIZE
+    void updateVertexBuffer(const std::vector<Vertex>& newVertices, uint32_t currentBuffSize) {
+        VkDeviceSize newSize = sizeof(newVertices[0]) * newVertices.size();
+        VkDeviceSize currentSize = currentBuffSize;
+        VkDeviceSize totalSize = newSize + currentSize;
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(newSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                     stagingBuffer, stagingBufferMemory, device, physicalDevice);
+
+        // Map and copy the new data to the staging buffer
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, newSize, 0, &data);
+        memcpy(data, newVertices.data(), (size_t) newSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        // Copy the new data from the staging buffer to the vertex buffer
+        VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandPool, device);
+        VkBufferCopy copyRegion{};
+        copyRegion.srcOffset = 0;
+        copyRegion.dstOffset = currentSize; // Append the new data at the end of the existing data
+        copyRegion.size = newSize;
+        vkCmdCopyBuffer(commandBuffer, stagingBuffer, vertexBuffer, 1, &copyRegion);
+        endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
+
+        // Clean up the staging buffer
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+    }
+
 /*
     void createUniformBuffers() {
         static auto startTime = std::chrono::high_resolution_clock::now();
@@ -1444,7 +1541,8 @@ private:
 
 
     void createVertexBuffer() {
-        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size() * 100;
+        VkDeviceSize actualBufferSize = sizeof(vertices[0]) * vertices.size();
 
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;
@@ -1454,7 +1552,7 @@ private:
 
         void* data;
         vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-        memcpy(data, vertices.data(), (size_t) bufferSize);
+        memcpy(data, vertices.data(), (size_t) actualBufferSize);
         vkUnmapMemory(device, stagingBufferMemory);
 
         createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,

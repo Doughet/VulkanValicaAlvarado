@@ -24,7 +24,12 @@ layout(location = 4) out int outIndex;
 
 
 void main() {
-    gl_Position = ubo.proj * ubo.view * ubo.model * mubo.model[inIndex] * vec4(inPosition, 1.0);
+    if(inIndex == 3){
+        gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
+    }
+    else{
+        gl_Position = ubo.proj * ubo.view * ubo.model * mubo.model[inIndex] * vec4(inPosition, 1.0);
+    }
     fragPos = vec3(ubo.model * mubo.model[inIndex] * vec4(inPosition, 1.0));
     fragTexCoord = inTexCoord;
     fragNormal = mat3(ubo.model) * inNormal;

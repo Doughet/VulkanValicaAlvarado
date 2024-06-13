@@ -15,11 +15,9 @@ ObjectLoader::ObjectLoader() {
 ObjectLoader::ObjectLoader(std::vector<ObjectInformation *> *listObjects,
                            std::vector <Vertex> *vertices,
                            std::vector <uint32_t> *indices) {
-
     this->listObjects = listObjects;
     this->vertices = vertices;
     this->indices = indices;
-
 }
 
 void ObjectLoader::loadModel(ObjectInformation* objectInformation, uint32_t index = 0) {
@@ -153,4 +151,34 @@ void ObjectLoader::fillVertexAndIndices(){
     }
 
 }
+
+
+void ObjectLoader::addObject(ObjectInformation* objectInformation){
+
+    loadModel(objectInformation, listObjects->size());
+
+    listObjects->push_back(objectInformation);
+
+    updateVerticesAndIndices(objectInformation);
+}
+
+void ObjectLoader::updateVerticesAndIndices(ObjectInformation* objectInformation){
+
+    int indicesCount = vertices->size();
+
+    // Adding all the vertices
+    vertices->insert(vertices->end(), objectInformation->vertices.begin(), objectInformation->vertices.end());
+
+    //Adding the mapped indices
+    std::transform(objectInformation->localIndices.begin(),
+                   objectInformation->localIndices.end(),
+                   std::back_inserter(*indices),
+                   [&indicesCount](uint32_t x){return x + indicesCount;});
+
+    indicesCount += objectInformation->vertices.size();
+
+    std::cout << "Locally Buffers: " + objectInformation->modelPath + " \n";
+
+}
+
 
