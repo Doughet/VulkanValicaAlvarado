@@ -25,6 +25,7 @@
 #include <optional>
 #include <set>
 #include <unordered_map>
+#include <datetimeapi.h>
 
 
 #include "ObjectLoader.h"
@@ -194,6 +195,8 @@ private:
     bool keyPressed = false;
     int currentTransformationModel = 0;
 
+    double lastTime = glfwGetTime();
+
     std::vector<std::string> texturePaths;
 
     void initWindow() {
@@ -267,12 +270,14 @@ private:
 
     void mainLoop() {
         while (!glfwWindowShouldClose(window)) {
-            glfwPollEvents();
+            float currentTime = glfwGetTime();
+            float deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
 
             changeCurrentModel(keyPressed, window, currentTransformationModel, listObjectInfos);
-
-            updateTransformationData(currentTransformationModel, window, listObjectInfos);
+            updateTransformationData(currentTransformationModel, window, listObjectInfos, deltaTime);
             updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped);
+            glfwPollEvents();
 
             drawFrame();
         }

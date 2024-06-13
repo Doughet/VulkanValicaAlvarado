@@ -24,27 +24,51 @@
 #include <unordered_map>
 
 
-void updateTransformationData(int pos, GLFWwindow * &window, std::vector<ObjectInformation*> listObjectInfos) {
-    if (glfwGetKey(window, GLFW_KEY_1)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix, glm::vec3(0.0f, 0.1f, 0.0f));
-    } else if (glfwGetKey(window, GLFW_KEY_2)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix, glm::vec3(0.0f, -0.1f, 0.0f));
-    } else if (glfwGetKey(window, GLFW_KEY_3)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix, glm::vec3(-0.1f, 0.0f, 0.0f));
-    } else if (glfwGetKey(window, GLFW_KEY_4)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix, glm::vec3(0.1f, 0.0f, 0.0f));
-    }else if (glfwGetKey(window, GLFW_KEY_5)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix, glm::vec3(0.0f, 0.0f, 1.0f));
-    } else if (glfwGetKey(window, GLFW_KEY_6)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix, glm::vec3(0.0f, 0.0f, -1.0f));
-    }else if(glfwGetKey(window, GLFW_KEY_M)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::scale(listObjectInfos.at(pos)->modelMatrix, glm::vec3(1.1f));
-    }else if(glfwGetKey(window, GLFW_KEY_N)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::scale(listObjectInfos.at(pos)->modelMatrix, glm::vec3(0.9f));
-    }else if(glfwGetKey(window, GLFW_KEY_V)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::rotate(listObjectInfos.at(pos)->modelMatrix, glm::radians(1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    }else if(glfwGetKey(window, GLFW_KEY_B)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::rotate(listObjectInfos.at(pos)->modelMatrix, glm::radians(-1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+void updateTransformationData(int pos, GLFWwindow * &window, std::vector<ObjectInformation*> listObjectInfos,
+                              float &deltaTime) {
+    const float moveSpeed = 5.0f;  // Units per second
+    const float scaleSpeed = 0.5f; // Scale factor per second
+    const float rotateSpeedDegrees = 35.0f; // Degrees per second
+    const float rotateSpeedRadians = glm::radians(rotateSpeedDegrees); // Convert to radians per second
+
+    bool shiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+        if(shiftPressed) {
+            listObjectInfos.at(pos)->modelMatrix = glm::translate(listObjectInfos.at(pos)->modelMatrix,
+                                                                  glm::vec3(0.0f, moveSpeed * deltaTime, 0.0f));
+        }else{
+            listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix,
+                                                                   glm::vec3(0.0f, -moveSpeed * deltaTime, 0.0f));
+        }
+    } else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+        if(shiftPressed) {
+            listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix,
+                                                                   glm::vec3(-moveSpeed * deltaTime, 0.0f, 0.0f));
+        }else{
+            listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix,
+                                                                   glm::vec3(moveSpeed * deltaTime, 0.0f, 0.0f));
+        }
+    } else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
+        if(shiftPressed) {
+            listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix,
+                                                                   glm::vec3(0.0f, 0.0f, moveSpeed * deltaTime));
+        }else{
+            listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix,
+                                                                   glm::vec3(0.0f, 0.0f,- moveSpeed * deltaTime));
+        }
+    } else if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) {
+        if(shiftPressed) {
+            listObjectInfos.at(pos)->modelMatrix = glm::scale(listObjectInfos.at(pos)->modelMatrix, glm::vec3(1.0f + scaleSpeed * deltaTime));
+        }else{
+            listObjectInfos.at(pos)->modelMatrix = glm::scale(listObjectInfos.at(pos)->modelMatrix, glm::vec3(1.0f - scaleSpeed * deltaTime));
+        }
+    }else if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS) {
+        if(shiftPressed) {
+            listObjectInfos.at(pos)->modelMatrix = glm::rotate(listObjectInfos.at(pos)->modelMatrix, glm::radians(rotateSpeedDegrees * deltaTime), glm::vec3(0.0f, 0.0f, 1.0f));
+        }else{
+            listObjectInfos.at(pos)->modelMatrix = glm::rotate(listObjectInfos.at(pos)->modelMatrix, glm::radians(- rotateSpeedDegrees * deltaTime), glm::vec3(0.0f, 0.0f, 1.0f));
+        }
     }
 }
 
