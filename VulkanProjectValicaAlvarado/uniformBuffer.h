@@ -401,7 +401,8 @@ void createUniformBuffers(VkDevice &device, VkPhysicalDevice &physicalDevice, Vk
 void createIndexBuffer(VkDevice &device, VkPhysicalDevice &physicalDevice, std::vector<uint32_t> &indices,
                        VkCommandPool &commandPool, VkQueue &graphicsQueue, VkBuffer &indexBuffer,
                        VkDeviceMemory &indexBufferMemory) {
-    VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+    VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size() * 100;
+    VkDeviceSize actualBufferSize = sizeof(indices[0]) * indices.size();
 
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
@@ -411,7 +412,7 @@ void createIndexBuffer(VkDevice &device, VkPhysicalDevice &physicalDevice, std::
 
     void* data;
     vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, indices.data(), (size_t) bufferSize);
+    memcpy(data, indices.data(), (size_t) actualBufferSize);
     vkUnmapMemory(device, stagingBufferMemory);
 
     createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,

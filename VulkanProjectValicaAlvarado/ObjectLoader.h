@@ -54,7 +54,6 @@ private:
     std::vector<Vertex> * vertices;
     std::vector<uint32_t> * indices;
 
-
 public:
 
     ObjectLoader();
@@ -68,6 +67,9 @@ public:
     void loadModel(ObjectInformation* objectInformation, uint32_t index);
     void loadAllElements();
     void fillVertexAndIndices();
+
+    void addObject(ObjectInformation* objectInformation);
+    void updateVerticesAndIndices(ObjectInformation* objectInformation);
 };
 
 
