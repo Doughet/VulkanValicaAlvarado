@@ -42,7 +42,7 @@ struct LightsBufferObject {
 };
 
 struct MatrixBufferObject{
-    glm::mat4 model[20]; // Increase the number if I want to add more models
+    glm::mat4 model[20];
 };
 
 UniformBufferObject ubo{};
@@ -108,7 +108,6 @@ void updateMatrixUniformBuffer(uint32_t currentImage, std::vector<ObjectInformat
 
     memcpy(matrixBufferMapped[currentImage], &mubo, sizeof(mubo));
 }
-
 
 void updateUniformBuffer(uint32_t currentImage, GLFWwindow * &window,
                          std::vector<void*> &uniformBuffersMapped, std::vector<void*> &lightsBuffersMapped) {
@@ -331,9 +330,9 @@ void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkCom
 }
 
 void createMatrixUniformBuffer(VkDevice &device, VkPhysicalDevice &physicalDevice, VkExtent2D &swapChainExtent,
-                               std::vector<VkBuffer> &uniformBuffers, std::vector<VkDeviceMemory> &uniformBuffersMemory,
-                               std::vector<void*> &uniformBuffersMapped,
-                               const int maxFramesInFlight) {
+                          std::vector<VkBuffer> &uniformBuffers, std::vector<VkDeviceMemory> &uniformBuffersMemory,
+                          std::vector<void*> &uniformBuffersMapped,
+                          const int maxFramesInFlight) {
 
     MatrixBufferObject mubo {};
     mubo.model[0] = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 10.0f, 10.0f));

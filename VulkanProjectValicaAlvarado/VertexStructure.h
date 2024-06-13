@@ -56,7 +56,7 @@ struct Vertex {
 
         attributeDescriptions[4].binding = 0;
         attributeDescriptions[4].location = 4;
-        attributeDescriptions[4].format = VK_FORMAT_R32_UINT; // Add format for index
+        attributeDescriptions[4].format = VK_FORMAT_R32_SINT; // Add format for index
         attributeDescriptions[4].offset = offsetof(Vertex, objectIndex);
 
         return attributeDescriptions;
