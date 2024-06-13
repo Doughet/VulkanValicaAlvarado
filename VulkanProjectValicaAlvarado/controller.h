@@ -8,7 +8,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
 
-
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
@@ -23,47 +22,6 @@
 #include <optional>
 #include <set>
 #include <unordered_map>
-
-
-void updateTransformationData(int pos, GLFWwindow * &window, std::vector<ObjectInformation*> listObjectInfos) {
-    if (glfwGetKey(window, GLFW_KEY_1)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix, glm::vec3(0.0f, 0.1f, 0.0f));
-    } else if (glfwGetKey(window, GLFW_KEY_2)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix, glm::vec3(0.0f, -0.1f, 0.0f));
-    } else if (glfwGetKey(window, GLFW_KEY_3)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix, glm::vec3(-0.1f, 0.0f, 0.0f));
-    } else if (glfwGetKey(window, GLFW_KEY_4)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix, glm::vec3(0.1f, 0.0f, 0.0f));
-    }else if (glfwGetKey(window, GLFW_KEY_5)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix, glm::vec3(0.0f, 0.0f, 1.0f));
-    } else if (glfwGetKey(window, GLFW_KEY_6)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix, glm::vec3(0.0f, 0.0f, -1.0f));
-    }else if(glfwGetKey(window, GLFW_KEY_M)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::scale(listObjectInfos.at(pos)->modelMatrix, glm::vec3(1.1f));
-    }else if(glfwGetKey(window, GLFW_KEY_N)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::scale(listObjectInfos.at(pos)->modelMatrix, glm::vec3(0.9f));
-    }else if(glfwGetKey(window, GLFW_KEY_V)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::rotate(listObjectInfos.at(pos)->modelMatrix, glm::radians(1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    }else if(glfwGetKey(window, GLFW_KEY_B)) {
-        listObjectInfos.at(pos)->modelMatrix = glm::rotate(listObjectInfos.at(pos)->modelMatrix, glm::radians(-1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    }
-}
-
-void changeCurrentModel(bool &keyPressed, GLFWwindow *&window, int &currentTransformationModel,
-                        std::vector<ObjectInformation*> listObjectInfos){
-    if(keyPressed == false) {
-        if(glfwGetKey(window, GLFW_KEY_8) && currentTransformationModel != 0) {
-            keyPressed = true;
-            currentTransformationModel--;
-        }else if (glfwGetKey(window, GLFW_KEY_9) && currentTransformationModel != listObjectInfos.size() - 1){
-            keyPressed = true;
-            currentTransformationModel++;
-        }
-    }
-    if(!glfwGetKey(window, GLFW_KEY_9) && !glfwGetKey(window, GLFW_KEY_8)){
-        keyPressed = false;
-    }
-}
 
 // Control Wrapper
 void handleGamePad(int id,  glm::vec3 &m, glm::vec3 &r, bool &fire) {
