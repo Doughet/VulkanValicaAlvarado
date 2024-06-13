@@ -26,11 +26,14 @@
 #include <set>
 #include <unordered_map>
 
+
 #include "ObjectLoader.h"
 #include "texturesManagement.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
+
+const std::string TEXTURE_PATH = "textures/";
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -80,6 +83,7 @@ struct SwapChainSupportDetails {
     std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR> presentModes;
 };
+
 
 namespace std {
     template<> struct hash<Vertex> {
@@ -182,9 +186,6 @@ private:
 
     bool framebufferResized = false;
 
-    bool keyPressed = false;
-    int currentTransformationModel = 0;
-
     VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
     void initWindow() {
@@ -193,7 +194,6 @@ private:
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
         window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
-        //glfwSetKeyCallback(window, );
         glfwSetWindowUserPointer(window, this);
         glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
     }
@@ -210,7 +210,6 @@ private:
         pickPhysicalDevice();
         createLogicalDevice();
         createSwapChain();
-
         createImageViews();
         createRenderPass();
         createDescriptorSetLayout();
@@ -225,8 +224,10 @@ private:
         createTextureImageView(device, textureImage, mipLevels, textureImageView);
         createTextureSampler(physicalDevice, device, textureSampler);
 
+
         createObjectLoader();
         launchObjectLoader();
+
 
         //loadSceneSphereElements();
 
@@ -246,15 +247,8 @@ private:
     }
 
     void mainLoop() {
-
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
-
-            changeCurrentModel(keyPressed, window, currentTransformationModel, listObjectInfos);
-
-            updateTransformationData(currentTransformationModel, window, listObjectInfos);
-            updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped);
-
             drawFrame();
         }
 
@@ -1131,7 +1125,7 @@ private:
 
         ObjectInformation objTurret {};
         objTurret.modelPath = "turret.obj";
-        objTurret.texturePath = "furniture/PoolFloats/Rainbow.png";
+        objTurret.texturePath = "";
         objTurret.mustBeLoaded = true;
         objTurret.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(15.0f, 15.0f, 15.0f));
         objTurret.texturePath = "tititiitit";
@@ -1386,7 +1380,6 @@ private:
 
 
     void createVertexBuffer() {
-
         VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
         VkBuffer stagingBuffer;
@@ -1619,8 +1612,6 @@ private:
         return VK_FALSE;
     }
 };
-
-
 
 int main() {
     HelloTriangleApplication app;
