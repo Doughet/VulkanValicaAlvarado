@@ -195,7 +195,10 @@ private:
     VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
     bool keyPressed = false;
+    bool keyPressedAdd = false;
     int currentTransformationModel = 0;
+    uint32_t addObjectIndex = 0;
+    bool mustAddObject = false;
 
     double lastTime = glfwGetTime();
 
@@ -278,58 +281,87 @@ private:
             lastTime = currentTime;
 
             changeCurrentModel(keyPressed, window, currentTransformationModel, listObjectInfos);
+            addObject(keyPressedAdd, window, addObjectIndex, mustAddObject);
             updateTransformationData(currentTransformationModel, window, listObjectInfos, deltaTime);
             updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped);
             glfwPollEvents();
 
-            if(isStart){
-                uint32_t verticesSize = sizeof(vertices[0]) * vertices.size();
-                uint32_t indicesSize = sizeof(indices[0]) * indices.size();
+            if(mustAddObject){
 
-                ObjectInformation objectInformation {};
-                objectInformation.modelPath = "furniture/Bamboo/bamboo.obj";
-                objectInformation.texturePath = "furniture/Bamboo/bambooTexture.jpeg";
-                objectInformation.mustBeLoaded = true;
-                objectInformation.modelMatrix = glm::mat4(1.0f);
-
-                listActualObjectInfos.push_back(objectInformation);
-                objectLoader.addObject(&listActualObjectInfos[listActualObjectInfos.size() - 1], texturePaths);
+                addObjectDynamic();
 
 
-                updateVertexBuffer(listActualObjectInfos[listActualObjectInfos.size() - 1].vertices, verticesSize);
-                updateIndexBuffer(listActualObjectInfos[listActualObjectInfos.size() - 1].localIndices, indicesSize);
-
-
-                //update the textureImages, ImageViews, ImageSamplers, ImageMemories
-                //update the texture images and memories
-                updateTextureImagesAdd(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImages, textureImageMemorys, listActualObjectInfos[listActualObjectInfos.size() - 1].texturePath);
-                //update the texture image views
-                updateTextureImageViewsAdd(device, textureImages.at(textureImages.size() -1), mipLevels, textureImageViews);
-                //update the textyre image samplers
-                updateTextureImageSamplersAdd(physicalDevice, device, textureSamplers);
-                //update the matrices
-
-                //update the descriptors ?
-                vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
-                createDescriptorSetLayout();
-
-                vkFreeDescriptorSets(device, descriptorPool, descriptorSets.size(), descriptorSets.data());
-
-                descriptorSets.clear();
-
-                vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-                vkDestroyPipeline(device, graphicsPipeline, nullptr);
-                createGraphicsPipeline();
-
-                createDescriptorSets();
-
-                isStart = false;
             }
 
             drawFrame();
         }
 
         vkDeviceWaitIdle(device);
+    }
+
+    void addObjectDynamic() {
+        uint32_t verticesSize = sizeof(vertices[0]) * vertices.size();
+        uint32_t indicesSize = sizeof(indices[0]) * indices.size();
+
+        ObjectInformation objectInformation {};
+        objectInformation.modelPath = "furniture/Laptop/SAMSUNG_Laptop.obj";
+        objectInformation.texturePath = "furniture/Laptop/SLT_Dif.png";
+        objectInformation.mustBeLoaded = true;
+        objectInformation.modelMatrix = glm::mat4(1.0f);
+        chooseObjectToAdd(addObjectIndex, objectInformation);
+
+        listActualObjectInfos.push_back(objectInformation);
+        objectLoader.addObject(&listActualObjectInfos[listActualObjectInfos.size() - 1], texturePaths);
+
+
+        updateVertexBuffer(listActualObjectInfos[listActualObjectInfos.size() - 1].vertices, verticesSize);
+        updateIndexBuffer(listActualObjectInfos[listActualObjectInfos.size() - 1].localIndices, indicesSize);
+
+
+        //update the textureImages, ImageViews, ImageSamplers, ImageMemories
+//update the texture images and memories
+        updateTextureImagesAdd(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImages,
+                               textureImageMemorys, listActualObjectInfos[listActualObjectInfos.size() - 1].texturePath);
+        //update the texture image views
+        updateTextureImageViewsAdd(device, textureImages.at(textureImages.size() - 1), mipLevels, textureImageViews);
+        //update the textyre image samplers
+        updateTextureImageSamplersAdd(physicalDevice, device, textureSamplers);
+        //update the descriptors
+        recreateDescriptorsAndPipeline();
+
+        mustAddObject = false;
+    }
+
+    void chooseObjectToAdd(uint32_t objectChosen, ObjectInformation & objectInformation){
+        if(objectChosen == 0){
+            objectInformation.modelPath = "furniture/Bamboo/bamboo.obj";
+            objectInformation.texturePath = "furniture/Bamboo/bambooTexture.jpeg";
+            objectInformation.mustBeLoaded = true;
+            objectInformation.modelMatrix = glm::mat4(1.0f);
+        }else if(objectChosen == 1){
+            objectInformation.modelPath = "furniture/CoconutTree/coconutTree.obj";
+            objectInformation.texturePath = "furniture/CoconutTree/coconutTreeTexture.jpg";
+            objectInformation.mustBeLoaded = true;
+            objectInformation.modelMatrix = glm::mat4(1.0f);
+        }else if(objectChosen == 2){
+            objectInformation.modelPath = "furniture/Laptop/SAMSUNG_Laptop.obj";
+            objectInformation.texturePath = "furniture/Laptop/SLT_Dif.png";
+            objectInformation.mustBeLoaded = true;
+            objectInformation.modelMatrix = glm::mat4(1.0f);
+        }
+    }
+
+    void recreateDescriptorsAndPipeline() {
+        vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+        vkFreeDescriptorSets(device, descriptorPool, descriptorSets.size(), descriptorSets.data());
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+        vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+        descriptorSets.clear();
+        createDescriptorSetLayout();
+
+        createGraphicsPipeline();
+
+        createDescriptorSets();
     }
 
     void cleanupSwapChain() {
