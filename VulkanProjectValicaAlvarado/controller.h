@@ -88,6 +88,27 @@ void changeCurrentModel(bool &keyPressed, GLFWwindow *&window, int &currentTrans
     }
 }
 
+void addObject(bool &keyPressedAdd, GLFWwindow *&window, uint32_t & selectedObject, bool &mustAdd){
+    if(keyPressedAdd == false) {
+        if(glfwGetKey(window, GLFW_KEY_Y)) {
+            keyPressedAdd = true;
+            selectedObject = 0;
+            mustAdd = true;
+        }else if (glfwGetKey(window, GLFW_KEY_U)){
+            keyPressedAdd = true;
+            selectedObject = 1;
+            mustAdd = true;
+        }else if (glfwGetKey(window, GLFW_KEY_I)){
+            keyPressedAdd = true;
+            selectedObject = 2;
+            mustAdd = true;
+        }
+    }
+    if(!glfwGetKey(window, GLFW_KEY_Y) && !glfwGetKey(window, GLFW_KEY_U) && !glfwGetKey(window, GLFW_KEY_I)){
+        keyPressedAdd = false;
+    }
+}
+
 
 // Control Wrapper
 void handleGamePad(int id,  glm::vec3 &m, glm::vec3 &r, bool &fire) {

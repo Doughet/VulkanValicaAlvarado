@@ -336,6 +336,7 @@ void createMatrixUniformBuffer(VkDevice &device, VkPhysicalDevice &physicalDevic
     mubo.model[0] = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 10.0f, 10.0f));
     mubo.model[1] = glm::translate(glm::mat4(1.0f), glm::vec3(15, 0, 0));
     mubo.model[2] = glm::translate(glm::mat4(1.0f), glm::vec3(15, 0, 0));
+    mubo.model[3] = glm::translate(glm::mat4(1.0f), glm::vec3(15, 0, 0));
 
     VkDeviceSize bufferSize1 = sizeof(MatrixBufferObject);
 
