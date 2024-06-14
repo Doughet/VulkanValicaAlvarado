@@ -153,9 +153,13 @@ void ObjectLoader::fillVertexAndIndices(){
 }
 
 
-void ObjectLoader::addObject(ObjectInformation* objectInformation){
+void ObjectLoader::addObject(ObjectInformation* objectInformation, std::vector<std::string> & texturePaths){
 
-    loadModel(objectInformation, listObjects->size());
+    if(objectInformation->mustBeLoaded){
+        loadModel(objectInformation, listObjects->size());
+    }
+
+    texturePaths.push_back(objectInformation->texturePath);
 
     listObjects->push_back(objectInformation);
 

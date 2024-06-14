@@ -287,17 +287,41 @@ private:
                 uint32_t indicesSize = sizeof(indices[0]) * indices.size();
 
                 ObjectInformation objectInformation {};
-                objectInformation.modelMatrix = glm::mat4(1.0f);
-                objectInformation.texturePath = "";
-                objectInformation.modelPath = "furniture/CoconutTree/coconutTree.obj";
+                objectInformation.modelPath = "furniture/Bamboo/bamboo.obj";
+                objectInformation.texturePath = "furniture/Bamboo/bambooTexture.jpeg";
                 objectInformation.mustBeLoaded = true;
+                objectInformation.modelMatrix = glm::mat4(1.0f);
 
                 listActualObjectInfos.push_back(objectInformation);
-                objectLoader.addObject(&listActualObjectInfos[listActualObjectInfos.size() - 1]);
+                objectLoader.addObject(&listActualObjectInfos[listActualObjectInfos.size() - 1], texturePaths);
 
 
                 updateVertexBuffer(listActualObjectInfos[listActualObjectInfos.size() - 1].vertices, verticesSize);
                 updateIndexBuffer(listActualObjectInfos[listActualObjectInfos.size() - 1].localIndices, indicesSize);
+
+
+                //update the textureImages, ImageViews, ImageSamplers, ImageMemories
+                //update the texture images and memories
+                updateTextureImagesAdd(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImages, textureImageMemorys, listActualObjectInfos[listActualObjectInfos.size() - 1].texturePath);
+                //update the texture image views
+                updateTextureImageViewsAdd(device, textureImages.at(textureImages.size() -1), mipLevels, textureImageViews);
+                //update the textyre image samplers
+                updateTextureImageSamplersAdd(physicalDevice, device, textureSamplers);
+                //update the matrices
+
+                //update the descriptors ?
+                vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+                createDescriptorSetLayout();
+
+                vkFreeDescriptorSets(device, descriptorPool, descriptorSets.size(), descriptorSets.data());
+
+                descriptorSets.clear();
+
+                vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+                vkDestroyPipeline(device, graphicsPipeline, nullptr);
+                createGraphicsPipeline();
+
+                createDescriptorSets();
 
                 isStart = false;
             }
@@ -739,6 +763,7 @@ private:
         if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor set layout!");
         }
+
     }
 
     void createGraphicsPipeline() {
@@ -898,7 +923,6 @@ private:
         for (int i = 0; i < listObjectInfos.size(); ++i) {
             texturePaths.push_back(listActualObjectInfos.at(i).texturePath);
         }
-        texturePaths.push_back("furniture/CoconutTree/coconutTreeTexture.jpg");
     }
 
     void createFramebuffers() {
@@ -1344,13 +1368,14 @@ private:
         poolSizes[3].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[3].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
         poolSizes[4].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[4].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT) * texturePaths.size();
+        poolSizes[4].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT) * (texturePaths.size() + 1);
 
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         poolInfo.pPoolSizes = poolSizes.data();
+        poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
         poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
         if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
@@ -1363,7 +1388,6 @@ private:
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = descriptorPool;
-        //MAYBE HERE
         allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
         allocInfo.pSetLayouts = layouts.data();
 
