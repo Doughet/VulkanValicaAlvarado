@@ -31,6 +31,8 @@ void updateTransformationData(int pos, GLFWwindow * &window, std::vector<ObjectI
     const float rotateSpeedDegrees = 35.0f; // Degrees per second
     const float rotateSpeedRadians = glm::radians(rotateSpeedDegrees); // Convert to radians per second
 
+    std::cout << pos << std::endl;
+
     bool shiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
 
     if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {

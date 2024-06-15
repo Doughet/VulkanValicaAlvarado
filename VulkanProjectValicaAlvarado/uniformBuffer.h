@@ -400,7 +400,7 @@ void createUniformBuffers(VkDevice &device, VkPhysicalDevice &physicalDevice, Vk
 void createIndexBuffer(VkDevice &device, VkPhysicalDevice &physicalDevice, std::vector<uint32_t> &indices,
                        VkCommandPool &commandPool, VkQueue &graphicsQueue, VkBuffer &indexBuffer,
                        VkDeviceMemory &indexBufferMemory) {
-    VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size() * 100;
+    VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size() * 1000;
     VkDeviceSize actualBufferSize = sizeof(indices[0]) * indices.size();
 
     VkBuffer stagingBuffer;

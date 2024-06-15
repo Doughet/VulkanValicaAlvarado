@@ -7,10 +7,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
-
+/*
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
-
+*/
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -290,10 +290,12 @@ private:
             glfwPollEvents();
 
             if(mustAddObject){
-
                 addObjectDynamic();
+            }
 
-
+            if(isStart){
+                deleteModel(0);
+                isStart = false;
             }
 
             drawFrame();
@@ -372,27 +374,85 @@ private:
      * from listObjectInfos
      */
     void deleteModel(int posModel){
+        ObjectInformation objectInformation {};
+        objectInformation = listActualObjectInfos.at(posModel);
+
         /* 1: Delete position of the VertexBuffer and move the following positions one step to the lef so that there are
          no empty spots (same for the IndexBuffer)*/
+        //Move the points in the vectors
+        size_t sizeVertices = objectInformation.vertices.size();
+        size_t sizeIndices = objectInformation.localIndices.size();
+
+        movePointsVertexVector(posModel, sizeVertices);
+        movePointsIndicesVector(posModel, sizeIndices);
+        //Update the buffers
+
+        //Destroy the previous ones
+        vkDestroyBuffer(device, indexBuffer, nullptr);
+        vkFreeMemory(device, indexBufferMemory, nullptr);
+
+        vkDestroyBuffer(device, vertexBuffer, nullptr);
+        vkFreeMemory(device, vertexBufferMemory, nullptr);
+
+        //Recreate the new ones
+        //TODO add a create functions with a size for the buffers
+        createVertexBuffer();
+        createIndexBuffer(device, physicalDevice, indices, commandPool, graphicsQueue,
+                          indexBuffer, indexBufferMemory);
+
 
 
 
         // 2: Erase, remove or delete all the things related to the textures
+        //TEXTURE IMAGE
+        //TEXTURE MEMORY
+        deleteTextureImages(device, textureImages, textureImageMemorys, posModel);
+        //TEXTURE IMAGE VIEW
+        deleteTextureImagesViews(device, posModel, mipLevels, textureImageViews);
+        //TEXTURE SAMPLER
+        deleteTextureImageSampler(device, textureSamplers, posModel);
+
+        texturePaths.erase(texturePaths.begin() + posModel);
 
         // 3: Remove Matrix  and move all the following matrix one step to the left
 
+        //SHOULD BE DONE BY DEFAULT
+
         // 4: Remove  object from listObjectInfos listActualObjectInfos
 
-        for(int i = posModel; i < listObjectInfos.size()-1; i++){
-            listObjectInfos[i] =  listObjectInfos[i+1];
-            listActualObjectInfos[i] = listActualObjectInfos[i+1];
-        }
+        listActualObjectInfos.erase(listActualObjectInfos.begin() + posModel);
         listObjectInfos.pop_back();
-        listActualObjectInfos.pop_back();
+
+        //ALSO MOVE THE POINTS
+        movePointsObjectInfos(posModel);
 
         // 5: Erase, delete, remove pipeline, descriptor...
 
-        // recreateDescriptorsAndPipeline()
+        recreateDescriptorsAndPipeline();
+    }
+
+    void movePointsVertexVector(uint32_t objectPos, uint32_t objectSizeVertices){
+        vertices.erase(vertices.begin() + objectPos, vertices.begin() + objectPos + objectSizeVertices);
+
+        auto displacement = [](Vertex x) { return Vertex{x.pos, x.color, x.texCoord, x.normal, x.objectIndex - 1}; };
+
+        std::transform(vertices.begin() + objectPos, vertices.end(), vertices.begin() + objectPos, displacement);
+    }
+
+    void movePointsIndicesVector(uint32_t objectPos, uint32_t objectSizeIndices){
+        indices.erase(indices.begin() + objectPos, indices.begin() + objectPos + objectSizeIndices);
+
+        auto displacement = [&objectSizeIndices](int x) { return x - objectSizeIndices; };
+
+        std::transform(indices.begin() + objectPos, indices.end(), indices.begin() + objectPos, displacement);
+    }
+
+    void movePointsObjectInfos(uint32_t objectPos){
+        auto displacement = [](Vertex x) { return Vertex{x.pos, x.color, x.texCoord, x.normal, x.objectIndex - 1}; };
+
+        for (int i = objectPos; i < listObjectInfos.size(); ++i) {
+            std::transform(listObjectInfos[i]->vertices.begin(), listObjectInfos[i]->vertices.end(), listObjectInfos[i]->vertices.begin(), displacement);
+        }
     }
 
     void cleanupSwapChain() {
@@ -968,7 +1028,7 @@ private:
 
         ObjectInformation objMorris {};
         objMorris.modelPath = "furniture/MorrisChair/morrisChair.obj";
-        objMorris.texturePath = "furniture/House/mondrian.png";
+        objMorris.texturePath = "furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png";
         objMorris.mustBeLoaded = true;
         objMorris.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 3.0f, 3.0f));
 
@@ -1430,7 +1490,7 @@ private:
         poolSizes[3].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[3].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
         poolSizes[4].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[4].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT) * (texturePaths.size() + 1);
+        poolSizes[4].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT) * (texturePaths.size() + 3);
 
 
         VkDescriptorPoolCreateInfo poolInfo{};
@@ -1627,7 +1687,7 @@ private:
 
 
     void createVertexBuffer() {
-        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size() * 100;
+        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size() * 1000;
         VkDeviceSize actualBufferSize = sizeof(vertices[0]) * vertices.size();
 
         VkBuffer stagingBuffer;

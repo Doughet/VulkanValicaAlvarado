@@ -135,6 +135,12 @@ VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags a
     return imageView;
 }
 
+void deleteTextureImageSampler(VkDevice &device, std::vector<VkSampler> & textureSamplers, uint32_t deleteIndex){
+    vkDestroySampler(device, textureSamplers[deleteIndex], nullptr);
+
+    textureSamplers.erase(textureSamplers.begin() + deleteIndex);
+}
+
 void updateTextureImageSamplersAdd(VkPhysicalDevice &physicalDevice, VkDevice &device, std::vector<VkSampler> & textureSamplers){
     VkSampler textureSampler;
 
@@ -248,6 +254,13 @@ void loadTextures(std::vector<tinyobj::material_t> &materials,
             //loadTexture(textureFile, textureImages[i], textureImageViews[i], textureSamplers[i]);
         }
     }
+}
+
+void deleteTextureImagesViews(VkDevice &device, uint32_t indexDelete, uint32_t &mipLevels,
+                                    std::vector<VkImageView> &textureImageViews){
+    vkDestroyImageView(device, textureImageViews[indexDelete], nullptr);
+
+    textureImageViews.erase(textureImageViews.begin() + indexDelete);
 }
 
 void updateTextureImageViewsAdd(VkDevice &device, VkImage &textureImage, uint32_t &mipLevels,
@@ -415,6 +428,17 @@ void createTextureImages(uint32_t &mipLevels, VkDevice &device, VkPhysicalDevice
     }
 
 
+}
+
+void deleteTextureImages(VkDevice &device,
+                         std::vector<VkImage> &textureImages,
+                         std::vector<VkDeviceMemory> &textureImageMemorys, uint32_t indexDelete){
+    vkDestroyImage(device, textureImages[indexDelete], nullptr);
+    //THIS CAN BE A PROBLEM
+    vkFreeMemory(device, textureImageMemorys[indexDelete], nullptr);
+
+    textureImages.erase(textureImages.begin() + indexDelete);
+    textureImageMemorys.erase(textureImageMemorys.begin() + indexDelete);
 }
 
 void updateTextureImagesAdd(uint32_t &mipLevels, VkDevice &device, VkPhysicalDevice &physicalDevice,
