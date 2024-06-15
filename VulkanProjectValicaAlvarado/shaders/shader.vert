@@ -7,7 +7,7 @@ layout(binding = 0) uniform UniformBufferObject {
 } ubo;
 
 layout(binding = 3) uniform MatrixBufferObject {
-    mat4 model[5];
+    mat4 model[20];
 } mubo;
 
 layout(location = 0) in vec3 inPosition;

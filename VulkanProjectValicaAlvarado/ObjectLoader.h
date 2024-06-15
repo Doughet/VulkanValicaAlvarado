@@ -68,8 +68,8 @@ public:
     void loadAllElements();
     void fillVertexAndIndices();
 
-    void addObject(ObjectInformation* objectInformation, std::vector<std::string> & texturePaths);
-    void updateVerticesAndIndices(ObjectInformation* objectInformation);
+    void addObject(ObjectInformation* objectInformation, std::vector<std::string> & texturePaths, std::vector<ObjectInformation*> &listObjectInfos, std::vector<Vertex> & vertices, std::vector<uint32_t> & indices);
+    void updateVerticesAndIndices(ObjectInformation* objectInformation, std::vector<Vertex> & vertices, std::vector<uint32_t> & indices);
 };
 
 

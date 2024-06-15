@@ -153,33 +153,40 @@ void ObjectLoader::fillVertexAndIndices(){
 }
 
 
-void ObjectLoader::addObject(ObjectInformation* objectInformation, std::vector<std::string> & texturePaths){
+void ObjectLoader::addObject(ObjectInformation* objectInformation, std::vector<std::string> & texturePaths, std::vector<ObjectInformation*> &listObjectInfos, std::vector<Vertex> & vertices, std::vector<uint32_t> & indices){
 
     if(objectInformation->mustBeLoaded){
-        loadModel(objectInformation, listObjects->size());
+        loadModel(objectInformation, texturePaths.size());
     }
 
     texturePaths.push_back(objectInformation->texturePath);
 
-    listObjects->push_back(objectInformation);
+    listObjectInfos.push_back(objectInformation);
 
-    updateVerticesAndIndices(objectInformation);
+    updateVerticesAndIndices(objectInformation, vertices, indices);
 }
 
-void ObjectLoader::updateVerticesAndIndices(ObjectInformation* objectInformation){
+void ObjectLoader::updateVerticesAndIndices(ObjectInformation* objectInformation, std::vector<Vertex> & vertices, std::vector<uint32_t> & indices){
 
-    int indicesCount = vertices->size();
+    int indicesCount = vertices.size();
 
     // Adding all the vertices
-    vertices->insert(vertices->end(), objectInformation->vertices.begin(), objectInformation->vertices.end());
+    vertices.insert(vertices.end(), objectInformation->vertices.begin(), objectInformation->vertices.end());
 
     //Adding the mapped indices
     std::transform(objectInformation->localIndices.begin(),
                    objectInformation->localIndices.end(),
-                   std::back_inserter(*indices),
+                   std::back_inserter(indices),
                    [&indicesCount](uint32_t x){return x + indicesCount;});
 
     indicesCount += objectInformation->vertices.size();
+
+    std::cout << "THE LAST: " + objectInformation->modelPath + " \n";
+    std::cout << "THE LAST: " + objectInformation->modelPath + " \n";
+    std::cout << "THE LAST: " + objectInformation->modelPath + " \n";
+    std::cout << indices.back();
+    std::cout << std::endl;
+
 
     std::cout << "Locally Buffers: " + objectInformation->modelPath + " \n";
 

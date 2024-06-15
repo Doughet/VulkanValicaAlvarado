@@ -294,11 +294,14 @@ private:
 
             if(mustAddObject){
                 addObjectDynamic();
+
+                int a = 0;
             }
 
             if(mustDelete){
                 deleteModel(currentTransformationModel);
                 mustDelete = false;
+                currentTransformationModel = 0;
             }
 
             drawFrame();
@@ -319,11 +322,23 @@ private:
         chooseObjectToAdd(addObjectIndex, objectInformation);
 
         listActualObjectInfos.push_back(objectInformation);
-        objectLoader.addObject(&listActualObjectInfos[listActualObjectInfos.size() - 1], texturePaths);
+        objectLoader.addObject(&listActualObjectInfos[listActualObjectInfos.size() - 1], texturePaths, listObjectInfos, vertices, indices);
 
+        for (int i = 0; i < listActualObjectInfos.size(); ++i) {
+            listObjectInfos[i] = &listActualObjectInfos[i];
+        }
 
-        updateVertexBuffer(listActualObjectInfos[listActualObjectInfos.size() - 1].vertices, verticesSize);
-        updateIndexBuffer(listActualObjectInfos[listActualObjectInfos.size() - 1].localIndices, indicesSize);
+        vkDestroyBuffer(device, indexBuffer, nullptr);
+        vkFreeMemory(device, indexBufferMemory, nullptr);
+
+        vkDestroyBuffer(device, vertexBuffer, nullptr);
+        vkFreeMemory(device, vertexBufferMemory, nullptr);
+
+        //Recreate the new ones
+        //TODO add a create functions with a size for the buffers
+        createVertexBuffer();
+        createIndexBuffer(device, physicalDevice, indices, commandPool, graphicsQueue,
+                          indexBuffer, indexBufferMemory);
 
 
         //update the textureImages, ImageViews, ImageSamplers, ImageMemories
@@ -1042,8 +1057,8 @@ private:
         objHouse.modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(60, 0, 0));
 
         ObjectInformation objMorris {};
-        objMorris.modelPath = "furniture/MorrisChair/morrisChair.obj";
-        objMorris.texturePath = "furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png";
+        objMorris.modelPath = "furniture/CoconutTree/coconutTree.obj";
+        objMorris.texturePath = "furniture/CoconutTree/coconutTreeTexture.jpg";
         objMorris.mustBeLoaded = true;
         objMorris.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 3.0f, 3.0f));
 
@@ -1393,36 +1408,91 @@ private:
 
     }
 
-    void updateIndexBuffer(const std::vector<uint32_t>& newIndices, uint32_t currentIndicesSize){
+    void updateIndexBuffer(const std::vector<uint32_t>& newIndices, uint32_t currentIndicesSize) {
         VkDeviceSize newSize = sizeof(newIndices[0]) * newIndices.size();
         VkDeviceSize currentSize = currentIndicesSize;
         VkDeviceSize totalSize = newSize + currentSize;
 
-        // Create a staging buffer for the new data
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        createBuffer(newSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                     stagingBuffer, stagingBufferMemory, device, physicalDevice);
+        if (true) {
+            VkBuffer newBuffer;
+            VkDeviceMemory newBufferMemory;
 
-        // Map and copy the new data to the staging buffer
-        void* data;
-        vkMapMemory(device, stagingBufferMemory, 0, newSize, 0, &data);
-        memcpy(data, newIndices.data(), (size_t) newSize);
-        vkUnmapMemory(device, stagingBufferMemory);
+            // Calculate new buffer size, ensure it has sufficient space
+            VkDeviceSize newBufferSize = totalSize * 2;
 
-        // Copy the new data from the staging buffer to the index buffer
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandPool, device);
-        VkBufferCopy copyRegion{};
-        copyRegion.srcOffset = 0;
-        copyRegion.dstOffset = currentSize; // Append the new data at the end of the existing data
-        copyRegion.size = newSize;
-        vkCmdCopyBuffer(commandBuffer, stagingBuffer, indexBuffer, 1, &copyRegion);
-        endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
+            // Create the new buffer with necessary usage flags
+            createBuffer(newBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, newBuffer, newBufferMemory, device, physicalDevice);
 
-        // Clean up the staging buffer
-        vkDestroyBuffer(device, stagingBuffer, nullptr);
-        vkFreeMemory(device, stagingBufferMemory, nullptr);
+            // Create a staging buffer for the new data
+            VkBuffer stagingBuffer;
+            VkDeviceMemory stagingBufferMemory;
+            createBuffer(newSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                         stagingBuffer, stagingBufferMemory, device, physicalDevice);
+
+            // Map and copy the new data to the staging buffer
+            void* data;
+            vkMapMemory(device, stagingBufferMemory, 0, newSize, 0, &data);
+            memcpy(data, newIndices.data(), static_cast<size_t>(newSize));
+            vkUnmapMemory(device, stagingBufferMemory);
+
+            // Copy the existing data to the new buffer
+            VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandPool, device);
+            VkBufferCopy copyRegion{};
+            copyRegion.srcOffset = 0;
+            copyRegion.dstOffset = 0;
+            copyRegion.size = currentSize;
+            vkCmdCopyBuffer(commandBuffer, indexBuffer, newBuffer, 1, &copyRegion);
+
+            // Copy the new data to the new buffer
+            copyRegion.srcOffset = 0;
+            copyRegion.dstOffset = currentSize; // Append the new data at the end of the existing data
+            copyRegion.size = newSize;
+            vkCmdCopyBuffer(commandBuffer, stagingBuffer, newBuffer, 1, &copyRegion);
+            endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
+
+            // Clean up the old buffer
+            vkDestroyBuffer(device, indexBuffer, nullptr);
+            vkFreeMemory(device, indexBufferMemory, nullptr);
+
+            // Replace the old buffer with the new buffer
+            indexBuffer = newBuffer;
+            indexBufferMemory = newBufferMemory;
+
+            // Clean up the staging buffer
+            vkDestroyBuffer(device, stagingBuffer, nullptr);
+            vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+        } else {
+            // No need to reallocate the buffer, just update with the new indices
+
+            // Create a staging buffer for the new data
+            VkBuffer stagingBuffer;
+            VkDeviceMemory stagingBufferMemory;
+            createBuffer(newSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                         stagingBuffer, stagingBufferMemory, device, physicalDevice);
+
+            // Map and copy the new data to the staging buffer
+            void* data;
+            vkMapMemory(device, stagingBufferMemory, 0, newSize, 0, &data);
+            memcpy(data, newIndices.data(), static_cast<size_t>(newSize));
+            vkUnmapMemory(device, stagingBufferMemory);
+
+            // Copy the new data from the staging buffer to the index buffer
+            VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandPool, device);
+            VkBufferCopy copyRegion{};
+            copyRegion.srcOffset = 0;
+            copyRegion.dstOffset = currentSize; // Append the new data at the end of the existing data
+            copyRegion.size = newSize;
+            vkCmdCopyBuffer(commandBuffer, stagingBuffer, indexBuffer, 1, &copyRegion);
+            endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
+
+            // Clean up the staging buffer
+            vkDestroyBuffer(device, stagingBuffer, nullptr);
+            vkFreeMemory(device, stagingBufferMemory, nullptr);
+        }
     }
 
     //TODO CHECK BUFFER SIZE
@@ -1431,31 +1501,82 @@ private:
         VkDeviceSize currentSize = currentBuffSize;
         VkDeviceSize totalSize = newSize + currentSize;
 
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        createBuffer(newSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                     stagingBuffer, stagingBufferMemory, device, physicalDevice);
+        if (true) {
+            // New buffer size if the current buffer is too small
+            VkBuffer newBuffer;
+            VkDeviceMemory newBufferMemory;
+            VkDeviceSize newBufferSize = totalSize * 2;
 
-        // Map and copy the new data to the staging buffer
-        void* data;
-        vkMapMemory(device, stagingBufferMemory, 0, newSize, 0, &data);
-        memcpy(data, newVertices.data(), (size_t) newSize);
-        vkUnmapMemory(device, stagingBufferMemory);
+            createBuffer(newBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, newBuffer, newBufferMemory, device, physicalDevice);
 
-        // Copy the new data from the staging buffer to the vertex buffer
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandPool, device);
-        VkBufferCopy copyRegion{};
-        copyRegion.srcOffset = 0;
-        copyRegion.dstOffset = currentSize; // Append the new data at the end of the existing data
-        copyRegion.size = newSize;
-        vkCmdCopyBuffer(commandBuffer, stagingBuffer, vertexBuffer, 1, &copyRegion);
-        endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
+            // Create a staging buffer for the new data
+            VkBuffer stagingBuffer;
+            VkDeviceMemory stagingBufferMemory;
+            createBuffer(newSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                         stagingBuffer, stagingBufferMemory, device, physicalDevice);
 
-        // Clean up the staging buffer
-        vkDestroyBuffer(device, stagingBuffer, nullptr);
-        vkFreeMemory(device, stagingBufferMemory, nullptr);
+            // Map and copy the new data to the staging buffer
+            void* data;
+            vkMapMemory(device, stagingBufferMemory, 0, newSize, 0, &data);
+            memcpy(data, newVertices.data(), static_cast<size_t>(newSize));
+            vkUnmapMemory(device, stagingBufferMemory);
 
+            // Copy the existing data to the new buffer
+            VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandPool, device);
+            VkBufferCopy copyRegion{};
+            copyRegion.srcOffset = 0;
+            copyRegion.dstOffset = 0;
+            copyRegion.size = currentSize;
+            vkCmdCopyBuffer(commandBuffer, vertexBuffer, newBuffer, 1, &copyRegion);
+
+            // Copy the new data to the new buffer
+            copyRegion.srcOffset = 0;
+            copyRegion.dstOffset = currentSize; // Append the new data at the end of the existing data
+            copyRegion.size = newSize;
+            vkCmdCopyBuffer(commandBuffer, stagingBuffer, newBuffer, 1, &copyRegion);
+            endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
+
+            // Clean up the old buffer
+            vkDestroyBuffer(device, vertexBuffer, nullptr);
+            vkFreeMemory(device, vertexBufferMemory, nullptr);
+
+            // Replace the old buffer with the new buffer
+            vertexBuffer = newBuffer;
+            vertexBufferMemory = newBufferMemory;
+
+            // Clean up the staging buffer
+            vkDestroyBuffer(device, stagingBuffer, nullptr);
+            vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+        } else {
+            // Current buffer has enough space, append new data
+            VkBuffer stagingBuffer;
+            VkDeviceMemory stagingBufferMemory;
+            createBuffer(newSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                         stagingBuffer, stagingBufferMemory, device, physicalDevice);
+
+            // Map and copy the new data to the staging buffer
+            void* data;
+            vkMapMemory(device, stagingBufferMemory, 0, newSize, 0, &data);
+            memcpy(data, newVertices.data(), static_cast<size_t>(newSize));
+            vkUnmapMemory(device, stagingBufferMemory);
+
+            // Copy the new data from the staging buffer to the vertex buffer
+            VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandPool, device);
+            VkBufferCopy copyRegion{};
+            copyRegion.srcOffset = 0;
+            copyRegion.dstOffset = currentSize; // Append the new data at the end of the existing data
+            copyRegion.size = newSize;
+            vkCmdCopyBuffer(commandBuffer, stagingBuffer, vertexBuffer, 1, &copyRegion);
+            endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
+
+            // Clean up the staging buffer
+            vkDestroyBuffer(device, stagingBuffer, nullptr);
+            vkFreeMemory(device, stagingBufferMemory, nullptr);
+        }
     }
 
 /*
@@ -1505,7 +1626,7 @@ private:
         poolSizes[3].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[3].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
         poolSizes[4].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[4].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT) * (texturePaths.size() + 3);
+        poolSizes[4].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT) * (texturePaths.size() + 10);
 
 
         VkDescriptorPoolCreateInfo poolInfo{};
@@ -1702,8 +1823,15 @@ private:
 
 
     void createVertexBuffer() {
-        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size() * 1000;
+        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size() * 3;
+        if(bufferSize == 0){
+            bufferSize = 1;
+        }
+
         VkDeviceSize actualBufferSize = sizeof(vertices[0]) * vertices.size();
+        if(actualBufferSize == 0){
+            actualBufferSize = 1;
+        }
 
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;

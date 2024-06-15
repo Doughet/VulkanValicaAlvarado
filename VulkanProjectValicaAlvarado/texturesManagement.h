@@ -489,8 +489,8 @@ void updateTextureImagesAdd(uint32_t &mipLevels, VkDevice &device, VkPhysicalDev
     vkDestroyBuffer(device, stagingBuffer, nullptr);
     vkFreeMemory(device, stagingBufferMemory, nullptr);
 
-    generateMipmaps(textureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, mipLevels, physicalDevice,
-                    device, commandPool, graphicsQueue);
+    //generateMipmaps(textureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, mipLevels, physicalDevice,
+     //               device, commandPool, graphicsQueue);
 
     textureImages.push_back(textureImage);
     textureImageMemorys.push_back(textureImageMemory);

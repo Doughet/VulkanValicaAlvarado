@@ -47,12 +47,14 @@ void main() {
     finalColor = clamp(finalColor, 0.0, 1.0);
 
 
+
     outColor = vec4(texture(texSamplerArray[inIndex], fragTexCoord).rgb, 1.0);
 
+
 /*
-    if(inIndex == 3) {
+    if(inIndex == 4) {
         outColor = vec4(1.0, 1.0, 1.0, 1.0);
-  s  }else{
+    }else{
         outColor = vec4(texture(texSamplerArray[inIndex], fragTexCoord).rgb, 1.0);
     }
 */
