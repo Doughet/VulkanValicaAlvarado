@@ -31,8 +31,6 @@ void updateTransformationData(int pos, GLFWwindow * &window, std::vector<ObjectI
     const float rotateSpeedDegrees = 35.0f; // Degrees per second
     const float rotateSpeedRadians = glm::radians(rotateSpeedDegrees); // Convert to radians per second
 
-    std::cout << pos << std::endl;
-
     bool shiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
 
     if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
@@ -108,6 +106,19 @@ void addObject(bool &keyPressedAdd, GLFWwindow *&window, uint32_t & selectedObje
     }
     if(!glfwGetKey(window, GLFW_KEY_Y) && !glfwGetKey(window, GLFW_KEY_U) && !glfwGetKey(window, GLFW_KEY_I)){
         keyPressedAdd = false;
+    }
+}
+
+
+void deleteObject(bool &keyPressedDelete, GLFWwindow *&window, bool &mustDelete){
+    if(keyPressedDelete == false) {
+        if(glfwGetKey(window, GLFW_KEY_BACKSPACE)) {
+            keyPressedDelete = true;
+            mustDelete = true;
+        }
+    }
+    if(!glfwGetKey(window, GLFW_KEY_BACKSPACE)){
+        keyPressedDelete = false;
     }
 }
 

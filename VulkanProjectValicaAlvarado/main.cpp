@@ -199,9 +199,11 @@ private:
 
     bool keyPressed = false;
     bool keyPressedAdd = false;
+    bool keyPressedDelete = false;
     int currentTransformationModel = 0;
     uint32_t addObjectIndex = 0;
     bool mustAddObject = false;
+    bool mustDelete = false;
 
     double lastTime = glfwGetTime();
 
@@ -285,6 +287,7 @@ private:
 
             changeCurrentModel(keyPressed, window, currentTransformationModel, listObjectInfos);
             addObject(keyPressedAdd, window, addObjectIndex, mustAddObject);
+            deleteObject(keyPressedDelete, window, mustDelete);
             updateTransformationData(currentTransformationModel, window, listObjectInfos, deltaTime);
             updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped);
             glfwPollEvents();
@@ -293,9 +296,9 @@ private:
                 addObjectDynamic();
             }
 
-            if(isStart){
-                deleteModel(0);
-                isStart = false;
+            if(mustDelete){
+                deleteModel(currentTransformationModel);
+                mustDelete = false;
             }
 
             drawFrame();
@@ -380,11 +383,19 @@ private:
         /* 1: Delete position of the VertexBuffer and move the following positions one step to the lef so that there are
          no empty spots (same for the IndexBuffer)*/
         //Move the points in the vectors
-        size_t sizeVertices = objectInformation.vertices.size();
-        size_t sizeIndices = objectInformation.localIndices.size();
+        size_t sizeVertices = listObjectInfos[posModel]->vertices.size();
+        size_t sizeIndices = listObjectInfos[posModel]->localIndices.size();
 
-        movePointsVertexVector(posModel, sizeVertices);
-        movePointsIndicesVector(posModel, sizeIndices);
+        size_t sizeUntilVertices = 0;
+        size_t sizeUntilIndices = 0;
+
+        for (int i = 0; i < posModel; ++i) {
+            sizeUntilVertices += listObjectInfos[i]->vertices.size();
+            sizeUntilIndices += listObjectInfos[i]->localIndices.size();
+        }
+
+        movePointsVertexVector(sizeUntilVertices, sizeVertices);
+        movePointsIndicesVector(sizeUntilIndices, sizeIndices);
         //Update the buffers
 
         //Destroy the previous ones
@@ -429,6 +440,10 @@ private:
         // 5: Erase, delete, remove pipeline, descriptor...
 
         recreateDescriptorsAndPipeline();
+
+        if(currentTransformationModel >= listObjectInfos.size()){
+            currentTransformationModel = listObjectInfos.size() - 1;
+        }
     }
 
     void movePointsVertexVector(uint32_t objectPos, uint32_t objectSizeVertices){
