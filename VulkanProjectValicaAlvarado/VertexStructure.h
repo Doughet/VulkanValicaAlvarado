@@ -62,7 +62,16 @@ struct Vertex {
         return attributeDescriptions;
     }
 
+    /**
+     * @brief == operator that determines whether two vertexes are equal or not by comparing the different aattributes.
+     * @param other The second vertex to be compared to.
+     * @return True if the vertexes are equal and false otherwise
+     */
     bool operator==(const Vertex& other) const {
         return pos == other.pos && color == other.color && texCoord == other.texCoord && normal == other.normal && objectIndex == other.objectIndex;
     }
+};
+
+struct skyBoxVertex {
+    glm::vec3 pos;
 };

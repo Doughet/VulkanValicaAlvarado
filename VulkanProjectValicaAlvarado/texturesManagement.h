@@ -529,6 +529,7 @@ void updateTextureImagesDelete(uint32_t &mipLevels, VkDevice &device, VkPhysical
 }
 */
 
+
 /*Inside this function two fixed paths are declare but they should be passed as parameters to be able to reuse the function*/
 void createTextureImage(uint32_t &mipLevels, VkDevice &device, VkPhysicalDevice &physicalDevice,
                         VkCommandPool &commandPool, VkQueue &graphicsQueue, VkImage &textureImage,

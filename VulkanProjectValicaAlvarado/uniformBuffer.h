@@ -31,6 +31,10 @@ struct UniformBufferObject {
     alignas(16) glm::mat4 proj;
 };
 
+struct skyBoxUniformBufferObject{
+    alignas(16) glm::mat4 mvpMat;
+};
+
 struct LightsBufferObject {
     glm::vec3 lightPos;
     glm::vec3 viewPos;
@@ -46,6 +50,7 @@ struct MatrixBufferObject{
 };
 
 UniformBufferObject ubo{};
+UniformBufferObject aux{};
 
 /*
 void createFramebuffers() {
@@ -73,6 +78,279 @@ void createFramebuffers() {
     }
 }
 */
+void changeOrthogonalView(GLFWwindow* &window, int screenWidth, int screenHeight, bool &normalProj) {
+
+    glm::mat4 M = glm::mat4(1.0f / 20.0f,0,0,0,  0,-4.0f / 60.f,0,0,
+                  0,0,1.0f/(0.1f-500.0f),0, 0,0,0.1f/(0.1f-500.0f),1);
+    // Update ubo.view with the orthogonal transformation matrix
+    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) {
+        if(normalProj) {
+            aux.view = ubo.view;
+            aux.proj = ubo.proj;
+            aux.model = ubo.model;
+            normalProj = false;
+        }
+        ubo.view = M;
+
+        // Update ubo.proj for orthographic projection
+        // Define the orthographic projection matrix
+        float orthoSize = 0.9f; // Adjust this based on your scene's dimensions
+
+        ubo.proj = glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, 0.1f, 100.0f);
+
+        // Ensure the Y coordinate is flipped if necessary (depends on coordinate system)
+
+        // Adjust aspect ratio based on screen dimensions
+        ubo.proj = glm::ortho(-orthoSize * screenWidth / static_cast<float>(screenHeight),
+                              orthoSize * screenWidth / static_cast<float>(screenHeight),
+                              -orthoSize, orthoSize, 0.1f, 100.0f);
+        ubo.proj[1][1] *= -1;
+    }
+}
+
+void changeIsometricView(GLFWwindow* &window, int screenWidth, int screenHeight, bool &normalProj) {
+    // Identity matrix or any other transformation you might need
+    glm::mat4 M;
+    glm::mat4 aux1;
+    glm::mat4 aux2;
+    glm::mat4 aux3;
+    float alpha;
+    float beta;
+
+
+
+// Isometric
+    aux1 = glm::mat4(1.0f / 20.0f,0,0,0,
+                     0,-4.0f / 60.0f,0,0,
+                     0,0, -(1.0f/(-500.0f-500.0f)),0,
+                     0,0,(-500.0f)/(-500.0f-500.0f),1);
+
+    alpha = 35.26f;
+    beta = 45.0f;
+
+    aux2 = glm::mat4(1.0f, 0, 0 ,0,
+                     0, glm::cos(glm::radians(alpha)), -(glm::sin(glm::radians(alpha))),0,
+                     0, glm::sin(glm::radians(alpha)), glm::cos(glm::radians(alpha)),0,
+                     0, 0, 0, 1);
+    aux3 = glm::mat4(glm::cos(glm::radians(beta)), 0, -(glm::sin(glm::radians(beta))), 0,
+                     0, 1, 0, 0,
+                     glm::sin(glm::radians(beta)), 0, glm::cos(glm::radians(beta)),0,
+                     0, 0, 0, 1);
+    M = aux1*aux2*aux3;
+
+    // Update ubo.view with the orthogonal transformation matrix
+    if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
+        if(normalProj) {
+            aux.view = ubo.view;
+            aux.proj = ubo.proj;
+            aux.model = ubo.model;
+            normalProj = false;
+        }
+        ubo.view = M;
+
+        // Update ubo.proj for orthographic projection
+        // Define the orthographic projection matrix
+        float isometricSize = 1.0f; // Adjust this based on your scene's dimensions
+        //ubo.proj = glm::ortho(-isometricSize, isometricSize, -isometricSize, isometricSize, 0.1f, 100.0f);
+
+        // Ensure the Y coordinate is flipped if necessary (depends on coordinate system)
+
+        // Adjust aspect ratio based on screen dimensions
+        ubo.proj = glm::scale(glm::mat4(1.0), glm::vec3(1,-1,1)) * glm::frustum(-isometricSize * screenWidth / static_cast<float>(screenHeight),
+                                isometricSize * screenWidth / static_cast<float>(screenHeight),
+                              -isometricSize, isometricSize, 0.1f, 500.0f);
+        ubo.proj[1][1] *= -1;
+    }
+}
+
+void regularProj(GLFWwindow* &window, int screenWidth, int screenHeight, bool &normalProj) {
+    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS && !normalProj) {
+        ubo.view = aux.view;
+        ubo.proj = aux.proj;
+        ubo.model = aux.model;
+        //ubo.proj = glm::perspective(glm::radians(90.0f), 4.0f/3.0f, 0.1f, 500.0f);
+        //ubo.proj[1][1] *= -1;
+        normalProj = true;
+    }
+}
+
+/*
+void changeIsometricView(GLFWwindow * &window){
+    glm::mat4 M;
+    glm::mat4 aux1;
+    glm::mat4 aux2;
+    glm::mat4 aux3;
+    float alpha;
+    float beta;
+
+/*    // Orthogonal Front
+    // this is the only one correct, and that should not be modified
+    M = glm::mat4(1.0f / 20.0f,0,0,0,  0,-4.0f / 60.f,0,0,
+                  0,0,1.0f/(0.1f-500.0f),0, 0,0,0.1f/(0.1f-500.0f),1);
+
+
+    // Isometric
+    aux1 = glm::mat4(1.0f / 20.0f,0,0,0,
+                     0,-4.0f / 60.0f,0,0,
+                     0,0, -(1.0f/(-500.0f-500.0f)),0,
+                     0,0,(-500.0f)/(-500.0f-500.0f),1);
+    alpha = 35.26f;
+    beta = 45.0f;
+
+    aux2 = glm::mat4(1.0f, 0, 0 ,0,
+                     0, glm::cos(glm::radians(alpha)), -(glm::sin(glm::radians(alpha))),0,
+                     0, glm::sin(glm::radians(alpha)), glm::cos(glm::radians(alpha)),0,
+                     0, 0, 0, 1);
+    aux3 = glm::mat4(glm::cos(glm::radians(beta)), 0, -(glm::sin(glm::radians(beta))), 0,
+                     0, 1, 0, 0,
+                     glm::sin(glm::radians(beta)), 0, glm::cos(glm::radians(beta)),0,
+                     0, 0, 0, 1);
+    M = aux1*aux2*aux3;
+
+    if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
+        ubo.view = M;
+        // Update ubo.proj for perspective (adjust these values as needed)
+
+      //  ubo.proj = glm::perspective(glm::radians(45.0f), 800 / static_cast<float>(600), 0.1f, 100.0f);
+        ubo.proj = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, 0.1f, 100.0f);
+       // ubo.proj[1][1] *= -1; // Flip Y coordinate if necessary
+        M = glm::mat4(1.0f / 20.0f,0,0,0,  0,-4.0f / 60.f,0,0,
+                      0,0,1.0f/(0.1f-500.0f),0, 0,0,0.1f/(0.1f-500.0f),1);
+        ubo.view = M;
+    }
+}*/
+
+
+/*
+void lookAtModel(int posModel, GLFWwindow * &window, std::vector<ObjectInformation*> listObjectInfos){
+    const glm::mat4 modelMatrix = listObjectInfos.at(posModel)->modelMatrix;
+    const glm::vec3 modelPosition = listObjectInfos.at(posModel)->vertices.at(0).pos;
+    const glm::vec4 posAux = glm::vec4(modelPosition, 1.0f);
+    const glm::vec4 transformedPosition = modelMatrix * glm::vec4(modelPosition, 1.0f);
+
+    // Define the camera's eye position (e.g., a fixed distance away from the object along the z-axis)
+    // Here, we place the camera at a distance of 5 units along the z-axis from the object's position.
+    const glm::vec3 eyePosition = glm::vec3(transformedPosition) + glm::vec3(0.0f, 0.0f, 5.0f);
+
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+        ubo.view = glm::lookAt(eyePosition, glm::vec3(transformedPosition), glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+}*/
+
+/*
+void lookAtModel(int posModel, GLFWwindow* &window, std::vector<ObjectInformation*> &listObjectInfos) {
+    // Ensure posModel is within the bounds of the listObjectInfos
+    if (posModel < 0 || posModel >= listObjectInfos.size()) {
+        std::cerr << "Invalid model position index." << std::endl;
+        return;
+    }
+    // Get the model matrix and the first vertex position of the object
+    const glm::mat4 modelMatrix = listObjectInfos.at(posModel)->modelMatrix;
+    const glm::vec3 modelPosition = listObjectInfos.at(posModel)->vertices.at(0).pos;
+    const glm::vec4 transformedPosition = modelMatrix * glm::vec4(modelPosition, 1.0f);
+
+    // Define the camera's eye position (e.g., a fixed distance away from the object along the z-axis)
+    // Here, we place the camera at a distance of 5 units along the z-axis from the object's position.
+    const float cameraDistance = 5.0f;
+    const glm::vec3 eyePosition = glm::vec3(transformedPosition) + glm::vec3(0.0f, 0.0f, cameraDistance);
+
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+        // Update the view matrix to look at the model
+        ubo.view = glm::lookAt(eyePosition, glm::vec3(transformedPosition), glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+}*/
+
+/*
+void lookAtModel(int posModel, GLFWwindow* &window, std::vector<ObjectInformation*> listObjectInfos, VkExtent2D &swapChainExtent) {
+    // Ensure posModel is within the bounds of the listObjectInfos
+    if (posModel < 0 || posModel >= listObjectInfos.size()) {
+        std::cerr << "Invalid model position index." << std::endl;
+        return;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+        const glm::vec3 modelPosition = listObjectInfos.at(posModel)->vertices.at(listObjectInfos.at(posModel)->vertices.size()/2).pos;
+        // Get the model matrix and the first vertex position of the object
+        const glm::mat4 modelMatrix = listObjectInfos.at(posModel)->modelMatrix;
+        //const glm::vec3 modelPosition = listObjectInfos.at(posModel)->vertices.at(0).pos;
+        const glm::vec4 transformedPosition = modelMatrix * glm::vec4(modelPosition, 1.0f);
+
+        // Define the camera's eye position (e.g., a fixed distance away from the object along the z-axis)
+        const float cameraDistance = 3.0f;
+        const glm::vec3 eyePosition = glm::vec3(transformedPosition) + glm::vec3(0.0f, 0.0f, cameraDistance);
+
+        // Update the view matrix to look at the model
+        ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 40.0f);
+        ubo.proj[1][1] *= -1;
+        ubo.view = glm::lookAt(eyePosition, glm::vec3(transformedPosition), glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+}*/
+/*
+void lookAtModel(int posModel, GLFWwindow* &window, std::vector<ObjectInformation*> &listObjectInfos, VkExtent2D &swapChainExtent) {
+    // Ensure posModel is within the bounds of the listObjectInfos
+    if (posModel < 0 || posModel >= listObjectInfos.size()) {
+        std::cerr << "Invalid model position index." << std::endl;
+        return;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+        const glm::vec3 modelPosition = listObjectInfos.at(posModel)->vertices.at(listObjectInfos.at(posModel)->vertices.size() / 2).pos;
+        const glm::mat4 modelMatrix = listObjectInfos.at(posModel)->modelMatrix;
+        const glm::vec4 transformedPosition = modelMatrix * glm::vec4(modelPosition, 1.0f);
+
+        // Define the camera's eye position (e.g., a fixed distance away from the object along the z-axis)
+        const float cameraDistance = 3.0f;
+        const glm::vec3 eyePosition = glm::vec3(transformedPosition) + glm::vec3(0.0f, 0.0f, cameraDistance);
+
+        // Update the view matrix to look at the model
+        ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 40.0f);
+        ubo.proj[1][1] *= -1; // Flip Y coordinate (if needed, depends on coordinate system)
+
+        ubo.view = glm::lookAt(eyePosition, glm::vec3(transformedPosition), glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+}*/
+// Example function to calculate model center (replace with your logic)
+glm::vec3 calculateModelCenter(ObjectInformation* objectInfo) {
+    // Calculate center as average of all vertices
+    glm::vec3 center = glm::vec3(0.0f);
+    for (const auto& vertex : objectInfo->vertices) {
+        center += vertex.pos;
+    }
+    center /= static_cast<float>(objectInfo->vertices.size());
+    return center;
+}
+
+void lookAtModel(int posModel, GLFWwindow* &window, std::vector<ObjectInformation*> listObjectInfos, VkExtent2D &swapChainExtent) {
+    // Ensure posModel is within the bounds of the listObjectInfos
+    if (posModel < 0 || posModel >= listObjectInfos.size()) {
+        std::cerr << "Invalid model position index." << std::endl;
+        return;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+        // Example: Calculate model center (replace with your logic)
+        glm::vec3 modelCenter = calculateModelCenter(listObjectInfos.at(posModel));
+
+        // Get the model matrix
+        const glm::mat4 modelMatrix = listObjectInfos.at(posModel)->modelMatrix;
+
+        // Calculate the transformed position based on the model center
+        const glm::vec4 transformedPosition = modelMatrix * glm::vec4(modelCenter, 1.0f);
+
+        // Define the camera's eye position (e.g., a fixed distance away from the object along the z-axis)
+        const float cameraDistance = 3.0f;
+        const glm::vec3 eyePosition = glm::vec3(transformedPosition) + glm::vec3(0.0f, 0.0f, cameraDistance);
+
+        // Update the projection matrix (assuming perspective projection)
+        ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / static_cast<float>(swapChainExtent.height), 0.1f, 40.0f);
+        ubo.proj[1][1] *= -1; // Flip Y coordinate if necessary
+
+        // Update the view matrix to look at the model
+        ubo.view = glm::lookAt(eyePosition, glm::vec3(transformedPosition), glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+}
+
+
 
 uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, VkPhysicalDevice &physicalDevice) {
     VkPhysicalDeviceMemoryProperties memProperties;
@@ -108,14 +386,14 @@ void updateMatrixUniformBuffer(uint32_t currentImage, std::vector<ObjectInformat
 }
 
 void updateUniformBuffer(uint32_t currentImage, GLFWwindow * &window,
-                         std::vector<void*> &uniformBuffersMapped, std::vector<void*> &lightsBuffersMapped) {
+                         std::vector<void*> &uniformBuffersMapped, std::vector<void*> &lightsBuffersMapped, bool &normalProj) {
     static bool debounce = false;
     static int curDebounce = 0;
 
     float deltaT;
     glm::vec3 m = glm::vec3(0.0f), r = glm::vec3(0.0f);
     bool fire = false;
-    getSixAxis(deltaT, m, r, fire, window);
+    getSixAxis(deltaT, m, r, fire, window, normalProj);
 
     static float autoTime = true;
     static float cTime = 0.0;
@@ -369,7 +647,7 @@ void createUniformBuffers(VkDevice &device, VkPhysicalDevice &physicalDevice, Vk
     glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scaleFactor));
 
     ubo.model = scaleMatrix * ubo.model;
-    ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 30.0f);
+    ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 60.0f);
     ubo.proj[1][1] *= -1;
     ubo.view = glm::lookAt(glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 

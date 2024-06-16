@@ -14,7 +14,6 @@
 #include <algorithm>
 #include <chrono>
 #include <vector>
-#include <cstring>
 #include <cstdlib>
 #include <cstdint>
 #include <limits>
@@ -24,54 +23,85 @@
 #include <unordered_map>
 
 
-void updateTransformationData(int pos, GLFWwindow * &window, std::vector<ObjectInformation*> listObjectInfos,
-                              float &deltaTime) {
+
+
+/**
+ * @brief Function that modifies a selected model from listObjectInfos by applying a trasnformation from the glm
+ * library. If the user presses the 1 key it will make it move positively through the y axis. And if shift happens to
+ * be pressed as well it will move negatively the model around the y axis as well. Same for the 2 and 3 keys but in
+ * these cases for the x and z axis respectively. If the user presses the 4 key it will make the selected model smaller
+ * but if shift is also pressed, it will make the  model bigger. If the user presses 5, it will rotate the model to the
+ * right but if the sift key is pressed as well, the model will rotate counterclockwise.
+ * The function calculates the speed of the diverse transformation factors by taking the deltaTime which will make that
+ * transformations behave identically in different computers with diverse specifications.
+ * @param pos It indicates the postion of the listObjectInfos so the user can modify the model he/she wishes.
+ * @param window Receives as reference the window in which we are rendering the application we will use it for the
+ * function *glfwGetKey(window, x)* that checks if for a specific window *window*, the x key is pressed.
+ * @param listObjectInfos The list that contains the information of the different objects loaded on screen and it
+ * contains as attribute the modelMatrix that needs to be modified for the  different transformations.
+ * @param deltaTime It will vary on the performance of each PC/Laptop and it represents the difference between the
+ * current moment and the last one the main loop was executed.
+ */
+void updateTransformationData(int pos, GLFWwindow * &window, std::vector<ObjectInformation*> listObjectInfos, float &deltaTime) {
     const float moveSpeed = 5.0f;  // Units per second
     const float scaleSpeed = 0.5f; // Scale factor per second
     const float rotateSpeedDegrees = 35.0f; // Degrees per second
-    const float rotateSpeedRadians = glm::radians(rotateSpeedDegrees); // Convert to radians per second
+
+    const float fixedMoveSpeed = moveSpeed * deltaTime;
+
+    const glm::mat4 M = listObjectInfos.at(pos)->modelMatrix;
 
     bool shiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
 
-    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) { // y-axis movement
         if(shiftPressed) {
-            listObjectInfos.at(pos)->modelMatrix = glm::translate(listObjectInfos.at(pos)->modelMatrix,
-                                                                  glm::vec3(0.0f, moveSpeed * deltaTime, 0.0f));
+            listObjectInfos.at(pos)->modelMatrix = glm::translate(M, glm::vec3(0.0f, fixedMoveSpeed, 0.0f));
         }else{
-            listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix,
-                                                                   glm::vec3(0.0f, -moveSpeed * deltaTime, 0.0f));
+            listObjectInfos.at(pos)->modelMatrix = glm::translate( M,glm::vec3(0.0f, - fixedMoveSpeed, 0.0f));
         }
-    } else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+    } else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) { // x-axis movement
         if(shiftPressed) {
-            listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix,
-                                                                   glm::vec3(-moveSpeed * deltaTime, 0.0f, 0.0f));
+            listObjectInfos.at(pos)->modelMatrix = glm::translate( M, glm::vec3(- fixedMoveSpeed, 0.0f, 0.0f));
         }else{
-            listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix,
-                                                                   glm::vec3(moveSpeed * deltaTime, 0.0f, 0.0f));
+            listObjectInfos.at(pos)->modelMatrix = glm::translate( M, glm::vec3(fixedMoveSpeed, 0.0f, 0.0f));
         }
-    } else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
+    } else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) { // z-axis movement
         if(shiftPressed) {
-            listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix,
-                                                                   glm::vec3(0.0f, 0.0f, moveSpeed * deltaTime));
+            listObjectInfos.at(pos)->modelMatrix = glm::translate( M, glm::vec3(0.0f, 0.0f, fixedMoveSpeed));
         }else{
-            listObjectInfos.at(pos)->modelMatrix = glm::translate( listObjectInfos.at(pos)->modelMatrix,
-                                                                   glm::vec3(0.0f, 0.0f,- moveSpeed * deltaTime));
+            listObjectInfos.at(pos)->modelMatrix = glm::translate( M, glm::vec3(0.0f, 0.0f,- fixedMoveSpeed));
         }
-    } else if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) {
+    } else if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) { // Scaling section
+        float fixedScaleSpeed = scaleSpeed * deltaTime;
         if(shiftPressed) {
-            listObjectInfos.at(pos)->modelMatrix = glm::scale(listObjectInfos.at(pos)->modelMatrix, glm::vec3(1.0f + scaleSpeed * deltaTime));
+            listObjectInfos.at(pos)->modelMatrix = glm::scale(M, glm::vec3(1.0f + fixedScaleSpeed));
         }else{
-            listObjectInfos.at(pos)->modelMatrix = glm::scale(listObjectInfos.at(pos)->modelMatrix, glm::vec3(1.0f - scaleSpeed * deltaTime));
+            listObjectInfos.at(pos)->modelMatrix = glm::scale(M, glm::vec3(1.0f - fixedScaleSpeed));
         }
-    }else if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS) {
-        if(shiftPressed) {
-            listObjectInfos.at(pos)->modelMatrix = glm::rotate(listObjectInfos.at(pos)->modelMatrix, glm::radians(rotateSpeedDegrees * deltaTime), glm::vec3(0.0f, 0.0f, 1.0f));
-        }else{
-            listObjectInfos.at(pos)->modelMatrix = glm::rotate(listObjectInfos.at(pos)->modelMatrix, glm::radians(- rotateSpeedDegrees * deltaTime), glm::vec3(0.0f, 0.0f, 1.0f));
+    }else if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS) { // Rotating
+        float fixedRotateSpeed = glm::radians(rotateSpeedDegrees * deltaTime);
+        if (shiftPressed) {
+            listObjectInfos.at(pos)->modelMatrix = glm::rotate(M, fixedRotateSpeed, glm::vec3(0.0f, 0.0f, 1.0f));
+        } else {
+            listObjectInfos.at(pos)->modelMatrix = glm::rotate(M, - fixedRotateSpeed, glm::vec3(0.0f, 0.0f, 1.0f));
         }
     }
 }
 
+
+/**
+ * @brief This function allows the user to select a model from listObjectInfos to modify it later in other functions.
+ * The 8 key decreases the currentTransformationModel by one if it is not already 0 and the 9 key increases it if it is
+ * smaller than the size listObjectInfos - 1.
+ * @param keyPressed Boolean variable that checks whether the 8 or 9 keys were already pressed so the
+ * currentTransformationModel can only increase or decrease by one. If that is the case  it becomes true, if none of
+ * them are pressed it is updated to false.
+ * @param window Receives as reference the window in which we are rendering the application we will use it for the
+ * function *glfwGetKey(window, x)* that checks if for a specific window *window*, the x key is pressed.
+ * @param currentTransformationModel the index that accesses the object of listObjectsInfos that is needed.
+ * @param listObjectInfos The list that contains the information of the different objects loaded on screen and it
+ * contains as attribute the modelMatrix that needs to be modified for the  different transformations.
+ */
 void changeCurrentModel(bool &keyPressed, GLFWwindow *&window, int &currentTransformationModel,
                         std::vector<ObjectInformation*> listObjectInfos){
     if(keyPressed == false) {
@@ -88,6 +118,13 @@ void changeCurrentModel(bool &keyPressed, GLFWwindow *&window, int &currentTrans
     }
 }
 
+/**
+ * @brief
+ * @param keyPressedAdd
+ * @param window
+ * @param selectedObject
+ * @param mustAdd
+ */
 void addObject(bool &keyPressedAdd, GLFWwindow *&window, uint32_t & selectedObject, bool &mustAdd){
     if(keyPressedAdd == false) {
         if(glfwGetKey(window, GLFW_KEY_Y)) {
@@ -109,7 +146,13 @@ void addObject(bool &keyPressedAdd, GLFWwindow *&window, uint32_t & selectedObje
     }
 }
 
-
+/**
+ *
+ * @param id
+ * @param m
+ * @param r
+ * @param fire
+ */
 // Control Wrapper
 void handleGamePad(int id,  glm::vec3 &m, glm::vec3 &r, bool &fire) {
     const float deadZone = 0.1f;
@@ -143,7 +186,15 @@ void handleGamePad(int id,  glm::vec3 &m, glm::vec3 &r, bool &fire) {
     }
 }
 
-void getSixAxis(float &deltaT, glm::vec3 &m, glm::vec3 &r, bool &fire, GLFWwindow* &window) {
+/**
+ * @brief
+ * @param deltaT
+ * @param m
+ * @param r
+ * @param fire
+ * @param window
+ */
+void getSixAxis(float &deltaT, glm::vec3 &m, glm::vec3 &r, bool &fire, GLFWwindow* &window, bool &normalProj) {
     static auto startTime = std::chrono::high_resolution_clock::now();
     static float lastTime = 0.0f;
 
@@ -161,24 +212,29 @@ void getSixAxis(float &deltaT, glm::vec3 &m, glm::vec3 &r, bool &fire, GLFWwindo
     old_xpos = xpos; old_ypos = ypos;
 
     const float MOUSE_RES = 10.0f;
-    glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
-    if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        r.y = -m_dx / MOUSE_RES;
-        r.x = -m_dy / MOUSE_RES;
+    if(normalProj == true) {
+        glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+            r.y = -m_dx / MOUSE_RES;
+            r.x = -m_dy / MOUSE_RES;
+        }
     }
 
-    if(glfwGetKey(window, GLFW_KEY_LEFT)) {
-        r.y = -1.0f;
+    if(normalProj == true) {
+        if (glfwGetKey(window, GLFW_KEY_LEFT)) {
+            r.y = -1.0f;
+        }
+        if (glfwGetKey(window, GLFW_KEY_RIGHT)) {
+            r.y = 1.0f;
+        }
+        if (glfwGetKey(window, GLFW_KEY_UP)) {
+            r.x = -1.0f;
+        }
+        if (glfwGetKey(window, GLFW_KEY_DOWN)) {
+            r.x = 1.0f;
+        }
     }
-    if(glfwGetKey(window, GLFW_KEY_RIGHT)) {
-        r.y = 1.0f;
-    }
-    if(glfwGetKey(window, GLFW_KEY_UP)) {
-        r.x = -1.0f;
-    }
-    if(glfwGetKey(window, GLFW_KEY_DOWN)) {
-        r.x = 1.0f;
-    }
+
     if(glfwGetKey(window, GLFW_KEY_Q)) {
         r.z = 1.0f;
     }
@@ -204,10 +260,11 @@ void getSixAxis(float &deltaT, glm::vec3 &m, glm::vec3 &r, bool &fire, GLFWwindo
     if(glfwGetKey(window, GLFW_KEY_F)) {
         m.y = -1.0f;
     }
-
-    fire = glfwGetKey(window, GLFW_KEY_SPACE) | (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
-    handleGamePad(GLFW_JOYSTICK_1,m,r,fire);
-    handleGamePad(GLFW_JOYSTICK_2,m,r,fire);
-    handleGamePad(GLFW_JOYSTICK_3,m,r,fire);
-    handleGamePad(GLFW_JOYSTICK_4,m,r,fire);
+    if(normalProj == true) {
+        fire = glfwGetKey(window, GLFW_KEY_SPACE) | (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
+        handleGamePad(GLFW_JOYSTICK_1, m, r, fire);
+        handleGamePad(GLFW_JOYSTICK_2, m, r, fire);
+        handleGamePad(GLFW_JOYSTICK_3, m, r, fire);
+        handleGamePad(GLFW_JOYSTICK_4, m, r, fire);
+    }
 }

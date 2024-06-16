@@ -11,6 +11,7 @@
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
 
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -56,6 +57,62 @@ const bool enableValidationLayers = true;
 #endif
 
 //UniformBufferObject ubo{};
+
+void MakeCube(float size, std::vector<std::array<float,6>> &vertices, std::vector<uint32_t> &indices) {
+    float halfSize = size / 2.0f;
+
+    // Relative positions of the vertices for each face of the cube
+    std::vector<std::array<int, 3>> basePositions = {
+            {-1, -1, -1}, {1, -1, -1}, {1, 1, -1}, {-1, 1, -1}, // Front face
+            {-1, -1, 1}, {1, -1, 1}, {1, 1, 1}, {-1, 1, 1}      // Back face
+    };
+
+    // Normals for each side
+    std::vector<std::array<float, 3>> normals = {
+            {0.0f, 0.0f, -1.0f}, // Front
+            {0.0f, 0.0f, 1.0f},  // Back
+            {0.0f, -1.0f, 0.0f}, // Down
+            {0.0f, 1.0f, 0.0f},  // Up
+            {-1.0f, 0.0f, 0.0f}, // Left side
+            {1.0f, 0.0f, 0.0f}   // Right side
+    };
+
+    // Combinations of vertices for each face
+    std::vector<std::array<int, 4>> faceVertices = {
+            {0, 1, 2, 3}, // Front
+            {5, 4, 7, 6}, // Back
+            {4, 5, 1, 0}, // Down
+            {3, 2, 6, 7}, // Up
+            {4, 0, 3, 7}, // Left side
+            {1, 5, 6, 2}  // Right side
+    };
+
+    // Create vertices with its positions and normals
+    for (int i = 0; i < 6; ++i) {
+        for (int j : faceVertices[i]) {
+            std::array<float, 6> vertex = {
+                    basePositions[j][0] * halfSize,
+                    basePositions[j][1] * halfSize,
+                    basePositions[j][2] * halfSize,
+                    normals[i][0],
+                    normals[i][1],
+                    normals[i][2]
+            };
+            vertices.push_back(vertex);
+        }
+    }
+
+    // Indixes for the cube faces
+    for (int i = 0; i < 6; ++i) {
+        int baseIndex = i * 4;
+        indices.push_back(baseIndex);
+        indices.push_back(baseIndex + 2);
+        indices.push_back(baseIndex + 1);
+        indices.push_back(baseIndex);
+        indices.push_back(baseIndex + 3);
+        indices.push_back(baseIndex + 2);
+    }
+}
 
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
@@ -132,10 +189,12 @@ private:
 
     VkRenderPass renderPass;
     VkDescriptorSetLayout descriptorSetLayout;
+    VkDescriptorSetLayout DSLskyBox;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
 
     VkCommandPool commandPool;
+    VkCommandPool skyBoxCommandPool;
 
     VkImage colorImage;
     VkDeviceMemory colorImageMemory;
@@ -158,13 +217,18 @@ private:
     std::vector<VkDeviceMemory> textureImageMemorys;
     std::vector<VkSampler> textureSamplers;
 
+    std::vector<ObjectInformation*> listSkyBoxInfos;
     std::vector<ObjectInformation*> listObjectInfos;
     std::vector<ObjectInformation> listActualObjectInfos;
+    std::vector<ObjectInformation> listActualSkyBoxInfos;
     bool isStart = true;
     ObjectLoader objectLoader;
+    ObjectLoader skyBoxLoader;
 
     std::vector<Vertex> vertices;
+    std::vector<Vertex> skyBoxVertices;
     std::vector<uint32_t> indices;
+    std::vector<uint32_t> skyBoxIndices;
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
     VkBuffer indexBuffer;
@@ -203,6 +267,8 @@ private:
     uint32_t addObjectIndex = 0;
     bool mustAddObject = false;
 
+    bool normalProj = true;
+
     double lastTime = glfwGetTime();
 
     std::vector<std::string> texturePaths;
@@ -232,16 +298,19 @@ private:
         createImageViews();
         createRenderPass();
 
-        //Create object vector
+        //Create object vector for the objects we want to put on the screen
         createObjectVector();
+        //createSkyBoxVector();
 
         createDescriptorSetLayout();
+        //createSkyBoxDescriptorSetLayout();
         createGraphicsPipeline();
+        //createSkyBoxPipeline();
         createCommandPool();
+        //createSkyBoxCommandPool();
         createColorResources();
         createDepthResources();
-        createFramebuffers(/*device, renderPass, swapChainFramebuffers, swapChainImageViews,
-                swapChainExtent, colorImageView, depthImageView*/);
+        createFramebuffers();
 
         createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImage,
                            textureImageMemory);
@@ -257,7 +326,9 @@ private:
 
 
         createObjectLoader();
+        //createSkyBoxLoader();
         launchObjectLoader();
+        //launchSkyBoxLoader();
 
 
         //loadSceneSphereElements();
@@ -272,11 +343,27 @@ private:
         createMatrixUniformBuffer(device, physicalDevice, swapChainExtent, matrixUniformBuffers, matrixUniformBuffersMemory,
                                   matrixUniformBuffersMapped, MAX_FRAMES_IN_FLIGHT);
         createDescriptorPool();
+        //createSkyBoxDescriptorPool();
         createDescriptorSets();
+        //createSkyBoxDescriptorSets();
         createCommandBuffers(device, commandBuffers, commandPool, MAX_FRAMES_IN_FLIGHT);
         createSyncObjects();
     }
 
+    /**
+     * @brief The mainLoop function checks whether the application window is closed of not and if it is not
+     * it keeps on iterating on a loop that calculates the last time of the last frame and the *deltaTime* that is the
+     * difference between the *currentTime* (is also calculated) and the *lastTime*. Then, the loop executes the
+     * functions for the user functionality (adding, removing models, transforming them...) and it properly updates the
+     * uniform buffer and it executes glfwPollEvents to keep the application running until either an error occurs or
+     * the window is closed. Then it checks the content of the boolean variable mustAddObject that is updated on the
+     * function *addObject* based on the user input, if it is true then it executes *addObjectDynamic*. At the end of
+     * the loop it executes *drawFrame* that renders a new frame. Before exiting the function we make use of
+     * *vkDeviceWaitIdle(device)* since the drawFrame operations are asynchronous and cleaning up resources before
+     * these operations finish is a bad idea so we will make it wait for the logicaal device to finish operations
+     * before exiting mainLoop and destroying the window.
+
+     */
     void mainLoop() {
         while (!glfwWindowShouldClose(window)) {
             float currentTime = glfwGetTime();
@@ -286,14 +373,16 @@ private:
             changeCurrentModel(keyPressed, window, currentTransformationModel, listObjectInfos);
             addObject(keyPressedAdd, window, addObjectIndex, mustAddObject);
             updateTransformationData(currentTransformationModel, window, listObjectInfos, deltaTime);
-            updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped);
+            //lookAtModel(currentTransformationModel, window, listObjectInfos, swapChainExtent);
+            //changeIsometricView(window);
+            changeOrthogonalView(window, WIDTH, HEIGHT, normalProj);
+            changeIsometricView(window, WIDTH, HEIGHT, normalProj);
+            regularProj(window, WIDTH, HEIGHT, normalProj);
+            updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped, normalProj);
             glfwPollEvents();
 
             if(mustAddObject){
-
                 addObjectDynamic();
-
-
             }
 
             drawFrame();
@@ -307,8 +396,8 @@ private:
         uint32_t indicesSize = sizeof(indices[0]) * indices.size();
 
         ObjectInformation objectInformation {};
-        objectInformation.modelPath = "furniture/Laptop/SAMSUNG_Laptop.obj";
-        objectInformation.texturePath = "furniture/Laptop/SLT_Dif.png";
+        objectInformation.modelPath = "";//"furniture/Laptop/SAMSUNG_Laptop.obj";
+        objectInformation.texturePath = "";//"furniture/Laptop/SLT_Dif.png";
         objectInformation.mustBeLoaded = true;
         objectInformation.modelMatrix = glm::mat4(1.0f);
         chooseObjectToAdd(addObjectIndex, objectInformation);
@@ -327,7 +416,7 @@ private:
                                textureImageMemorys, listActualObjectInfos[listActualObjectInfos.size() - 1].texturePath);
         //update the texture image views
         updateTextureImageViewsAdd(device, textureImages.at(textureImages.size() - 1), mipLevels, textureImageViews);
-        //update the textyre image samplers
+        //update the texture image samplers
         updateTextureImageSamplersAdd(physicalDevice, device, textureSamplers);
         //update the descriptors
         recreateDescriptorsAndPipeline();
@@ -780,6 +869,25 @@ private:
         }
     }
 
+    void createSkyBoxDescriptorSetLayout(){
+        VkDescriptorSetLayoutBinding skyBoxLayoutBinding{};
+        skyBoxLayoutBinding.binding = 0;
+        skyBoxLayoutBinding.descriptorCount = 1;
+        skyBoxLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        skyBoxLayoutBinding.pImmutableSamplers = nullptr;
+        skyBoxLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 1> bindings = {skyBoxLayoutBinding};
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+        layoutInfo.pBindings = bindings.data();
+
+        if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &DSLskyBox) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create descriptor set layout of the skyBox!");
+        }
+    }
+
     void createDescriptorSetLayout() {
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
@@ -825,7 +933,131 @@ private:
         if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor set layout!");
         }
+    }
 
+    void createSkyBoxPipeline(){
+        auto vertShaderCode = readFile("shaders/skyBoxvert.spv");
+        auto fragShaderCode = readFile("shaders/skyBoxfrag.spv");
+
+        VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
+        VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+
+        VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+        vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+        vertShaderStageInfo.module = vertShaderModule;
+        vertShaderStageInfo.pName = "main";
+
+        VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+        fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        fragShaderStageInfo.module = fragShaderModule;
+        fragShaderStageInfo.pName = "main";
+
+        VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
+
+        VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+        vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+
+        auto bindingDescription = Vertex::getBindingDescription();
+        auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
+        vertexInputInfo.vertexBindingDescriptionCount = 1;
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+        vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+        vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+
+        VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+        inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+        VkPipelineViewportStateCreateInfo viewportState{};
+        viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+        viewportState.viewportCount = 1;
+        viewportState.scissorCount = 1;
+
+        VkPipelineRasterizationStateCreateInfo rasterizer{};
+        rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+        rasterizer.depthClampEnable = VK_FALSE;
+        rasterizer.rasterizerDiscardEnable = VK_FALSE;
+        rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+        rasterizer.lineWidth = 1.0f;
+        rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        rasterizer.depthBiasEnable = VK_FALSE;
+
+        VkPipelineMultisampleStateCreateInfo multisampling{};
+        multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+        multisampling.sampleShadingEnable = VK_FALSE;
+        multisampling.rasterizationSamples = msaaSamples;
+        multisampling.sampleShadingEnable = VK_TRUE; // enable sample shading in the pipeline
+        multisampling.minSampleShading = .2f; // min fraction for sample shading; closer to one is smoother
+
+        VkPipelineDepthStencilStateCreateInfo depthStencil{};
+        depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        depthStencil.depthTestEnable = VK_TRUE;
+        depthStencil.depthWriteEnable = VK_TRUE;
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencil.depthBoundsTestEnable = VK_FALSE;
+        depthStencil.stencilTestEnable = VK_FALSE;
+
+        VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+        colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        colorBlendAttachment.blendEnable = VK_FALSE;
+
+        VkPipelineColorBlendStateCreateInfo colorBlending{};
+        colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+        colorBlending.logicOpEnable = VK_FALSE;
+        colorBlending.logicOp = VK_LOGIC_OP_COPY;
+        colorBlending.attachmentCount = 1;
+        colorBlending.pAttachments = &colorBlendAttachment;
+        colorBlending.blendConstants[0] = 0.0f;
+        colorBlending.blendConstants[1] = 0.0f;
+        colorBlending.blendConstants[2] = 0.0f;
+        colorBlending.blendConstants[3] = 0.0f;
+
+        std::vector<VkDynamicState> dynamicStates = {
+                VK_DYNAMIC_STATE_VIEWPORT,
+                VK_DYNAMIC_STATE_SCISSOR
+        };
+        VkPipelineDynamicStateCreateInfo dynamicState{};
+        dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+        dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+        dynamicState.pDynamicStates = dynamicStates.data();
+
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        pipelineLayoutInfo.setLayoutCount = 1;
+        pipelineLayoutInfo.pSetLayouts = &DSLskyBox;
+
+        if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create pipeline layout!");
+        }
+
+        VkGraphicsPipelineCreateInfo pipelineInfo{};
+        pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        pipelineInfo.stageCount = 2;
+        pipelineInfo.pStages = shaderStages;
+        pipelineInfo.pVertexInputState = &vertexInputInfo;
+        pipelineInfo.pInputAssemblyState = &inputAssembly;
+        pipelineInfo.pViewportState = &viewportState;
+        pipelineInfo.pRasterizationState = &rasterizer;
+        pipelineInfo.pMultisampleState = &multisampling;
+        pipelineInfo.pDepthStencilState = &depthStencil;
+        pipelineInfo.pColorBlendState = &colorBlending;
+        pipelineInfo.pDynamicState = &dynamicState;
+        pipelineInfo.layout = pipelineLayout;
+        pipelineInfo.renderPass = renderPass;
+        pipelineInfo.subpass = 0;
+        pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+
+        if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create graphics pipeline for the Sky Box!");
+        }
+
+        vkDestroyShaderModule(device, fragShaderModule, nullptr);
+        vkDestroyShaderModule(device, vertShaderModule, nullptr);
     }
 
     void createGraphicsPipeline() {
@@ -953,6 +1185,23 @@ private:
         vkDestroyShaderModule(device, vertShaderModule, nullptr);
     }
 
+    void createSkyBoxVector(){
+        ObjectInformation skyBoxObj {};
+        skyBoxObj.modelPath = "models/skyBox/skyBox.obj";
+        skyBoxObj.texturePath = "textures/skybox/Daylight Box UV.png";
+        skyBoxObj.mustBeLoaded = true;
+        skyBoxObj.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(150.0f, 150.0f, 150.0f));
+
+        listActualSkyBoxInfos.push_back(skyBoxObj);
+        listSkyBoxInfos.push_back(&listActualSkyBoxInfos[0]);
+
+        isStart = true;
+
+        for (int i = 0; i < listObjectInfos.size(); ++i) {
+            texturePaths.push_back(listActualObjectInfos.at(i).texturePath);
+        }
+    }
+
     void createObjectVector(){
         ObjectInformation objTurret {};
         objTurret.modelPath = "turret.obj";
@@ -1009,6 +1258,19 @@ private:
             if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) {
                 throw std::runtime_error("failed to create framebuffer!");
             }
+        }
+    }
+
+    void createSkyBoxCommandPool(){
+        QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
+
+        VkCommandPoolCreateInfo skyBoxPoolInfo{};
+        skyBoxPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        skyBoxPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        skyBoxPoolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+
+        if (vkCreateCommandPool(device, &skyBoxPoolInfo, nullptr, &skyBoxCommandPool) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create sky box command pool!");
         }
     }
 
@@ -1306,16 +1568,22 @@ private:
     }
 
 */
+    void createSkyBoxLoader(){
+        skyBoxLoader = ObjectLoader(&listSkyBoxInfos, &vertices, &indices);
+    }
+
     void createObjectLoader(){
         objectLoader = ObjectLoader(&listObjectInfos, &vertices, &indices);
     }
 
-    void launchObjectLoader(){
+    void launchSkyBoxLoader(){
+        skyBoxLoader.loadAllElements();
+        skyBoxLoader.fillVertexAndIndices();
+    }
 
+    void launchObjectLoader(){
         objectLoader.loadAllElements();
         objectLoader.fillVertexAndIndices();
-
-
     }
 
     void updateIndexBuffer(const std::vector<uint32_t>& newIndices, uint32_t currentIndicesSize){
@@ -1419,6 +1687,32 @@ private:
         }
     }
 */
+    void createSkyBoxDescriptorPool() {
+        std::array<VkDescriptorPoolSize, 5> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[2].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[3].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[3].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[4].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[4].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT) * (texturePaths.size() + 1);
+
+
+        VkDescriptorPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+        poolInfo.pPoolSizes = poolSizes.data();
+        poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+        poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+        if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create sky box descriptor pool!");
+        }
+    }
+
     void createDescriptorPool() {
         std::array<VkDescriptorPoolSize, 5> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -1443,6 +1737,10 @@ private:
         if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor pool!");
         }
+    }
+
+    void createSkyBoxDescriptorSets() {
+
     }
 
     void createDescriptorSets() {
@@ -1571,7 +1869,7 @@ private:
             throw std::runtime_error("failed to acquire swap chain image!");
         }
 
-        updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped);
+        updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped, normalProj);
         updateMatrixUniformBuffer(currentFrame, listActualObjectInfos, matrixUniformBuffersMapped);
 
         vkResetFences(device, 1, &inFlightFences[currentFrame]);
@@ -1625,6 +1923,30 @@ private:
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
 
+    void createSkyBoxVertexBuffer(){
+        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size() * 100;
+        VkDeviceSize actualBufferSize = sizeof(vertices[0]) * vertices.size();
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                     stagingBuffer, stagingBufferMemory, device, physicalDevice);
+
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        memcpy(data, vertices.data(), (size_t) actualBufferSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                     vertexBuffer, vertexBufferMemory, device, physicalDevice);
+
+        copyBuffer(stagingBuffer, vertexBuffer, bufferSize,
+                   commandPool, device, graphicsQueue);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+    }
 
     void createVertexBuffer() {
         VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size() * 100;
@@ -1833,6 +2155,13 @@ private:
         return true;
     }
 
+    /**
+     * @brief Auxiliar function that help us in reading the binary files from the shaders that have been compiled,
+     * it starts reading them from the end of the file so we can use the read position to determine the size of the
+     * file and allocate a buffer. It reads all of the bytes from the specified file.
+     * @param filename The name of the binary file that we want to open.
+     * @return Return the bytes of the binary file in a byte array managed by std::vector.
+     */
     static std::vector<char> readFile(const std::string& filename) {
         std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
