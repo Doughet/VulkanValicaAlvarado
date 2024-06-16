@@ -167,7 +167,7 @@ void updateUniformBuffer(uint32_t currentImage, GLFWwindow * &window,
                * ubo.view;
 
     LightsBufferObject lbo{};
-    lbo.lightPos = glm::vec3(0.0f, 0.2f, 0.0f);
+    lbo.lightPos = glm::vec3(2.0f, 4.0f, -2.0f);
     lbo.viewPos = glm::vec3(0.0f, 0.0f, 0.0f);
     lbo.lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     lbo.ambientColor = glm::vec3(0.1f, 0.1f, 0.1f);

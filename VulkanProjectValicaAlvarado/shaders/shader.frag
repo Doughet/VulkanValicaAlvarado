@@ -1,6 +1,7 @@
 #version 450
 
 layout(set = 0, binding = 4) uniform sampler2D texSamplerArray[10];
+layout(set = 0, binding = 5) uniform sampler2D normalSamplerArray[10];
 
 layout(binding = 1) uniform sampler2D texSampler;
 
@@ -8,7 +9,8 @@ layout(location = 0) in vec3 fragPos;
 layout(location = 1) in vec2 fragTexCoord;
 layout(location = 2) in vec3 fragNormal;
 layout(location = 3) in vec3 fragColor;
-layout(location = 4) in flat int inIndex;
+layout(location = 4) in flat int outIndex;
+layout(location = 5) in flat int outHasNormal;
 
 layout(location = 0) out vec4 outColor;
 
@@ -24,31 +26,39 @@ layout(binding = 2) uniform LightBufferObject {
 
 
 void main() {
-    // Base color for the object is white
-    vec3 baseColor = vec3(1.0, 1.0, 1.0);
 
-    // Normalize the fragment normal
-    vec3 norm = normalize(fragNormal);
+    //vec3 lightDirection = normalize(ubo2.lightPos - fragPos);
 
-    // Calculate the direction of the light
-    vec3 lightDir = normalize(ubo2.lightPos - fragPos);
+    vec3 normal = normalize(fragNormal);
 
-    // Calculate the ambient component
-    vec3 ambient = ubo2.ambientColor * baseColor;
+    vec3 lightDirection1 = vec3(0.0f, 0.0, 1.0f);
+    vec3 lightDirection2 = vec3(0.0f, 1.0, 0.0f);
+    vec3 lightDirection3 = vec3(0.0f, -1.0, 0.0f);
+    vec3 lightDirection4 = vec3(1.0f, 0.0, 0.0f);
 
-    // Calculate the diffuse component using Lambert's cosine law
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = ubo2.diffuseColor * diff * baseColor;
+    vec3 Diffuse1 = texture(texSamplerArray[outIndex], fragTexCoord).rgb
+    * clamp(dot(normal, lightDirection1),0.0,1.0) * 1;
 
-    // Combine the components for the final color
-    vec3 finalColor = ambient + diffuse;
+    vec3 Diffuse2 = texture(texSamplerArray[outIndex], fragTexCoord).rgb
+    * clamp(dot(normal, lightDirection2),0.0,1.0) * 1;
 
-    // Ensure the color does not exceed white
-    finalColor = clamp(finalColor, 0.0, 1.0);
+    vec3 Diffuse3 = texture(texSamplerArray[outIndex], fragTexCoord).rgb
+    * clamp(dot(normal, lightDirection3),0.0,1.0) * 1;
+
+    vec3 Diffuse4 = texture(texSamplerArray[outIndex], fragTexCoord).rgb
+    * clamp(dot(normal, lightDirection4),0.0,1.0) * 1;
+
+
+    vec3 Ambient = texture(texSamplerArray[outIndex], fragTexCoord).rgb * ubo2.ambientColor * 0.01;
+
+    //vec3 Diffuse = texture(texSamplerArray[outIndex], fragTexCoord).rgb
+    //* 1;
 
 
 
-    outColor = vec4(texture(texSamplerArray[inIndex], fragTexCoord).rgb, 1.0);
+    outColor = vec4(Diffuse1 + Diffuse2 + Diffuse3 + Diffuse4, 1.0);
+
+
 
 
 /*

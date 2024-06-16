@@ -34,8 +34,8 @@
 #include "ObjectLoader.h"
 #include "texturesManagement.h"
 
-const uint32_t WIDTH = 800;
-const uint32_t HEIGHT = 600;
+const uint32_t WIDTH = 1920;
+const uint32_t HEIGHT = 1080;
 
 const std::string TEXTURE_PATH = "textures/";
 
@@ -158,6 +158,12 @@ private:
     std::vector<VkDeviceMemory> textureImageMemorys;
     std::vector<VkSampler> textureSamplers;
 
+    //NORMALS
+    std::vector<VkImage> normalImages;
+    std::vector<VkImageView> normalImageViews;
+    std::vector<VkDeviceMemory> normalImageMemorys;
+    std::vector<VkSampler> normalSamplers;
+
     std::vector<ObjectInformation*> listObjectInfos;
     std::vector<ObjectInformation> listActualObjectInfos;
     bool isStart = true;
@@ -208,6 +214,7 @@ private:
     double lastTime = glfwGetTime();
 
     std::vector<std::string> texturePaths;
+    std::vector<std::string> normalPaths;
 
     void initWindow() {
         glfwInit();
@@ -245,18 +252,23 @@ private:
         createFramebuffers(/*device, renderPass, swapChainFramebuffers, swapChainImageViews,
                 swapChainExtent, colorImageView, depthImageView*/);
 
+
+        //CREATE TEXTURES AND NORMALS
         createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImage,
                            textureImageMemory);
-
         createTextureImages(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImages,
                            textureImageMemorys, texturePaths);
+        createTextureImages(mipLevels, device, physicalDevice, commandPool, graphicsQueue, normalImages,
+                            normalImageMemorys, normalPaths);
+
 
         createTextureImageView(device, textureImage, mipLevels, textureImageView);
         createTextureImageViews(device, textureImages, mipLevels, textureImageViews);
+        createTextureImageViews(device, normalImages, mipLevels, normalImageViews);
 
         createTextureSampler(physicalDevice, device, textureSampler);
         createTextureSamplers(physicalDevice, device, textureSamplers, texturePaths.size());
-
+        createTextureSamplers(physicalDevice, device, normalSamplers, normalPaths.size());
 
         createObjectLoader();
         launchObjectLoader();
@@ -319,14 +331,18 @@ private:
         objectInformation.texturePath = "furniture/Laptop/SLT_Dif.png";
         objectInformation.mustBeLoaded = true;
         objectInformation.modelMatrix = glm::mat4(1.0f);
+        objectInformation.hasNormalMap = false;
+        objectInformation.hasNormalMap = "furniture/Laptop/SLT_Dif.png";
         chooseObjectToAdd(addObjectIndex, objectInformation);
 
         listActualObjectInfos.push_back(objectInformation);
-        objectLoader.addObject(&listActualObjectInfos[listActualObjectInfos.size() - 1], texturePaths, listObjectInfos, vertices, indices);
+        objectLoader.addObject(&listActualObjectInfos[listActualObjectInfos.size() - 1], texturePaths, normalPaths, listObjectInfos, vertices, indices);
 
         for (int i = 0; i < listActualObjectInfos.size(); ++i) {
             listObjectInfos[i] = &listActualObjectInfos[i];
         }
+
+        vkDeviceWaitIdle(device);
 
         vkDestroyBuffer(device, indexBuffer, nullptr);
         vkFreeMemory(device, indexBufferMemory, nullptr);
@@ -342,13 +358,18 @@ private:
 
 
         //update the textureImages, ImageViews, ImageSamplers, ImageMemories
-//update the texture images and memories
+        //update the texture images and memories
         updateTextureImagesAdd(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImages,
                                textureImageMemorys, listActualObjectInfos[listActualObjectInfos.size() - 1].texturePath);
+        updateTextureImagesAdd(mipLevels, device, physicalDevice, commandPool, graphicsQueue, normalImages,
+                               normalImageMemorys, listActualObjectInfos[listActualObjectInfos.size() - 1].normalPath);
+
         //update the texture image views
         updateTextureImageViewsAdd(device, textureImages.at(textureImages.size() - 1), mipLevels, textureImageViews);
-        //update the textyre image samplers
+        updateTextureImageViewsAdd(device, normalImages.at(normalImages.size() - 1), mipLevels, normalImageViews);
+        //update the texture image samplers
         updateTextureImageSamplersAdd(physicalDevice, device, textureSamplers);
+        updateTextureImageSamplersAdd(physicalDevice, device, normalSamplers);
         //update the descriptors
         recreateDescriptorsAndPipeline();
 
@@ -361,16 +382,22 @@ private:
             objectInformation.texturePath = "furniture/Bamboo/bambooTexture.jpeg";
             objectInformation.mustBeLoaded = true;
             objectInformation.modelMatrix = glm::mat4(1.0f);
+            objectInformation.hasNormalMap = false;
+            objectInformation.normalPath = "furniture/Laptop/SLT_Dif.png";
         }else if(objectChosen == 1){
             objectInformation.modelPath = "furniture/CoconutTree/coconutTree.obj";
             objectInformation.texturePath = "furniture/CoconutTree/coconutTreeTexture.jpg";
             objectInformation.mustBeLoaded = true;
             objectInformation.modelMatrix = glm::mat4(1.0f);
+            objectInformation.hasNormalMap = false;
+            objectInformation.normalPath = "furniture/Laptop/SLT_Dif.png";
         }else if(objectChosen == 2){
             objectInformation.modelPath = "furniture/Laptop/SAMSUNG_Laptop.obj";
             objectInformation.texturePath = "furniture/Laptop/SLT_Dif.png";
             objectInformation.mustBeLoaded = true;
             objectInformation.modelMatrix = glm::mat4(1.0f);
+            objectInformation.hasNormalMap = false;
+            objectInformation.normalPath = "furniture/Laptop/SLT_Dif.png";
         }
     }
 
@@ -433,12 +460,16 @@ private:
         //TEXTURE IMAGE
         //TEXTURE MEMORY
         deleteTextureImages(device, textureImages, textureImageMemorys, posModel);
+        deleteTextureImages(device, normalImages, normalImageMemorys, posModel);
         //TEXTURE IMAGE VIEW
         deleteTextureImagesViews(device, posModel, mipLevels, textureImageViews);
+        deleteTextureImagesViews(device, posModel, mipLevels, normalImageViews);
         //TEXTURE SAMPLER
         deleteTextureImageSampler(device, textureSamplers, posModel);
+        deleteTextureImageSampler(device, normalSamplers, posModel);
 
         texturePaths.erase(texturePaths.begin() + posModel);
+        normalPaths.erase(normalPaths.begin() + posModel);
 
         // 3: Remove Matrix  and move all the following matrix one step to the left
 
@@ -531,6 +562,12 @@ private:
 
             vkDestroyImage(device, textureImages[i], nullptr);
             vkFreeMemory(device, textureImageMemorys[i], nullptr);
+
+            vkDestroySampler(device, normalSamplers[i], nullptr);
+            vkDestroyImageView(device, normalImageViews[i], nullptr);
+
+            vkDestroyImage(device, normalImages[i], nullptr);
+            vkFreeMemory(device, normalImageMemorys[i], nullptr);
         }
 
         vkDestroySampler(device, textureSampler, nullptr);
@@ -871,42 +908,15 @@ private:
     }
 
     void createDescriptorSetLayout() {
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        std::vector<VkDescriptorSetLayoutBinding> bindings = {
+                {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr}, // UBO for vertex
+                {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr}, // Texture
+                {2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr}, // UBO for lights
+                {3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr}, // UBO for matrix
+                {4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast<uint32_t>(texturePaths.size()), VK_SHADER_STAGE_FRAGMENT_BIT, nullptr}, // Multiple textures
+                {5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast<uint32_t>(normalPaths.size()), VK_SHADER_STAGE_VERTEX_BIT, nullptr} // Multiple normals
+        };
 
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        VkDescriptorSetLayoutBinding lightLayoutBinding{};
-        lightLayoutBinding.binding = 2;
-        lightLayoutBinding.descriptorCount = 1;
-        lightLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        lightLayoutBinding.pImmutableSamplers = nullptr;
-        lightLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        VkDescriptorSetLayoutBinding matrixLayoutBinding{};
-        matrixLayoutBinding.binding = 3;
-        matrixLayoutBinding.descriptorCount = 1;
-        matrixLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        matrixLayoutBinding.pImmutableSamplers = nullptr;
-        matrixLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-        VkDescriptorSetLayoutBinding samplersLayoutBinding{};
-        samplersLayoutBinding.binding = 4;
-        samplersLayoutBinding.descriptorCount = texturePaths.size();
-        samplersLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplersLayoutBinding.pImmutableSamplers = nullptr;
-        samplersLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        std::array<VkDescriptorSetLayoutBinding, 5> bindings = {uboLayoutBinding, samplerLayoutBinding, lightLayoutBinding, matrixLayoutBinding, samplersLayoutBinding};
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
@@ -915,7 +925,6 @@ private:
         if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor set layout!");
         }
-
     }
 
     void createGraphicsPipeline() {
@@ -1049,18 +1058,25 @@ private:
         objTurret.texturePath = "furniture/House/mondrian.png";
         objTurret.mustBeLoaded = true;
         objTurret.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(15.0f, 15.0f, 15.0f));
+        objTurret.hasNormalMap = false;
+        objTurret.normalPath = "";
 
         ObjectInformation objHouse {};
         objHouse.modelPath = "furniture/House/house_04.obj";
         objHouse.texturePath = "furniture/House/mondrian.png";
         objHouse.mustBeLoaded = true;
         objHouse.modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(60, 0, 0));
+        objHouse.hasNormalMap = false;
+        objHouse.normalPath = "";
+
 
         ObjectInformation objMorris {};
-        objMorris.modelPath = "furniture/CoconutTree/coconutTree.obj";
-        objMorris.texturePath = "furniture/CoconutTree/coconutTreeTexture.jpg";
+        objMorris.modelPath = "furniture/MorrisChair/morrisChair.obj";
+        objMorris.texturePath = "furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png";
         objMorris.mustBeLoaded = true;
         objMorris.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 3.0f, 3.0f));
+        objMorris.hasNormalMap = true;
+        objMorris.normalPath = "furniture/MorrisChair/morrisChair_smallChairMat_Normal.tga.png";
 
         listActualObjectInfos.push_back(objTurret);
         listActualObjectInfos.push_back(objHouse);
@@ -1074,6 +1090,12 @@ private:
 
         for (int i = 0; i < listObjectInfos.size(); ++i) {
             texturePaths.push_back(listActualObjectInfos.at(i).texturePath);
+
+            if(listActualObjectInfos.at(i).hasNormalMap){
+                normalPaths.push_back(listActualObjectInfos.at(i).normalPath);
+            }else{
+                normalPaths.push_back("furniture/MorrisChair/morrisChair_smallChairMat_Normal.tga.png");
+            }
         }
     }
 
@@ -1401,11 +1423,8 @@ private:
     }
 
     void launchObjectLoader(){
-
         objectLoader.loadAllElements();
         objectLoader.fillVertexAndIndices();
-
-
     }
 
     void updateIndexBuffer(const std::vector<uint32_t>& newIndices, uint32_t currentIndicesSize) {
@@ -1616,25 +1635,17 @@ private:
     }
 */
     void createDescriptorPool() {
-        std::array<VkDescriptorPoolSize, 5> poolSizes{};
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[0].descriptorCount = MAX_FRAMES_IN_FLIGHT * 3; // For three UBOs per frame
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-        poolSizes[2].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-        poolSizes[3].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[3].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-        poolSizes[4].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[4].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT) * (texturePaths.size() + 10);
-
+        poolSizes[1].descriptorCount = MAX_FRAMES_IN_FLIGHT * (texturePaths.size() + normalPaths.size());
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-        poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolInfo.maxSets = MAX_FRAMES_IN_FLIGHT * 2; // Just an example, adjust accordingly
 
         if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor pool!");
@@ -1676,18 +1687,29 @@ private:
             matrixBufferInfo.range = sizeof(MatrixBufferObject);
 
             std::vector<VkDescriptorImageInfo> imageInfos;
+            std::vector<VkDescriptorImageInfo> normalInfos;
 
             for (size_t j = 0; j < texturePaths.size(); ++j) {
-                VkDescriptorImageInfo imageInfo;
+                VkDescriptorImageInfo imageInfoO;
 
-                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                imageInfo.imageView = textureImageViews[j];
-                imageInfo.sampler = textureSamplers[j];
+                imageInfoO.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfoO.imageView = textureImageViews[j];
+                imageInfoO.sampler = textureSamplers[j];
 
-                imageInfos.push_back(imageInfo);
+                imageInfos.push_back(imageInfoO);
             }
 
-            std::array<VkWriteDescriptorSet, 5> descriptorWrites{};
+            for (size_t j = 0; j < normalPaths.size(); ++j) {
+                VkDescriptorImageInfo imageInfoO;
+
+                imageInfoO.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfoO.imageView = normalImageViews[j];
+                imageInfoO.sampler = normalSamplers[j];
+
+                normalInfos.push_back(imageInfoO);
+            }
+
+            std::array<VkWriteDescriptorSet, 6> descriptorWrites{};
 
             descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptorWrites[0].dstSet = descriptorSets[i];
@@ -1728,6 +1750,14 @@ private:
             descriptorWrites[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             descriptorWrites[4].descriptorCount = texturePaths.size();
             descriptorWrites[4].pImageInfo = imageInfos.data();
+
+            descriptorWrites[5].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[5].dstSet = descriptorSets[i];
+            descriptorWrites[5].dstBinding = 5; // The same as the layout binding index
+            descriptorWrites[5].dstArrayElement = 0;
+            descriptorWrites[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            descriptorWrites[5].descriptorCount = normalPaths.size();
+            descriptorWrites[5].pImageInfo = normalInfos.data();
 
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }

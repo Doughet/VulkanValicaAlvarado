@@ -15,12 +15,14 @@ layout(location = 1) in vec3 inColor;
 layout(location = 2) in vec2 inTexCoord;
 layout(location = 3) in vec3 inNormal;
 layout(location = 4) in int inIndex;
+layout(location = 5) in int inHasNormal;
 
 layout(location = 0) out vec3 fragPos;
 layout(location = 1) out vec2 fragTexCoord;
 layout(location = 2) out vec3 fragNormal;
 layout(location = 3) out vec3 fragColor;
 layout(location = 4) out int outIndex;
+layout(location = 5) out flat int outHasNormal;
 
 
 void main() {
@@ -29,7 +31,11 @@ void main() {
 
     fragPos = vec3(ubo.model * mubo.model[inIndex] * vec4(inPosition, 1.0));
     fragTexCoord = inTexCoord;
-    fragNormal = mat3(ubo.model) * inNormal;
+
+    mat3 normalMatrix = transpose(inverse(mat3(mubo.model[inIndex])));
+
+    fragNormal = normalize(normalMatrix * inNormal);
     fragColor = inColor;
     outIndex = inIndex;
+    outHasNormal = inHasNormal;
 }

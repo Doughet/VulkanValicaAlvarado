@@ -41,9 +41,11 @@ struct ObjectInformation{
     bool mustBeLoaded;
     std::string modelPath;
 
-    //TEMPORARY
     glm::mat4 modelMatrix;
     std::string texturePath;
+
+    bool hasNormalMap;
+    std::string normalPath;
 };
 
 
@@ -68,8 +70,10 @@ public:
     void loadAllElements();
     void fillVertexAndIndices();
 
-    void addObject(ObjectInformation* objectInformation, std::vector<std::string> & texturePaths, std::vector<ObjectInformation*> &listObjectInfos, std::vector<Vertex> & vertices, std::vector<uint32_t> & indices);
+    void addObject(ObjectInformation* objectInformation, std::vector<std::string> & texturePaths, std::vector<std::string> & normalPaths, std::vector<ObjectInformation*> &listObjectInfos, std::vector<Vertex> & vertices, std::vector<uint32_t> & indices);
     void updateVerticesAndIndices(ObjectInformation* objectInformation, std::vector<Vertex> & vertices, std::vector<uint32_t> & indices);
+
+    void computeTangentAndBitangent(Vertex& v0, Vertex& v1, Vertex& v2);
 };
 
 
