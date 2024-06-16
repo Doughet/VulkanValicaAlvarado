@@ -23,6 +23,7 @@ layout(location = 2) out vec3 fragNormal;
 layout(location = 3) out vec3 fragColor;
 layout(location = 4) out int outIndex;
 layout(location = 5) out flat int outHasNormal;
+layout(location = 6) out vec3 outCamPos;
 
 
 void main() {
@@ -38,4 +39,7 @@ void main() {
     fragColor = inColor;
     outIndex = inIndex;
     outHasNormal = inHasNormal;
+
+    outCamPos = vec3(inverse(ubo.view)[3]);
+
 }

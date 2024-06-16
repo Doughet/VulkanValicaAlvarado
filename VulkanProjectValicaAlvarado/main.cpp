@@ -1798,6 +1798,7 @@ private:
         }
 
         updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped);
+
         updateMatrixUniformBuffer(currentFrame, listActualObjectInfos, matrixUniformBuffersMapped);
 
         vkResetFences(device, 1, &inFlightFences[currentFrame]);
