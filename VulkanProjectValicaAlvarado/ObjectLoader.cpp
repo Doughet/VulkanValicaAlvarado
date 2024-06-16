@@ -87,6 +87,17 @@ void ObjectLoader::loadModel(ObjectInformation* objectInformation, uint32_t inde
             vertex0.normal = vertex1.normal = vertex2.normal = normal;
             vertex0.objectIndex = vertex1.objectIndex = vertex2.objectIndex = index;
 
+            computeTangentAndBitangent(vertex0, vertex1, vertex2);
+
+            if(objectInformation->hasNormalMap){
+                vertex0.hasNormal = 1;
+                vertex1.hasNormal = 1;
+                vertex2.hasNormal = 1;
+            }else{
+                vertex0.hasNormal = 0;
+                vertex1.hasNormal = 0;
+                vertex2.hasNormal = 0;
+            }
 
             objectInformation->vertices.push_back(vertex0);
             objectInformation->vertices.push_back(vertex1);
@@ -153,36 +164,73 @@ void ObjectLoader::fillVertexAndIndices(){
 }
 
 
-void ObjectLoader::addObject(ObjectInformation* objectInformation, std::vector<std::string> & texturePaths){
+void ObjectLoader::addObject(ObjectInformation* objectInformation, std::vector<std::string> & texturePaths, std::vector<std::string> & normalPaths, std::vector<ObjectInformation*> &listObjectInfos, std::vector<Vertex> & vertices, std::vector<uint32_t> & indices){
 
     if(objectInformation->mustBeLoaded){
-        loadModel(objectInformation, listObjects->size());
+        loadModel(objectInformation, texturePaths.size());
     }
 
     texturePaths.push_back(objectInformation->texturePath);
+    normalPaths.push_back(objectInformation->normalPath);
 
-    listObjects->push_back(objectInformation);
+    listObjectInfos.push_back(objectInformation);
 
-    updateVerticesAndIndices(objectInformation);
+    updateVerticesAndIndices(objectInformation, vertices, indices);
 }
 
-void ObjectLoader::updateVerticesAndIndices(ObjectInformation* objectInformation){
+void ObjectLoader::updateVerticesAndIndices(ObjectInformation* objectInformation, std::vector<Vertex> & vertices, std::vector<uint32_t> & indices){
 
-    int indicesCount = vertices->size();
+    int indicesCount = vertices.size();
 
     // Adding all the vertices
-    vertices->insert(vertices->end(), objectInformation->vertices.begin(), objectInformation->vertices.end());
+    vertices.insert(vertices.end(), objectInformation->vertices.begin(), objectInformation->vertices.end());
 
     //Adding the mapped indices
     std::transform(objectInformation->localIndices.begin(),
                    objectInformation->localIndices.end(),
-                   std::back_inserter(*indices),
+                   std::back_inserter(indices),
                    [&indicesCount](uint32_t x){return x + indicesCount;});
 
     indicesCount += objectInformation->vertices.size();
+
+    std::cout << "THE LAST: " + objectInformation->modelPath + " \n";
+    std::cout << "THE LAST: " + objectInformation->modelPath + " \n";
+    std::cout << "THE LAST: " + objectInformation->modelPath + " \n";
+    std::cout << indices.back();
+    std::cout << std::endl;
+
 
     std::cout << "Locally Buffers: " + objectInformation->modelPath + " \n";
 
 }
 
 
+// Function to calculate tangent and bitangent for a triangle
+void ObjectLoader::computeTangentAndBitangent(Vertex& v0, Vertex& v1, Vertex& v2) {
+    glm::vec3 edge1 = v1.pos - v0.pos;
+    glm::vec3 edge2 = v2.pos - v0.pos;
+
+    glm::vec2 deltaUV1 = v1.texCoord - v0.texCoord;
+    glm::vec2 deltaUV2 = v2.texCoord - v0.texCoord;
+
+    float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+    glm::vec3 tangent;
+    tangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+    tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+    tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+
+    glm::vec3 bitangent;
+    bitangent.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+    bitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+    bitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+
+    // Normalize the tangent and bitangent
+    v0.tangent = glm::normalize(tangent);
+    v1.tangent = glm::normalize(tangent);
+    v2.tangent = glm::normalize(tangent);
+
+    v0.bitangent = glm::normalize(bitangent);
+    v1.bitangent = glm::normalize(bitangent);
+    v2.bitangent = glm::normalize(bitangent);
+}

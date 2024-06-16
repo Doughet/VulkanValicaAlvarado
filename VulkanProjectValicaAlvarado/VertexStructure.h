@@ -21,6 +21,9 @@ struct Vertex {
     glm::vec2 texCoord;
     glm::vec3 normal; // Add normal vector
     glm::int32 objectIndex;
+    int8_t hasNormal;
+    glm::vec3 tangent;
+    glm::vec3 bitangent;
 
     static VkVertexInputBindingDescription getBindingDescription() {
         VkVertexInputBindingDescription bindingDescription{};
@@ -31,8 +34,8 @@ struct Vertex {
         return bindingDescription;
     }
 
-    static std::array<VkVertexInputAttributeDescription, 5> getAttributeDescriptions() {
-        std::array<VkVertexInputAttributeDescription, 5> attributeDescriptions{};
+    static std::array<VkVertexInputAttributeDescription, 8> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 8> attributeDescriptions{};
 
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
@@ -58,6 +61,21 @@ struct Vertex {
         attributeDescriptions[4].location = 4;
         attributeDescriptions[4].format = VK_FORMAT_R32_SINT; // Add format for index
         attributeDescriptions[4].offset = offsetof(Vertex, objectIndex);
+
+        attributeDescriptions[5].binding = 0;
+        attributeDescriptions[5].location = 5;
+        attributeDescriptions[5].format = VK_FORMAT_R32_SINT; // Add format for index
+        attributeDescriptions[5].offset = offsetof(Vertex, hasNormal);
+
+        attributeDescriptions[6].binding = 0;
+        attributeDescriptions[6].location = 6;
+        attributeDescriptions[6].format = VK_FORMAT_R32G32B32_SFLOAT; // Add format for index
+        attributeDescriptions[6].offset = offsetof(Vertex, tangent);
+
+        attributeDescriptions[7].binding = 0;
+        attributeDescriptions[7].location = 7;
+        attributeDescriptions[7].format = VK_FORMAT_R32G32B32_SFLOAT; // Add format for index
+        attributeDescriptions[7].offset = offsetof(Vertex, bitangent);
 
         return attributeDescriptions;
     }

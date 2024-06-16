@@ -445,7 +445,7 @@ void updateUniformBuffer(uint32_t currentImage, GLFWwindow * &window,
                * ubo.view;
 
     LightsBufferObject lbo{};
-    lbo.lightPos = glm::vec3(0.0f, 0.2f, 0.0f);
+    lbo.lightPos = glm::vec3(2.0f, 4.0f, -2.0f);
     lbo.viewPos = glm::vec3(0.0f, 0.0f, 0.0f);
     lbo.lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     lbo.ambientColor = glm::vec3(0.1f, 0.1f, 0.1f);
@@ -678,8 +678,15 @@ void createUniformBuffers(VkDevice &device, VkPhysicalDevice &physicalDevice, Vk
 void createIndexBuffer(VkDevice &device, VkPhysicalDevice &physicalDevice, std::vector<uint32_t> &indices,
                        VkCommandPool &commandPool, VkQueue &graphicsQueue, VkBuffer &indexBuffer,
                        VkDeviceMemory &indexBufferMemory) {
-    VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size() * 100;
+    VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size() * 3;
+    if(bufferSize == 0){
+        bufferSize = 1;
+    }
+
     VkDeviceSize actualBufferSize = sizeof(indices[0]) * indices.size();
+    if (actualBufferSize == 0){
+        actualBufferSize = 1;
+    }
 
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;

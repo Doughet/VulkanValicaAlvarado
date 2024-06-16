@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <chrono>
 #include <vector>
+#include <cstring>
 #include <cstdlib>
 #include <cstdint>
 #include <limits>
@@ -143,6 +144,18 @@ void addObject(bool &keyPressedAdd, GLFWwindow *&window, uint32_t & selectedObje
     }
     if(!glfwGetKey(window, GLFW_KEY_Y) && !glfwGetKey(window, GLFW_KEY_U) && !glfwGetKey(window, GLFW_KEY_I)){
         keyPressedAdd = false;
+    }
+}
+
+void deleteObject(bool &keyPressedDelete, GLFWwindow *&window, bool &mustDelete){
+    if(keyPressedDelete == false) {
+        if(glfwGetKey(window, GLFW_KEY_BACKSPACE)) {
+            keyPressedDelete = true;
+            mustDelete = true;
+        }
+    }
+    if(!glfwGetKey(window, GLFW_KEY_BACKSPACE)){
+        keyPressedDelete = false;
     }
 }
 

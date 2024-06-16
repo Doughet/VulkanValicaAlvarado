@@ -7,11 +7,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
-
+/*
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
-
-
+*/
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -35,8 +34,8 @@
 #include "ObjectLoader.h"
 #include "texturesManagement.h"
 
-const uint32_t WIDTH = 800;
-const uint32_t HEIGHT = 600;
+const uint32_t WIDTH = 1920;
+const uint32_t HEIGHT = 1080;
 
 const std::string TEXTURE_PATH = "textures/";
 
@@ -57,62 +56,6 @@ const bool enableValidationLayers = true;
 #endif
 
 //UniformBufferObject ubo{};
-
-void MakeCube(float size, std::vector<std::array<float,6>> &vertices, std::vector<uint32_t> &indices) {
-    float halfSize = size / 2.0f;
-
-    // Relative positions of the vertices for each face of the cube
-    std::vector<std::array<int, 3>> basePositions = {
-            {-1, -1, -1}, {1, -1, -1}, {1, 1, -1}, {-1, 1, -1}, // Front face
-            {-1, -1, 1}, {1, -1, 1}, {1, 1, 1}, {-1, 1, 1}      // Back face
-    };
-
-    // Normals for each side
-    std::vector<std::array<float, 3>> normals = {
-            {0.0f, 0.0f, -1.0f}, // Front
-            {0.0f, 0.0f, 1.0f},  // Back
-            {0.0f, -1.0f, 0.0f}, // Down
-            {0.0f, 1.0f, 0.0f},  // Up
-            {-1.0f, 0.0f, 0.0f}, // Left side
-            {1.0f, 0.0f, 0.0f}   // Right side
-    };
-
-    // Combinations of vertices for each face
-    std::vector<std::array<int, 4>> faceVertices = {
-            {0, 1, 2, 3}, // Front
-            {5, 4, 7, 6}, // Back
-            {4, 5, 1, 0}, // Down
-            {3, 2, 6, 7}, // Up
-            {4, 0, 3, 7}, // Left side
-            {1, 5, 6, 2}  // Right side
-    };
-
-    // Create vertices with its positions and normals
-    for (int i = 0; i < 6; ++i) {
-        for (int j : faceVertices[i]) {
-            std::array<float, 6> vertex = {
-                    basePositions[j][0] * halfSize,
-                    basePositions[j][1] * halfSize,
-                    basePositions[j][2] * halfSize,
-                    normals[i][0],
-                    normals[i][1],
-                    normals[i][2]
-            };
-            vertices.push_back(vertex);
-        }
-    }
-
-    // Indixes for the cube faces
-    for (int i = 0; i < 6; ++i) {
-        int baseIndex = i * 4;
-        indices.push_back(baseIndex);
-        indices.push_back(baseIndex + 2);
-        indices.push_back(baseIndex + 1);
-        indices.push_back(baseIndex);
-        indices.push_back(baseIndex + 3);
-        indices.push_back(baseIndex + 2);
-    }
-}
 
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
@@ -217,6 +160,13 @@ private:
     std::vector<VkDeviceMemory> textureImageMemorys;
     std::vector<VkSampler> textureSamplers;
 
+
+    //NORMALS
+    std::vector<VkImage> normalImages;
+    std::vector<VkImageView> normalImageViews;
+    std::vector<VkDeviceMemory> normalImageMemorys;
+    std::vector<VkSampler> normalSamplers;
+
     std::vector<ObjectInformation*> listSkyBoxInfos;
     std::vector<ObjectInformation*> listObjectInfos;
     std::vector<ObjectInformation> listActualObjectInfos;
@@ -263,15 +213,18 @@ private:
 
     bool keyPressed = false;
     bool keyPressedAdd = false;
+    bool keyPressedDelete = false;
     int currentTransformationModel = 0;
     uint32_t addObjectIndex = 0;
     bool mustAddObject = false;
+    bool mustDelete = false;
 
     bool normalProj = true;
 
     double lastTime = glfwGetTime();
 
     std::vector<std::string> texturePaths;
+    std::vector<std::string> normalPaths;
 
     void initWindow() {
         glfwInit();
@@ -312,18 +265,23 @@ private:
         createDepthResources();
         createFramebuffers();
 
+
+        //CREATE TEXTURES AND NORMALS
         createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImage,
                            textureImageMemory);
-
         createTextureImages(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImages,
                            textureImageMemorys, texturePaths);
+        createTextureImages(mipLevels, device, physicalDevice, commandPool, graphicsQueue, normalImages,
+                            normalImageMemorys, normalPaths);
+
 
         createTextureImageView(device, textureImage, mipLevels, textureImageView);
         createTextureImageViews(device, textureImages, mipLevels, textureImageViews);
+        createTextureImageViews(device, normalImages, mipLevels, normalImageViews);
 
         createTextureSampler(physicalDevice, device, textureSampler);
         createTextureSamplers(physicalDevice, device, textureSamplers, texturePaths.size());
-
+        createTextureSamplers(physicalDevice, device, normalSamplers, normalPaths.size());
 
         createObjectLoader();
         //createSkyBoxLoader();
@@ -372,6 +330,7 @@ private:
 
             changeCurrentModel(keyPressed, window, currentTransformationModel, listObjectInfos);
             addObject(keyPressedAdd, window, addObjectIndex, mustAddObject);
+            deleteObject(keyPressedDelete, window, mustDelete);
             updateTransformationData(currentTransformationModel, window, listObjectInfos, deltaTime);
             //lookAtModel(currentTransformationModel, window, listObjectInfos, swapChainExtent);
             //changeIsometricView(window);
@@ -383,6 +342,14 @@ private:
 
             if(mustAddObject){
                 addObjectDynamic();
+
+                int a = 0;
+            }
+
+            if(mustDelete){
+                deleteModel(currentTransformationModel);
+                mustDelete = false;
+                currentTransformationModel = 0;
             }
 
             drawFrame();
@@ -400,24 +367,46 @@ private:
         objectInformation.texturePath = "";//"furniture/Laptop/SLT_Dif.png";
         objectInformation.mustBeLoaded = true;
         objectInformation.modelMatrix = glm::mat4(1.0f);
+        objectInformation.hasNormalMap = false;
+        objectInformation.hasNormalMap = "furniture/Laptop/SLT_Dif.png";
         chooseObjectToAdd(addObjectIndex, objectInformation);
 
         listActualObjectInfos.push_back(objectInformation);
-        objectLoader.addObject(&listActualObjectInfos[listActualObjectInfos.size() - 1], texturePaths);
+        objectLoader.addObject(&listActualObjectInfos[listActualObjectInfos.size() - 1], texturePaths, normalPaths, listObjectInfos, vertices, indices);
 
+        for (int i = 0; i < listActualObjectInfos.size(); ++i) {
+            listObjectInfos[i] = &listActualObjectInfos[i];
+        }
 
-        updateVertexBuffer(listActualObjectInfos[listActualObjectInfos.size() - 1].vertices, verticesSize);
-        updateIndexBuffer(listActualObjectInfos[listActualObjectInfos.size() - 1].localIndices, indicesSize);
+        vkDeviceWaitIdle(device);
+
+        vkDestroyBuffer(device, indexBuffer, nullptr);
+        vkFreeMemory(device, indexBufferMemory, nullptr);
+
+        vkDestroyBuffer(device, vertexBuffer, nullptr);
+        vkFreeMemory(device, vertexBufferMemory, nullptr);
+
+        //Recreate the new ones
+        //TODO add a create functions with a size for the buffers
+        createVertexBuffer();
+        createIndexBuffer(device, physicalDevice, indices, commandPool, graphicsQueue,
+                          indexBuffer, indexBufferMemory);
 
 
         //update the textureImages, ImageViews, ImageSamplers, ImageMemories
-//update the texture images and memories
+        //update the texture images and memories
         updateTextureImagesAdd(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImages,
                                textureImageMemorys, listActualObjectInfos[listActualObjectInfos.size() - 1].texturePath);
+        updateTextureImagesAdd(mipLevels, device, physicalDevice, commandPool, graphicsQueue, normalImages,
+                               normalImageMemorys, listActualObjectInfos[listActualObjectInfos.size() - 1].normalPath);
+
         //update the texture image views
         updateTextureImageViewsAdd(device, textureImages.at(textureImages.size() - 1), mipLevels, textureImageViews);
         //update the texture image samplers
+        updateTextureImageViewsAdd(device, normalImages.at(normalImages.size() - 1), mipLevels, normalImageViews);
+        //update the texture image samplers
         updateTextureImageSamplersAdd(physicalDevice, device, textureSamplers);
+        updateTextureImageSamplersAdd(physicalDevice, device, normalSamplers);
         //update the descriptors
         recreateDescriptorsAndPipeline();
 
@@ -430,16 +419,22 @@ private:
             objectInformation.texturePath = "furniture/Bamboo/bambooTexture.jpeg";
             objectInformation.mustBeLoaded = true;
             objectInformation.modelMatrix = glm::mat4(1.0f);
+            objectInformation.hasNormalMap = false;
+            objectInformation.normalPath = "furniture/Laptop/SLT_Dif.png";
         }else if(objectChosen == 1){
             objectInformation.modelPath = "furniture/CoconutTree/coconutTree.obj";
             objectInformation.texturePath = "furniture/CoconutTree/coconutTreeTexture.jpg";
             objectInformation.mustBeLoaded = true;
             objectInformation.modelMatrix = glm::mat4(1.0f);
+            objectInformation.hasNormalMap = false;
+            objectInformation.normalPath = "furniture/Laptop/SLT_Dif.png";
         }else if(objectChosen == 2){
             objectInformation.modelPath = "furniture/Laptop/SAMSUNG_Laptop.obj";
             objectInformation.texturePath = "furniture/Laptop/SLT_Dif.png";
             objectInformation.mustBeLoaded = true;
             objectInformation.modelMatrix = glm::mat4(1.0f);
+            objectInformation.hasNormalMap = false;
+            objectInformation.normalPath = "furniture/Laptop/SLT_Dif.png";
         }
     }
 
@@ -461,27 +456,101 @@ private:
      * from listObjectInfos
      */
     void deleteModel(int posModel){
+        ObjectInformation objectInformation {};
+        objectInformation = listActualObjectInfos.at(posModel);
+
         /* 1: Delete position of the VertexBuffer and move the following positions one step to the lef so that there are
          no empty spots (same for the IndexBuffer)*/
+        //Move the points in the vectors
+        size_t sizeVertices = listObjectInfos[posModel]->vertices.size();
+        size_t sizeIndices = listObjectInfos[posModel]->localIndices.size();
+
+        size_t sizeUntilVertices = 0;
+        size_t sizeUntilIndices = 0;
+
+        for (int i = 0; i < posModel; ++i) {
+            sizeUntilVertices += listObjectInfos[i]->vertices.size();
+            sizeUntilIndices += listObjectInfos[i]->localIndices.size();
+        }
+
+        movePointsVertexVector(sizeUntilVertices, sizeVertices);
+        movePointsIndicesVector(sizeUntilIndices, sizeIndices);
+        //Update the buffers
+
+        //Destroy the previous ones
+        vkDestroyBuffer(device, indexBuffer, nullptr);
+        vkFreeMemory(device, indexBufferMemory, nullptr);
+
+        vkDestroyBuffer(device, vertexBuffer, nullptr);
+        vkFreeMemory(device, vertexBufferMemory, nullptr);
+
+        //Recreate the new ones
+        //TODO add a create functions with a size for the buffers
+        createVertexBuffer();
+        createIndexBuffer(device, physicalDevice, indices, commandPool, graphicsQueue,
+                          indexBuffer, indexBufferMemory);
+
 
 
 
         // 2: Erase, remove or delete all the things related to the textures
+        //TEXTURE IMAGE
+        //TEXTURE MEMORY
+        deleteTextureImages(device, textureImages, textureImageMemorys, posModel);
+        deleteTextureImages(device, normalImages, normalImageMemorys, posModel);
+        //TEXTURE IMAGE VIEW
+        deleteTextureImagesViews(device, posModel, mipLevels, textureImageViews);
+        deleteTextureImagesViews(device, posModel, mipLevels, normalImageViews);
+        //TEXTURE SAMPLER
+        deleteTextureImageSampler(device, textureSamplers, posModel);
+        deleteTextureImageSampler(device, normalSamplers, posModel);
+
+        texturePaths.erase(texturePaths.begin() + posModel);
+        normalPaths.erase(normalPaths.begin() + posModel);
 
         // 3: Remove Matrix  and move all the following matrix one step to the left
 
+        //SHOULD BE DONE BY DEFAULT
+
         // 4: Remove  object from listObjectInfos listActualObjectInfos
 
-        for(int i = posModel; i < listObjectInfos.size()-1; i++){
-            listObjectInfos[i] =  listObjectInfos[i+1];
-            listActualObjectInfos[i] = listActualObjectInfos[i+1];
-        }
+        listActualObjectInfos.erase(listActualObjectInfos.begin() + posModel);
         listObjectInfos.pop_back();
-        listActualObjectInfos.pop_back();
+
+        //ALSO MOVE THE POINTS
+        movePointsObjectInfos(posModel);
 
         // 5: Erase, delete, remove pipeline, descriptor...
 
-        // recreateDescriptorsAndPipeline()
+        recreateDescriptorsAndPipeline();
+
+        if(currentTransformationModel >= listObjectInfos.size()){
+            currentTransformationModel = listObjectInfos.size() - 1;
+        }
+    }
+
+    void movePointsVertexVector(uint32_t objectPos, uint32_t objectSizeVertices){
+        vertices.erase(vertices.begin() + objectPos, vertices.begin() + objectPos + objectSizeVertices);
+
+        auto displacement = [](Vertex x) { return Vertex{x.pos, x.color, x.texCoord, x.normal, x.objectIndex - 1}; };
+
+        std::transform(vertices.begin() + objectPos, vertices.end(), vertices.begin() + objectPos, displacement);
+    }
+
+    void movePointsIndicesVector(uint32_t objectPos, uint32_t objectSizeIndices){
+        indices.erase(indices.begin() + objectPos, indices.begin() + objectPos + objectSizeIndices);
+
+        auto displacement = [&objectSizeIndices](int x) { return x - objectSizeIndices; };
+
+        std::transform(indices.begin() + objectPos, indices.end(), indices.begin() + objectPos, displacement);
+    }
+
+    void movePointsObjectInfos(uint32_t objectPos){
+        auto displacement = [](Vertex x) { return Vertex{x.pos, x.color, x.texCoord, x.normal, x.objectIndex - 1}; };
+
+        for (int i = objectPos; i < listObjectInfos.size(); ++i) {
+            std::transform(listObjectInfos[i]->vertices.begin(), listObjectInfos[i]->vertices.end(), listObjectInfos[i]->vertices.begin(), displacement);
+        }
     }
 
     void cleanupSwapChain() {
@@ -530,6 +599,12 @@ private:
 
             vkDestroyImage(device, textureImages[i], nullptr);
             vkFreeMemory(device, textureImageMemorys[i], nullptr);
+
+            vkDestroySampler(device, normalSamplers[i], nullptr);
+            vkDestroyImageView(device, normalImageViews[i], nullptr);
+
+            vkDestroyImage(device, normalImages[i], nullptr);
+            vkFreeMemory(device, normalImageMemorys[i], nullptr);
         }
 
         vkDestroySampler(device, textureSampler, nullptr);
@@ -889,42 +964,15 @@ private:
     }
 
     void createDescriptorSetLayout() {
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        std::vector<VkDescriptorSetLayoutBinding> bindings = {
+                {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr}, // UBO for vertex
+                {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr}, // Texture
+                {2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr}, // UBO for lights
+                {3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr}, // UBO for matrix
+                {4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast<uint32_t>(texturePaths.size()), VK_SHADER_STAGE_FRAGMENT_BIT, nullptr}, // Multiple textures
+                {5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast<uint32_t>(normalPaths.size()), VK_SHADER_STAGE_VERTEX_BIT, nullptr} // Multiple normals
+        };
 
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        VkDescriptorSetLayoutBinding lightLayoutBinding{};
-        lightLayoutBinding.binding = 2;
-        lightLayoutBinding.descriptorCount = 1;
-        lightLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        lightLayoutBinding.pImmutableSamplers = nullptr;
-        lightLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        VkDescriptorSetLayoutBinding matrixLayoutBinding{};
-        matrixLayoutBinding.binding = 3;
-        matrixLayoutBinding.descriptorCount = 1;
-        matrixLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        matrixLayoutBinding.pImmutableSamplers = nullptr;
-        matrixLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-        VkDescriptorSetLayoutBinding samplersLayoutBinding{};
-        samplersLayoutBinding.binding = 4;
-        samplersLayoutBinding.descriptorCount = texturePaths.size();
-        samplersLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplersLayoutBinding.pImmutableSamplers = nullptr;
-        samplersLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        std::array<VkDescriptorSetLayoutBinding, 5> bindings = {uboLayoutBinding, samplerLayoutBinding, lightLayoutBinding, matrixLayoutBinding, samplersLayoutBinding};
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
@@ -1208,18 +1256,25 @@ private:
         objTurret.texturePath = "furniture/House/mondrian.png";
         objTurret.mustBeLoaded = true;
         objTurret.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(15.0f, 15.0f, 15.0f));
+        objTurret.hasNormalMap = false;
+        objTurret.normalPath = "";
 
         ObjectInformation objHouse {};
         objHouse.modelPath = "furniture/House/house_04.obj";
         objHouse.texturePath = "furniture/House/mondrian.png";
         objHouse.mustBeLoaded = true;
         objHouse.modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(60, 0, 0));
+        objHouse.hasNormalMap = false;
+        objHouse.normalPath = "";
+
 
         ObjectInformation objMorris {};
         objMorris.modelPath = "furniture/MorrisChair/morrisChair.obj";
-        objMorris.texturePath = "furniture/House/mondrian.png";
+        objMorris.texturePath = "furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png";
         objMorris.mustBeLoaded = true;
         objMorris.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 3.0f, 3.0f));
+        objMorris.hasNormalMap = true;
+        objMorris.normalPath = "furniture/MorrisChair/morrisChair_smallChairMat_Normal.tga.png";
 
         listActualObjectInfos.push_back(objTurret);
         listActualObjectInfos.push_back(objHouse);
@@ -1233,6 +1288,12 @@ private:
 
         for (int i = 0; i < listObjectInfos.size(); ++i) {
             texturePaths.push_back(listActualObjectInfos.at(i).texturePath);
+
+            if(listActualObjectInfos.at(i).hasNormalMap){
+                normalPaths.push_back(listActualObjectInfos.at(i).normalPath);
+            }else{
+                normalPaths.push_back("furniture/MorrisChair/morrisChair_smallChairMat_Normal.tga.png");
+            }
         }
     }
 
@@ -1586,36 +1647,91 @@ private:
         objectLoader.fillVertexAndIndices();
     }
 
-    void updateIndexBuffer(const std::vector<uint32_t>& newIndices, uint32_t currentIndicesSize){
+    void updateIndexBuffer(const std::vector<uint32_t>& newIndices, uint32_t currentIndicesSize) {
         VkDeviceSize newSize = sizeof(newIndices[0]) * newIndices.size();
         VkDeviceSize currentSize = currentIndicesSize;
         VkDeviceSize totalSize = newSize + currentSize;
 
-        // Create a staging buffer for the new data
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        createBuffer(newSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                     stagingBuffer, stagingBufferMemory, device, physicalDevice);
+        if (true) {
+            VkBuffer newBuffer;
+            VkDeviceMemory newBufferMemory;
 
-        // Map and copy the new data to the staging buffer
-        void* data;
-        vkMapMemory(device, stagingBufferMemory, 0, newSize, 0, &data);
-        memcpy(data, newIndices.data(), (size_t) newSize);
-        vkUnmapMemory(device, stagingBufferMemory);
+            // Calculate new buffer size, ensure it has sufficient space
+            VkDeviceSize newBufferSize = totalSize * 2;
 
-        // Copy the new data from the staging buffer to the index buffer
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandPool, device);
-        VkBufferCopy copyRegion{};
-        copyRegion.srcOffset = 0;
-        copyRegion.dstOffset = currentSize; // Append the new data at the end of the existing data
-        copyRegion.size = newSize;
-        vkCmdCopyBuffer(commandBuffer, stagingBuffer, indexBuffer, 1, &copyRegion);
-        endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
+            // Create the new buffer with necessary usage flags
+            createBuffer(newBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, newBuffer, newBufferMemory, device, physicalDevice);
 
-        // Clean up the staging buffer
-        vkDestroyBuffer(device, stagingBuffer, nullptr);
-        vkFreeMemory(device, stagingBufferMemory, nullptr);
+            // Create a staging buffer for the new data
+            VkBuffer stagingBuffer;
+            VkDeviceMemory stagingBufferMemory;
+            createBuffer(newSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                         stagingBuffer, stagingBufferMemory, device, physicalDevice);
+
+            // Map and copy the new data to the staging buffer
+            void* data;
+            vkMapMemory(device, stagingBufferMemory, 0, newSize, 0, &data);
+            memcpy(data, newIndices.data(), static_cast<size_t>(newSize));
+            vkUnmapMemory(device, stagingBufferMemory);
+
+            // Copy the existing data to the new buffer
+            VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandPool, device);
+            VkBufferCopy copyRegion{};
+            copyRegion.srcOffset = 0;
+            copyRegion.dstOffset = 0;
+            copyRegion.size = currentSize;
+            vkCmdCopyBuffer(commandBuffer, indexBuffer, newBuffer, 1, &copyRegion);
+
+            // Copy the new data to the new buffer
+            copyRegion.srcOffset = 0;
+            copyRegion.dstOffset = currentSize; // Append the new data at the end of the existing data
+            copyRegion.size = newSize;
+            vkCmdCopyBuffer(commandBuffer, stagingBuffer, newBuffer, 1, &copyRegion);
+            endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
+
+            // Clean up the old buffer
+            vkDestroyBuffer(device, indexBuffer, nullptr);
+            vkFreeMemory(device, indexBufferMemory, nullptr);
+
+            // Replace the old buffer with the new buffer
+            indexBuffer = newBuffer;
+            indexBufferMemory = newBufferMemory;
+
+            // Clean up the staging buffer
+            vkDestroyBuffer(device, stagingBuffer, nullptr);
+            vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+        } else {
+            // No need to reallocate the buffer, just update with the new indices
+
+            // Create a staging buffer for the new data
+            VkBuffer stagingBuffer;
+            VkDeviceMemory stagingBufferMemory;
+            createBuffer(newSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                         stagingBuffer, stagingBufferMemory, device, physicalDevice);
+
+            // Map and copy the new data to the staging buffer
+            void* data;
+            vkMapMemory(device, stagingBufferMemory, 0, newSize, 0, &data);
+            memcpy(data, newIndices.data(), static_cast<size_t>(newSize));
+            vkUnmapMemory(device, stagingBufferMemory);
+
+            // Copy the new data from the staging buffer to the index buffer
+            VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandPool, device);
+            VkBufferCopy copyRegion{};
+            copyRegion.srcOffset = 0;
+            copyRegion.dstOffset = currentSize; // Append the new data at the end of the existing data
+            copyRegion.size = newSize;
+            vkCmdCopyBuffer(commandBuffer, stagingBuffer, indexBuffer, 1, &copyRegion);
+            endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
+
+            // Clean up the staging buffer
+            vkDestroyBuffer(device, stagingBuffer, nullptr);
+            vkFreeMemory(device, stagingBufferMemory, nullptr);
+        }
     }
 
     //TODO CHECK BUFFER SIZE
@@ -1624,31 +1740,82 @@ private:
         VkDeviceSize currentSize = currentBuffSize;
         VkDeviceSize totalSize = newSize + currentSize;
 
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        createBuffer(newSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                     stagingBuffer, stagingBufferMemory, device, physicalDevice);
+        if (true) {
+            // New buffer size if the current buffer is too small
+            VkBuffer newBuffer;
+            VkDeviceMemory newBufferMemory;
+            VkDeviceSize newBufferSize = totalSize * 2;
 
-        // Map and copy the new data to the staging buffer
-        void* data;
-        vkMapMemory(device, stagingBufferMemory, 0, newSize, 0, &data);
-        memcpy(data, newVertices.data(), (size_t) newSize);
-        vkUnmapMemory(device, stagingBufferMemory);
+            createBuffer(newBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, newBuffer, newBufferMemory, device, physicalDevice);
 
-        // Copy the new data from the staging buffer to the vertex buffer
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandPool, device);
-        VkBufferCopy copyRegion{};
-        copyRegion.srcOffset = 0;
-        copyRegion.dstOffset = currentSize; // Append the new data at the end of the existing data
-        copyRegion.size = newSize;
-        vkCmdCopyBuffer(commandBuffer, stagingBuffer, vertexBuffer, 1, &copyRegion);
-        endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
+            // Create a staging buffer for the new data
+            VkBuffer stagingBuffer;
+            VkDeviceMemory stagingBufferMemory;
+            createBuffer(newSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                         stagingBuffer, stagingBufferMemory, device, physicalDevice);
 
-        // Clean up the staging buffer
-        vkDestroyBuffer(device, stagingBuffer, nullptr);
-        vkFreeMemory(device, stagingBufferMemory, nullptr);
+            // Map and copy the new data to the staging buffer
+            void* data;
+            vkMapMemory(device, stagingBufferMemory, 0, newSize, 0, &data);
+            memcpy(data, newVertices.data(), static_cast<size_t>(newSize));
+            vkUnmapMemory(device, stagingBufferMemory);
 
+            // Copy the existing data to the new buffer
+            VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandPool, device);
+            VkBufferCopy copyRegion{};
+            copyRegion.srcOffset = 0;
+            copyRegion.dstOffset = 0;
+            copyRegion.size = currentSize;
+            vkCmdCopyBuffer(commandBuffer, vertexBuffer, newBuffer, 1, &copyRegion);
+
+            // Copy the new data to the new buffer
+            copyRegion.srcOffset = 0;
+            copyRegion.dstOffset = currentSize; // Append the new data at the end of the existing data
+            copyRegion.size = newSize;
+            vkCmdCopyBuffer(commandBuffer, stagingBuffer, newBuffer, 1, &copyRegion);
+            endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
+
+            // Clean up the old buffer
+            vkDestroyBuffer(device, vertexBuffer, nullptr);
+            vkFreeMemory(device, vertexBufferMemory, nullptr);
+
+            // Replace the old buffer with the new buffer
+            vertexBuffer = newBuffer;
+            vertexBufferMemory = newBufferMemory;
+
+            // Clean up the staging buffer
+            vkDestroyBuffer(device, stagingBuffer, nullptr);
+            vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+        } else {
+            // Current buffer has enough space, append new data
+            VkBuffer stagingBuffer;
+            VkDeviceMemory stagingBufferMemory;
+            createBuffer(newSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                         stagingBuffer, stagingBufferMemory, device, physicalDevice);
+
+            // Map and copy the new data to the staging buffer
+            void* data;
+            vkMapMemory(device, stagingBufferMemory, 0, newSize, 0, &data);
+            memcpy(data, newVertices.data(), static_cast<size_t>(newSize));
+            vkUnmapMemory(device, stagingBufferMemory);
+
+            // Copy the new data from the staging buffer to the vertex buffer
+            VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandPool, device);
+            VkBufferCopy copyRegion{};
+            copyRegion.srcOffset = 0;
+            copyRegion.dstOffset = currentSize; // Append the new data at the end of the existing data
+            copyRegion.size = newSize;
+            vkCmdCopyBuffer(commandBuffer, stagingBuffer, vertexBuffer, 1, &copyRegion);
+            endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
+
+            // Clean up the staging buffer
+            vkDestroyBuffer(device, stagingBuffer, nullptr);
+            vkFreeMemory(device, stagingBufferMemory, nullptr);
+        }
     }
 
 /*
@@ -1714,25 +1881,17 @@ private:
     }
 
     void createDescriptorPool() {
-        std::array<VkDescriptorPoolSize, 5> poolSizes{};
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[0].descriptorCount = MAX_FRAMES_IN_FLIGHT * 3; // For three UBOs per frame
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-        poolSizes[2].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-        poolSizes[3].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[3].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-        poolSizes[4].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[4].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT) * (texturePaths.size() + 1);
-
+        poolSizes[1].descriptorCount = MAX_FRAMES_IN_FLIGHT * (texturePaths.size() + normalPaths.size());
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-        poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolInfo.maxSets = MAX_FRAMES_IN_FLIGHT * 2; // Just an example, adjust accordingly
 
         if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor pool!");
@@ -1778,18 +1937,29 @@ private:
             matrixBufferInfo.range = sizeof(MatrixBufferObject);
 
             std::vector<VkDescriptorImageInfo> imageInfos;
+            std::vector<VkDescriptorImageInfo> normalInfos;
 
             for (size_t j = 0; j < texturePaths.size(); ++j) {
-                VkDescriptorImageInfo imageInfo;
+                VkDescriptorImageInfo imageInfoO;
 
-                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                imageInfo.imageView = textureImageViews[j];
-                imageInfo.sampler = textureSamplers[j];
+                imageInfoO.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfoO.imageView = textureImageViews[j];
+                imageInfoO.sampler = textureSamplers[j];
 
-                imageInfos.push_back(imageInfo);
+                imageInfos.push_back(imageInfoO);
             }
 
-            std::array<VkWriteDescriptorSet, 5> descriptorWrites{};
+            for (size_t j = 0; j < normalPaths.size(); ++j) {
+                VkDescriptorImageInfo imageInfoO;
+
+                imageInfoO.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfoO.imageView = normalImageViews[j];
+                imageInfoO.sampler = normalSamplers[j];
+
+                normalInfos.push_back(imageInfoO);
+            }
+
+            std::array<VkWriteDescriptorSet, 6> descriptorWrites{};
 
             descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptorWrites[0].dstSet = descriptorSets[i];
@@ -1831,6 +2001,14 @@ private:
             descriptorWrites[4].descriptorCount = texturePaths.size();
             descriptorWrites[4].pImageInfo = imageInfos.data();
 
+            descriptorWrites[5].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[5].dstSet = descriptorSets[i];
+            descriptorWrites[5].dstBinding = 5; // The same as the layout binding index
+            descriptorWrites[5].dstArrayElement = 0;
+            descriptorWrites[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            descriptorWrites[5].descriptorCount = normalPaths.size();
+            descriptorWrites[5].pImageInfo = normalInfos.data();
+
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
     }
@@ -1868,6 +2046,8 @@ private:
         } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
             throw std::runtime_error("failed to acquire swap chain image!");
         }
+
+        //updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped);
 
         updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped, normalProj);
         updateMatrixUniformBuffer(currentFrame, listActualObjectInfos, matrixUniformBuffersMapped);
@@ -1949,8 +2129,15 @@ private:
     }
 
     void createVertexBuffer() {
-        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size() * 100;
+        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size() * 3;
+        if(bufferSize == 0){
+            bufferSize = 1;
+        }
+
         VkDeviceSize actualBufferSize = sizeof(vertices[0]) * vertices.size();
+        if(actualBufferSize == 0){
+            actualBufferSize = 1;
+        }
 
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;
