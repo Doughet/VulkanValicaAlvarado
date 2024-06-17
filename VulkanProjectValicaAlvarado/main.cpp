@@ -132,7 +132,6 @@ private:
 
     VkRenderPass renderPass;
     VkDescriptorSetLayout descriptorSetLayout;
-    VkDescriptorSetLayout DSLskyBox;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
 
@@ -226,6 +225,20 @@ private:
     std::vector<std::string> texturePaths;
     std::vector<std::string> normalPaths;
 
+
+    //SkyBox PIPELINE
+    VkDescriptorSetLayout DSLskyBox;
+    VkPipelineLayout pipelineLayoutSkyBox;
+    VkPipeline graphicsPipelineSkyBox;
+
+    VkImage skyboxImage;
+    VkDeviceMemory skyboxImageMemory;
+    VkImageView skyboxImageView;
+    VkSampler skyboxSampler;
+
+    std::vector<VkDescriptorSet> descriptorSetsSkyBox;
+
+
     void initWindow() {
         glfwInit();
 
@@ -255,10 +268,19 @@ private:
         createObjectVector();
         //createSkyBoxVector();
 
+        //CREATE THE FIRST PIPELINE DESCRIPTOR SET
         createDescriptorSetLayout();
+
+        //CREATE THE SECOND PIPELINE DESCRIPTOR SET
         //createSkyBoxDescriptorSetLayout();
+
+        //CREATE THE FIRST GRAPHIC PIPELINE
         createGraphicsPipeline();
-        //createSkyBoxPipeline();
+
+        //CREATE THE SECOND GRAPHICS PIPELINE
+        //createSkyBoxGraphicsPipeline();
+
+
         createCommandPool();
         //createSkyBoxCommandPool();
         createColorResources();
@@ -283,6 +305,9 @@ private:
         createTextureSamplers(physicalDevice, device, textureSamplers, texturePaths.size());
         createTextureSamplers(physicalDevice, device, normalSamplers, normalPaths.size());
 
+        //CREATE SKYBOX
+        //createSkyBoxTextures();
+
         createObjectLoader();
         //createSkyBoxLoader();
         launchObjectLoader();
@@ -302,8 +327,13 @@ private:
                                   matrixUniformBuffersMapped, MAX_FRAMES_IN_FLIGHT);
         createDescriptorPool();
         //createSkyBoxDescriptorPool();
+
+        //CREATE DESCRIPTOR SETS
         createDescriptorSets();
+
+        //CREATE DESCRIPTOR SETS SKYBOX
         //createSkyBoxDescriptorSets();
+
         createCommandBuffers(device, commandBuffers, commandPool, MAX_FRAMES_IN_FLIGHT);
         createSyncObjects();
     }
@@ -415,9 +445,11 @@ private:
 
     void chooseObjectToAdd(uint32_t objectChosen, ObjectInformation & objectInformation){
         if(objectChosen == 0){
-            objectInformation.modelPath = "furniture/Bamboo/bamboo.obj";
-            objectInformation.texturePath = "furniture/Bamboo/bambooTexture.jpeg";
+            ObjectInformation skyBoxObj {};
+            objectInformation.modelPath = "skyBox/skyBox.obj";
+            objectInformation.texturePath = "skybox/Daylight Box UV.png";
             objectInformation.mustBeLoaded = true;
+            //objectInformation.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(150.0f, 150.0f, 150.0f));
             objectInformation.modelMatrix = glm::mat4(1.0f);
             objectInformation.hasNormalMap = false;
             objectInformation.normalPath = "furniture/Laptop/SLT_Dif.png";
@@ -955,7 +987,14 @@ private:
         skyBoxLayoutBinding.pImmutableSamplers = nullptr;
         skyBoxLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        std::array<VkDescriptorSetLayoutBinding, 1> bindings = {skyBoxLayoutBinding};
+        VkDescriptorSetLayoutBinding matrixLayoutBinding{};
+        matrixLayoutBinding.binding = 1;
+        matrixLayoutBinding.descriptorCount = 1;
+        matrixLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        matrixLayoutBinding.pImmutableSamplers = nullptr;
+        matrixLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {skyBoxLayoutBinding, matrixLayoutBinding};
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
@@ -986,7 +1025,7 @@ private:
         }
     }
 
-    void createSkyBoxPipeline(){
+    void createSkyBoxGraphicsPipeline(){
         auto vertShaderCode = readFile("shaders/skyBoxvert.spv");
         auto fragShaderCode = readFile("shaders/skyBoxfrag.spv");
 
@@ -1010,8 +1049,8 @@ private:
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-        auto bindingDescription = Vertex::getBindingDescription();
-        auto attributeDescriptions = Vertex::getAttributeDescriptions();
+        auto bindingDescription = skyBoxVertex::getBindingDescription();
+        auto attributeDescriptions = skyBoxVertex::getAttributeDescriptions();
 
         vertexInputInfo.vertexBindingDescriptionCount = 1;
         vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
@@ -1082,7 +1121,7 @@ private:
         pipelineLayoutInfo.setLayoutCount = 1;
         pipelineLayoutInfo.pSetLayouts = &DSLskyBox;
 
-        if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
+        if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayoutSkyBox) != VK_SUCCESS) {
             throw std::runtime_error("failed to create pipeline layout!");
         }
 
@@ -1103,7 +1142,7 @@ private:
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-        if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
+        if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipelineSkyBox) != VK_SUCCESS) {
             throw std::runtime_error("failed to create graphics pipeline for the Sky Box!");
         }
 
@@ -1234,6 +1273,14 @@ private:
 
         vkDestroyShaderModule(device, fragShaderModule, nullptr);
         vkDestroyShaderModule(device, vertShaderModule, nullptr);
+    }
+
+
+    void createSkyBoxTextures(){
+        createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, skyboxImage,
+                           skyboxImageMemory);
+        createTextureImageView(device, skyboxImage, mipLevels, skyboxImageView);
+        createTextureSampler(physicalDevice, device, skyboxSampler);
     }
 
     void createSkyBoxVector(){
@@ -1924,7 +1971,49 @@ private:
     }
 
     void createSkyBoxDescriptorSets() {
+        std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, DSLskyBox);
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        allocInfo.pSetLayouts = layouts.data();
 
+        descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+        if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSetsSkyBox.data()) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            VkDescriptorImageInfo imageInfo{};
+            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfo.imageView = skyboxImageView;
+            imageInfo.sampler = skyboxSampler;
+
+            VkDescriptorBufferInfo uniforBufferInfo{};
+            uniforBufferInfo.buffer = uniformBuffers[i];
+            uniforBufferInfo.offset = 0;
+            uniforBufferInfo.range = sizeof(UniformBufferObject);
+
+            std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+
+            descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[0].dstSet = descriptorSetsSkyBox[i];
+            descriptorWrites[0].dstBinding = 0;
+            descriptorWrites[0].dstArrayElement = 0;
+            descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            descriptorWrites[0].descriptorCount = 1;
+            descriptorWrites[0].pImageInfo = &imageInfo;
+
+            descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[1].dstSet = descriptorSetsSkyBox[i];
+            descriptorWrites[1].dstBinding = 1;
+            descriptorWrites[1].dstArrayElement = 0;
+            descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptorWrites[1].descriptorCount = 1;
+            descriptorWrites[1].pBufferInfo = &uniforBufferInfo;
+
+            vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+        }
     }
 
     void createDescriptorSets() {

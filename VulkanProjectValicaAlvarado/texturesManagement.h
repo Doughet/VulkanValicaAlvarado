@@ -236,6 +236,10 @@ void createTextureSampler(VkPhysicalDevice &physicalDevice, VkDevice &device, Vk
     }
 }
 
+
+
+
+
 void loadTextures(std::vector<tinyobj::material_t> &materials,
                   std::vector<VkImage> &textureImages,
                   std::vector<VkImageView> &textureImageViews,
