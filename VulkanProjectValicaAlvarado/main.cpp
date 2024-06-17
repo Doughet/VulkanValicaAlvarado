@@ -1276,13 +1276,34 @@ private:
         objMorris.hasNormalMap = true;
         objMorris.normalPath = "furniture/MorrisChair/morrisChair_smallChairMat_Normal.tga.png";
 
+
+        ObjectInformation objPlane{};
+        objPlane.modelPath = "furniture/MorrisChair/morrisChair.obj";
+        objPlane.texturePath = "furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png";
+        objPlane.mustBeLoaded = false;
+        objPlane.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(1000.0f, 1000.0f, 1000.0f));
+        objPlane.hasNormalMap = true;
+        objPlane.normalPath = "furniture/MorrisChair/morrisChair_smallChairMat_Normal.tga.png";
+        objPlane.vertices = {
+                Vertex{glm::vec3(1.0, 1.0, 0), glm::vec3(1.0, 1.0, 1.0), glm::vec2(1.0, 1.0), glm::vec3(0.0, 0.0, 1.0), 3, false, glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0)},
+                Vertex{glm::vec3(-1.0, 1.0, 0), glm::vec3(1.0, 1.0, 1.0), glm::vec2(1.0, 1.0), glm::vec3(0.0, 0.0, 1.0), 3, false, glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0)},
+                Vertex{glm::vec3(-1.0, -1.0, 0), glm::vec3(1.0, 1.0, 1.0), glm::vec2(1.0, 1.0), glm::vec3(0.0, 0.0, 1.0), 3, false, glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0)},
+                Vertex{glm::vec3(1.0, -1.0, 0), glm::vec3(1.0, 1.0, 1.0), glm::vec2(1.0, 1.0), glm::vec3(0.0, 0.0, 1.0), 3, false, glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0)}
+        };
+        objPlane.localIndices = {
+                0, 1, 3, 2, 3, 1
+        };
+
+
         listActualObjectInfos.push_back(objTurret);
         listActualObjectInfos.push_back(objHouse);
         listActualObjectInfos.push_back(objMorris);
+        listActualObjectInfos.push_back(objPlane);
 
         listObjectInfos.push_back(&listActualObjectInfos[0]);
         listObjectInfos.push_back(&listActualObjectInfos[1]);
         listObjectInfos.push_back(&listActualObjectInfos[2]);
+        listObjectInfos.push_back(&listActualObjectInfos[3]);
 
         isStart = true;
 
@@ -1891,6 +1912,7 @@ private:
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         poolInfo.pPoolSizes = poolSizes.data();
+        poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
         poolInfo.maxSets = MAX_FRAMES_IN_FLIGHT * 2; // Just an example, adjust accordingly
 
         if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
