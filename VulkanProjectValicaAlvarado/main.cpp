@@ -477,6 +477,9 @@ private:
         movePointsIndicesVector(sizeUntilIndices, sizeIndices);
         //Update the buffers
 
+
+        vkQueueWaitIdle(graphicsQueue);
+
         //Destroy the previous ones
         vkDestroyBuffer(device, indexBuffer, nullptr);
         vkFreeMemory(device, indexBufferMemory, nullptr);
