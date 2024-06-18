@@ -19,10 +19,11 @@
    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*/
 #version 450
-#define MAX_LIGHTS 128
+//#define MAX_LIGHTS 128
 
-layout(location = 0) in vec3  position;
+layout(location = 0) in vec3 position;
 
+/*
 struct PointLight
 {
     vec4 m_Position;  // ignore w
@@ -55,10 +56,16 @@ layout(push_constant) uniform Push
 } push;
 
 layout(location = 0)  out  vec3  fragUVW;
+*/
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 model;
+    mat4 view;
+    mat4 proj;
+} ubo;
+
 
 void main()
 {
     // projection * view * model * position
-    gl_Position = ubo.m_Projection * ubo.m_View * push.m_ModelMatrix * vec4(position, 1.0);
-    fragUVW     = position;
+    gl_Position = ubo.proj * ubo.view * ubo.model * vec4(position, 1.0);
 }

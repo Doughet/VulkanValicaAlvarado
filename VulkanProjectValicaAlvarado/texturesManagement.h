@@ -564,7 +564,7 @@ void createTextureImage(uint32_t &mipLevels, VkDevice &device, VkPhysicalDevice 
                         VkDeviceMemory &textureImageMemory) {
     int texWidth, texHeight, texChannels;
     std::string texturePath = "textures/furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png";
-    std::string texturePathWaterMelon = "textures/furniture/Laptop/SLT_Dif.png";
+    std::string texturePathWaterMelon = "textures/skybox/Daylight Box UV.png";
 
     std::cout << texturePath + "\n";
 

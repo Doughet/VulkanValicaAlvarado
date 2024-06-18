@@ -24,6 +24,8 @@
    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*/
 
 #version 450
+
+/*
 #define MAX_LIGHTS 128
 
 // inputs
@@ -64,8 +66,12 @@ layout(push_constant) uniform Push
     mat4 m_ModelMatrix;
     mat4 m_NormalMatrix;
 } push;
+*/
+
+
+layout(location = 0) out vec4 outColor;
 
 void main()
 {
-    outColor    = texture(samplerCubeMap, fragUVW);
+    outColor = vec4(1.0, 1.0, 1.0, 1.0);
 }

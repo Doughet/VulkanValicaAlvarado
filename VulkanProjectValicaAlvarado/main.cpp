@@ -166,18 +166,15 @@ private:
     std::vector<VkDeviceMemory> normalImageMemorys;
     std::vector<VkSampler> normalSamplers;
 
-    std::vector<ObjectInformation*> listSkyBoxInfos;
     std::vector<ObjectInformation*> listObjectInfos;
     std::vector<ObjectInformation> listActualObjectInfos;
-    std::vector<ObjectInformation> listActualSkyBoxInfos;
     bool isStart = true;
     ObjectLoader objectLoader;
     ObjectLoader skyBoxLoader;
 
     std::vector<Vertex> vertices;
-    std::vector<Vertex> skyBoxVertices;
     std::vector<uint32_t> indices;
-    std::vector<uint32_t> skyBoxIndices;
+
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
     VkBuffer indexBuffer;
@@ -235,9 +232,21 @@ private:
     VkDeviceMemory skyboxImageMemory;
     VkImageView skyboxImageView;
     VkSampler skyboxSampler;
-
     std::vector<VkDescriptorSet> descriptorSetsSkyBox;
 
+    std::vector<ObjectInformation*> listSkyBoxInfos;
+    std::vector<ObjectInformation> listActualSkyBoxInfos;
+
+    std::vector<Vertex> tempVerticesSB;
+    std::vector<skyBoxVertex> skyBoxVertices;
+    std::vector<uint32_t> skyBoxIndices;
+
+    VkBuffer vertexBufferSB;
+    VkDeviceMemory vertexBufferMemorySB;
+    VkBuffer indexBufferSB;
+    VkDeviceMemory indexBufferMemorySB;
+
+    std::string texturePathSB;
 
     void initWindow() {
         glfwInit();
@@ -266,19 +275,19 @@ private:
 
         //Create object vector for the objects we want to put on the screen
         createObjectVector();
-        //createSkyBoxVector();
+        createSkyBoxVector();
 
         //CREATE THE FIRST PIPELINE DESCRIPTOR SET
         createDescriptorSetLayout();
 
         //CREATE THE SECOND PIPELINE DESCRIPTOR SET
-        //createSkyBoxDescriptorSetLayout();
+        createSkyBoxDescriptorSetLayout();
 
         //CREATE THE FIRST GRAPHIC PIPELINE
         createGraphicsPipeline();
 
         //CREATE THE SECOND GRAPHICS PIPELINE
-        //createSkyBoxGraphicsPipeline();
+        createSkyBoxGraphicsPipeline();
 
 
         createCommandPool();
@@ -306,25 +315,41 @@ private:
         createTextureSamplers(physicalDevice, device, normalSamplers, normalPaths.size());
 
         //CREATE SKYBOX
-        //createSkyBoxTextures();
+        createSkyBoxTextures(texturePathSB);
 
         createObjectLoader();
-        //createSkyBoxLoader();
+        createSkyBoxLoader();
+
+
         launchObjectLoader();
-        //launchSkyBoxLoader();
+        launchSkyBoxLoader();
+
+
 
 
         //loadSceneSphereElements();
 
         //loadSceneCone();
-        createVertexBuffer();
+        //Create first VBuffer
+        createVertexBuffer(vertices, vertexBuffer, vertexBufferMemory);
+
+        //Create SB VBuffer
+        createSBVertexBuffer(skyBoxVertices, vertexBufferSB, vertexBufferMemorySB);
+
+        //Create first IBuffer
         createIndexBuffer(device, physicalDevice, indices, commandPool, graphicsQueue,
                           indexBuffer, indexBufferMemory);
+        //Create SB IBuffer
+        createIndexBuffer(device, physicalDevice, skyBoxIndices, commandPool, graphicsQueue,
+                          indexBufferSB, indexBufferMemorySB);
+
+
         createUniformBuffers(device, physicalDevice, swapChainExtent, uniformBuffers, uniformBuffersMemory,
                              uniformBuffersMapped, lightsBuffers, lightsBuffersMemory, lightsBuffersMapped,
                              MAX_FRAMES_IN_FLIGHT);
         createMatrixUniformBuffer(device, physicalDevice, swapChainExtent, matrixUniformBuffers, matrixUniformBuffersMemory,
                                   matrixUniformBuffersMapped, MAX_FRAMES_IN_FLIGHT);
+
         createDescriptorPool();
         //createSkyBoxDescriptorPool();
 
@@ -332,7 +357,7 @@ private:
         createDescriptorSets();
 
         //CREATE DESCRIPTOR SETS SKYBOX
-        //createSkyBoxDescriptorSets();
+        createSkyBoxDescriptorSets();
 
         createCommandBuffers(device, commandBuffers, commandPool, MAX_FRAMES_IN_FLIGHT);
         createSyncObjects();
@@ -418,7 +443,7 @@ private:
 
         //Recreate the new ones
         //TODO add a create functions with a size for the buffers
-        createVertexBuffer();
+        createVertexBuffer(vertices, vertexBuffer, vertexBufferMemory);
         createIndexBuffer(device, physicalDevice, indices, commandPool, graphicsQueue,
                           indexBuffer, indexBufferMemory);
 
@@ -448,11 +473,12 @@ private:
             ObjectInformation skyBoxObj {};
             objectInformation.modelPath = "skyBox/skyBox.obj";
             objectInformation.texturePath = "skybox/Daylight Box UV.png";
-            objectInformation.mustBeLoaded = true;
+            objectInformation.mustBeLoaded = false;
             //objectInformation.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(150.0f, 150.0f, 150.0f));
             objectInformation.modelMatrix = glm::mat4(1.0f);
             objectInformation.hasNormalMap = false;
             objectInformation.normalPath = "furniture/Laptop/SLT_Dif.png";
+
         }else if(objectChosen == 1){
             objectInformation.modelPath = "furniture/CoconutTree/coconutTree.obj";
             objectInformation.texturePath = "furniture/CoconutTree/coconutTreeTexture.jpg";
@@ -521,7 +547,7 @@ private:
 
         //Recreate the new ones
         //TODO add a create functions with a size for the buffers
-        createVertexBuffer();
+        createVertexBuffer(vertices, vertexBuffer, vertexBufferMemory);
         createIndexBuffer(device, physicalDevice, indices, commandPool, graphicsQueue,
                           indexBuffer, indexBufferMemory);
 
@@ -613,6 +639,10 @@ private:
 
         vkDestroyPipeline(device, graphicsPipeline, nullptr);
         vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+
+        vkDestroyPipeline(device, graphicsPipelineSkyBox, nullptr);
+        vkDestroyPipelineLayout(device, pipelineLayoutSkyBox, nullptr);
+
         vkDestroyRenderPass(device, renderPass, nullptr);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -648,13 +678,26 @@ private:
         vkDestroyImage(device, textureImage, nullptr);
         vkFreeMemory(device, textureImageMemory, nullptr);
 
+        vkDestroySampler(device, skyboxSampler, nullptr);
+        vkDestroyImageView(device, skyboxImageView, nullptr);
+
+        vkDestroyImage(device, skyboxImage, nullptr);
+        vkFreeMemory(device, skyboxImageMemory, nullptr);
+
         vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+        vkDestroyDescriptorSetLayout(device, DSLskyBox, nullptr);
 
         vkDestroyBuffer(device, indexBuffer, nullptr);
         vkFreeMemory(device, indexBufferMemory, nullptr);
 
+        vkDestroyBuffer(device, indexBufferSB, nullptr);
+        vkFreeMemory(device, indexBufferMemorySB, nullptr);
+
         vkDestroyBuffer(device, vertexBuffer, nullptr);
         vkFreeMemory(device, vertexBufferMemory, nullptr);
+
+        vkDestroyBuffer(device, vertexBufferSB, nullptr);
+        vkFreeMemory(device, vertexBufferMemorySB, nullptr);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
@@ -1137,7 +1180,7 @@ private:
         pipelineInfo.pDepthStencilState = &depthStencil;
         pipelineInfo.pColorBlendState = &colorBlending;
         pipelineInfo.pDynamicState = &dynamicState;
-        pipelineInfo.layout = pipelineLayout;
+        pipelineInfo.layout = pipelineLayoutSkyBox;
         pipelineInfo.renderPass = renderPass;
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
@@ -1276,7 +1319,7 @@ private:
     }
 
 
-    void createSkyBoxTextures(){
+    void createSkyBoxTextures(std::string texturePathSB){
         createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, skyboxImage,
                            skyboxImageMemory);
         createTextureImageView(device, skyboxImage, mipLevels, skyboxImageView);
@@ -1285,8 +1328,8 @@ private:
 
     void createSkyBoxVector(){
         ObjectInformation skyBoxObj {};
-        skyBoxObj.modelPath = "models/skyBox/skyBox.obj";
-        skyBoxObj.texturePath = "textures/skybox/Daylight Box UV.png";
+        skyBoxObj.modelPath = "skyBox/skyBox.obj";
+        skyBoxObj.texturePath = "skybox/Daylight Box UV.png";
         skyBoxObj.mustBeLoaded = true;
         skyBoxObj.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(150.0f, 150.0f, 150.0f));
 
@@ -1295,9 +1338,7 @@ private:
 
         isStart = true;
 
-        for (int i = 0; i < listObjectInfos.size(); ++i) {
-            texturePaths.push_back(listActualObjectInfos.at(i).texturePath);
-        }
+        texturePathSB = "skybox/Daylight Box UV.png";
     }
 
     void createObjectVector(){
@@ -1701,7 +1742,7 @@ private:
 
 */
     void createSkyBoxLoader(){
-        skyBoxLoader = ObjectLoader(&listSkyBoxInfos, &vertices, &indices);
+        skyBoxLoader = ObjectLoader(&listSkyBoxInfos, &tempVerticesSB, &skyBoxIndices);
     }
 
     void createObjectLoader(){
@@ -1711,6 +1752,7 @@ private:
     void launchSkyBoxLoader(){
         skyBoxLoader.loadAllElements();
         skyBoxLoader.fillVertexAndIndices();
+        skyBoxLoader.transformVertex(tempVerticesSB, skyBoxVertices);
     }
 
     void launchObjectLoader(){
@@ -1927,17 +1969,10 @@ private:
 */
     void createSkyBoxDescriptorPool() {
         std::array<VkDescriptorPoolSize, 5> poolSizes{};
-        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-        poolSizes[2].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-        poolSizes[3].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[3].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-        poolSizes[4].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[4].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT) * (texturePaths.size() + 1);
-
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -1954,9 +1989,9 @@ private:
     void createDescriptorPool() {
         std::array<VkDescriptorPoolSize, 2> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = MAX_FRAMES_IN_FLIGHT * 3; // For three UBOs per frame
+        poolSizes[0].descriptorCount = MAX_FRAMES_IN_FLIGHT * 4; // For three UBOs per frame
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = MAX_FRAMES_IN_FLIGHT * (texturePaths.size() + normalPaths.size());
+        poolSizes[1].descriptorCount = MAX_FRAMES_IN_FLIGHT * (texturePaths.size() + normalPaths.size() + 2);
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -1978,7 +2013,7 @@ private:
         allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
         allocInfo.pSetLayouts = layouts.data();
 
-        descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+        descriptorSetsSkyBox.resize(MAX_FRAMES_IN_FLIGHT);
         if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSetsSkyBox.data()) != VK_SUCCESS) {
             throw std::runtime_error("failed to allocate descriptor sets!");
         }
@@ -2171,7 +2206,7 @@ private:
         vkResetCommandBuffer(commandBuffers[currentFrame], /*VkCommandBufferResetFlagBits*/ 0);
         recordCommandBuffer(commandBuffers[currentFrame], imageIndex, renderPass, swapChainFramebuffers,
                             swapChainExtent, graphicsPipeline, vertexBuffer, indexBuffer, pipelineLayout, indices,
-                            descriptorSets, currentFrame);
+                            descriptorSets, graphicsPipelineSkyBox, vertexBufferSB, indexBufferSB, pipelineLayoutSkyBox, skyBoxIndices, descriptorSetsSkyBox, currentFrame);
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -2217,9 +2252,16 @@ private:
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
 
-    void createSkyBoxVertexBuffer(){
-        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size() * 100;
+    void createSBVertexBuffer(std::vector<skyBoxVertex> & vertices, VkBuffer & vertexBuffer, VkDeviceMemory & vertexBufferMemory) {
+        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size() * 3;
+        if(bufferSize == 0){
+            bufferSize = 1;
+        }
+
         VkDeviceSize actualBufferSize = sizeof(vertices[0]) * vertices.size();
+        if(actualBufferSize == 0){
+            actualBufferSize = 1;
+        }
 
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;
@@ -2242,7 +2284,8 @@ private:
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
 
-    void createVertexBuffer() {
+
+    void createVertexBuffer(std::vector<Vertex> & vertices, VkBuffer & vertexBuffer, VkDeviceMemory & vertexBufferMemory) {
         VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size() * 3;
         if(bufferSize == 0){
             bufferSize = 1;

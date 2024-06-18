@@ -234,3 +234,9 @@ void ObjectLoader::computeTangentAndBitangent(Vertex& v0, Vertex& v1, Vertex& v2
     v1.bitangent = glm::normalize(bitangent);
     v2.bitangent = glm::normalize(bitangent);
 }
+
+void ObjectLoader::transformVertex(std::vector<Vertex> & tempVertices, std::vector<skyBoxVertex> & verticesSB) {
+    verticesSB.resize(tempVertices.size());
+
+    std::transform(tempVertices.begin(), tempVertices.end(), verticesSB.begin(), [](const Vertex& x) {return skyBoxVertex{x.pos};});
+}
