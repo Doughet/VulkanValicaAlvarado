@@ -74,6 +74,8 @@ public:
     void updateVerticesAndIndices(ObjectInformation* objectInformation, std::vector<Vertex> & vertices, std::vector<uint32_t> & indices);
 
     void computeTangentAndBitangent(Vertex& v0, Vertex& v1, Vertex& v2);
+
+    void transformVertex(std::vector<Vertex> & tempVertices, std::vector<skyBoxVertex> & verticesSB);
 };
 
 

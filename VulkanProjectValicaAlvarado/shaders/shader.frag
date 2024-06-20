@@ -49,11 +49,11 @@ void lambertModel(){
     * clamp(dot(normal, lightDirection4),0.0,1.0) * 1;
 
 
-    vec3 Ambient = texture(texSamplerArray[outIndex], fragTexCoord).rgb * ubo2.ambientColor * 0.01;
+    vec3 Ambient = texture(texSamplerArray[outIndex], fragTexCoord).rgb * ubo2.ambientColor * 0.1;
 
     //vec3 Diffuse = texture(texSamplerArray[outIndex], fragTexCoord).rgb
     //* 1;
-    outColor = vec4(Diffuse1 + Diffuse2 + Diffuse3 + Diffuse4, 1.0);
+    outColor = vec4(Diffuse1 + Diffuse2 + Diffuse3 + Diffuse4 + Ambient, 1.0);
 }
 
 void BlinnPhong(){
