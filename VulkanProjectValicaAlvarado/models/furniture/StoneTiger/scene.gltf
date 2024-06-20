@@ -1,0 +1,451 @@
+{
+  "accessors": [
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 7836,
+      "max": [
+        84.11758422851563,
+        19.68325424194336,
+        87.32569122314453
+      ],
+      "min": [
+        -64.6395263671875,
+        -23.474803924560547,
+        -0.5369110703468323
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 94032,
+      "componentType": 5126,
+      "count": 7836,
+      "max": [
+        0.9950289726257324,
+        0.9997877478599548,
+        0.999770998954773
+      ],
+      "min": [
+        -0.999980092048645,
+        -0.9999620318412781,
+        -0.9999997019767761
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 7836,
+      "max": [
+        0.9999997019767761,
+        0.9999995231628418,
+        0.9765987992286682,
+        1.0
+      ],
+      "min": [
+        -1.0,
+        -0.9999963641166687,
+        -0.9678736329078674,
+        -1.0
+      ],
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 7836,
+      "max": [
+        1.5233025550842285,
+        1.817237377166748
+      ],
+      "min": [
+        -0.5199868679046631,
+        0.2204674482345581
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "componentType": 5125,
+      "count": 29034,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 188064,
+      "componentType": 5126,
+      "count": 160,
+      "max": [
+        40.0,
+        40.0,
+        120.0
+      ],
+      "min": [
+        -40.0,
+        -40.0,
+        0.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 189984,
+      "componentType": 5126,
+      "count": 160,
+      "max": [
+        0.9834410548210144,
+        0.9834410548210144,
+        0.9881076812744141
+      ],
+      "min": [
+        -0.9834410548210144,
+        -0.9834410548210144,
+        -0.9881072640419006
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 62688,
+      "componentType": 5126,
+      "count": 160,
+      "max": [
+        0.9961543083190918,
+        0.997269868850708
+      ],
+      "min": [
+        0.012986987829208374,
+        0.00273016095161438
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 116136,
+      "componentType": 5125,
+      "count": 612,
+      "type": "SCALAR"
+    }
+  ],
+  "asset": {
+    "extras": {
+      "author": "Twpic (https://sketchfab.com/TWPIC)",
+      "license": "SKETCHFAB Standard (https://sketchfab.com/licenses)",
+      "source": "https://sketchfab.com/3d-models/stonetiger-ad240bdb26a741d49f3eeee83e689696",
+      "title": "StoneTiger"
+    },
+    "generator": "Sketchfab-16.15.0",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 118584,
+      "name": "floatBufferViews",
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 63968,
+      "byteOffset": 118584,
+      "byteStride": 8,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 191904,
+      "byteOffset": 182552,
+      "byteStride": 12,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 125376,
+      "byteOffset": 374456,
+      "byteStride": 16,
+      "name": "floatBufferViews",
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 499832,
+      "uri": "scene.bin"
+    }
+  ],
+  "images": [
+    {
+      "uri": "textures/Archmodels_64_040__0_baseColor.jpeg"
+    },
+    {
+      "uri": "textures/Archmodels_64_040__0_metallicRoughness.png"
+    },
+    {
+      "uri": "textures/Archmodels_64_040__0_normal.png"
+    },
+    {
+      "uri": "textures/material_baseColor.jpeg"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "Archmodels_64_040__0",
+      "normalTexture": {
+        "index": 2
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicFactor": 0.0,
+        "metallicRoughnessTexture": {
+          "index": 1
+        }
+      }
+    },
+    {
+      "doubleSided": true,
+      "name": "material",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 3
+        },
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.6
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Archmodels_64_040__0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0,
+            "TANGENT": 2,
+            "TEXCOORD_0": 3
+          },
+          "indices": 4,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "ChamferBox01_������_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 6,
+            "POSITION": 5,
+            "TEXCOORD_0": 7
+          },
+          "indices": 8,
+          "material": 1,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "Sketchfab_model"
+    },
+    {
+      "children": [
+        2
+      ],
+      "matrix": [
+        0.0010000000474974513,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0010000000474974513,
+        0.0,
+        0.0,
+        -0.0010000000474974513,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "676f3922774c480eaedf73b7d7669b4e.fbx"
+    },
+    {
+      "children": [
+        3,
+        6
+      ],
+      "name": "RootNode"
+    },
+    {
+      "children": [
+        4
+      ],
+      "matrix": [
+        0.8692779763534142,
+        -1.2249756568786577e-17,
+        0.1532771355223238,
+        0.0,
+        0.1532771355223238,
+        1.9599610510058523e-16,
+        -0.8692779763534143,
+        0.0,
+        -1.2249756568786577e-17,
+        0.8826879858970642,
+        1.9599610510058523e-16,
+        0.0,
+        -4.167516231536865,
+        -38.303707122802734,
+        -0.8346326351165771,
+        1.0
+      ],
+      "name": "Archmodels_64_040"
+    },
+    {
+      "children": [
+        5
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        -0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        215.13632202148438,
+        1.0
+      ],
+      "name": "Object_4"
+    },
+    {
+      "mesh": 0,
+      "name": "Archmodels_64_040__0"
+    },
+    {
+      "children": [
+        7
+      ],
+      "matrix": [
+        -1.4406289672112873,
+        1.705874542953673e-16,
+        -0.12603880429201833,
+        0.0,
+        -0.12603880429201833,
+        -3.211057963206914e-16,
+        1.440628967211287,
+        0.0,
+        1.705874542953673e-16,
+        1.4461319446563723,
+        -3.211057963206914e-16,
+        0.0,
+        -7.217950820922852,
+        -86.76795196533203,
+        6.31013392649038e-07,
+        1.0
+      ],
+      "name": "ChamferBox01"
+    },
+    {
+      "children": [
+        8
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        -0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        59.999996185302734,
+        1.0
+      ],
+      "name": "Object_7"
+    },
+    {
+      "mesh": 1,
+      "name": "ChamferBox01_������_0"
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Sketchfab_Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
+    },
+    {
+      "sampler": 0,
+      "source": 2
+    },
+    {
+      "sampler": 0,
+      "source": 3
+    }
+  ]
+}

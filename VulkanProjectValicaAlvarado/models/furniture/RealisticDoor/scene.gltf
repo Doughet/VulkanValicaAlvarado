@@ -1,0 +1,627 @@
+{
+  "accessors": [
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 88,
+      "max": [
+        0.5454276204109192,
+        0.8753365278244019,
+        2.0080461502075195
+      ],
+      "min": [
+        0.2506585121154785,
+        -0.8753365278244019,
+        -1.989321231842041
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 1056,
+      "componentType": 5126,
+      "count": 88,
+      "max": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "min": [
+        -0.028533725067973137,
+        -1.0,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 88,
+      "max": [
+        0.6160227060317993,
+        0.7319720983505249
+      ],
+      "min": [
+        0.3850592374801636,
+        0.6543248891830444
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "componentType": 5125,
+      "count": 132,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 2112,
+      "componentType": 5126,
+      "count": 65532,
+      "max": [
+        0.5454276204109192,
+        1.0228564739227295,
+        2.1634199619293213
+      ],
+      "min": [
+        -0.2506585121154785,
+        -1.0228564739227295,
+        -2.1634199619293213
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 788496,
+      "componentType": 5126,
+      "count": 65532,
+      "max": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "min": [
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 704,
+      "componentType": 5126,
+      "count": 65532,
+      "max": [
+        0.8750000596046448,
+        1.0
+      ],
+      "min": [
+        0.125,
+        0.0
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 528,
+      "componentType": 5125,
+      "count": 102828,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 1574880,
+      "componentType": 5126,
+      "count": 16486,
+      "max": [
+        0.25237321853637695,
+        1.0228564739227295,
+        2.1634199619293213
+      ],
+      "min": [
+        -0.2506585121154785,
+        0.8550334572792053,
+        -0.02030305191874504
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 1772712,
+      "componentType": 5126,
+      "count": 16486,
+      "max": [
+        1.0,
+        0.9994726777076721,
+        0.9988138675689697
+      ],
+      "min": [
+        -1.0,
+        -0.0048399027436971664,
+        -0.004935309290885925
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 524960,
+      "componentType": 5126,
+      "count": 16486,
+      "max": [
+        0.8750000596046448,
+        1.0
+      ],
+      "min": [
+        0.49882686138153076,
+        0.0
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 411840,
+      "componentType": 5125,
+      "count": 25176,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 1970544,
+      "componentType": 5126,
+      "count": 72,
+      "max": [
+        1.0,
+        13.457174301147461,
+        1.1732838153839111
+      ],
+      "min": [
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 1971408,
+      "componentType": 5126,
+      "count": 72,
+      "max": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "min": [
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 656848,
+      "componentType": 5126,
+      "count": 72,
+      "max": [
+        0.875,
+        1.0
+      ],
+      "min": [
+        0.125,
+        0.0
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 512544,
+      "componentType": 5125,
+      "count": 108,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 1972272,
+      "componentType": 5126,
+      "count": 574,
+      "max": [
+        1.0,
+        1.0,
+        2.1940670013427734
+      ],
+      "min": [
+        -1.0,
+        -1.0,
+        -2.327214241027832
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 1979160,
+      "componentType": 5126,
+      "count": 574,
+      "max": [
+        1.0,
+        0.9951848387718201,
+        1.0
+      ],
+      "min": [
+        -0.9951847791671753,
+        -0.9951847791671753,
+        -0.9951848387718201
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 657424,
+      "componentType": 5126,
+      "count": 574,
+      "max": [
+        1.0,
+        1.0
+      ],
+      "min": [
+        0.0,
+        0.01000000536441803
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 512976,
+      "componentType": 5125,
+      "count": 948,
+      "type": "SCALAR"
+    }
+  ],
+  "asset": {
+    "extras": {
+      "author": "MR. A K (https://sketchfab.com/Ahlad_kondli)",
+      "license": "SKETCHFAB Standard (https://sketchfab.com/licenses)",
+      "source": "https://sketchfab.com/3d-models/realistic-door-ec835c0c500c487a93f9fcd47535a554",
+      "title": "realistic door"
+    },
+    "generator": "Sketchfab-16.14.0",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 516768,
+      "name": "floatBufferViews",
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 662016,
+      "byteOffset": 516768,
+      "byteStride": 8,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 1986048,
+      "byteOffset": 1178784,
+      "byteStride": 12,
+      "name": "floatBufferViews",
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 3164832,
+      "uri": "scene.bin"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "Material.001",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.131281,
+          0.0258024,
+          0.00492039,
+          1.0
+        ],
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.9939685412502948
+      }
+    },
+    {
+      "doubleSided": true,
+      "name": "Material.003",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.156265,
+          0.045045,
+          0.0205401,
+          1.0
+        ],
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.9952337950454055
+      }
+    },
+    {
+      "doubleSided": true,
+      "name": "Material.002",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.276514,
+          0.266883,
+          0.274094,
+          1.0
+        ],
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.9176174048802729
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "bagila chuka_Material.001_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "bagilu_Material.001_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 5,
+            "POSITION": 4,
+            "TEXCOORD_0": 6
+          },
+          "indices": 7,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "bagilu_Material.001_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 9,
+            "POSITION": 8,
+            "TEXCOORD_0": 10
+          },
+          "indices": 11,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "chukattu_Material.003_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 13,
+            "POSITION": 12,
+            "TEXCOORD_0": 14
+          },
+          "indices": 15,
+          "material": 1,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "handal_Material.002_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 17,
+            "POSITION": 16,
+            "TEXCOORD_0": 18
+          },
+          "indices": 19,
+          "material": 2,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "Sketchfab_model"
+    },
+    {
+      "children": [
+        2
+      ],
+      "matrix": [
+        0.009999999776482582,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.009999999776482582,
+        0.0,
+        0.0,
+        -0.009999999776482582,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "2cfb02a597bf40e7999f7d56b4f5a5b9.fbx"
+    },
+    {
+      "children": [
+        3,
+        5,
+        8,
+        10
+      ],
+      "name": "RootNode"
+    },
+    {
+      "children": [
+        4
+      ],
+      "matrix": [
+        16.330089569091797,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -1.629206793918314e-05,
+        -99.99999999999868,
+        0.0,
+        0.0,
+        99.99999999999868,
+        -1.629206793918314e-05,
+        0.0,
+        2.061131477355957,
+        216.3419952392578,
+        21.336708068847656,
+        1.0
+      ],
+      "name": "bagila chuka"
+    },
+    {
+      "mesh": 0,
+      "name": "bagila chuka_Material.001_0"
+    },
+    {
+      "children": [
+        6,
+        7
+      ],
+      "matrix": [
+        16.330089569091797,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -1.629206793918314e-05,
+        -99.99999999999868,
+        0.0,
+        0.0,
+        99.99999999999868,
+        -1.629206793918314e-05,
+        0.0,
+        2.061131477355957,
+        216.3419952392578,
+        21.336708068847656,
+        1.0
+      ],
+      "name": "bagilu"
+    },
+    {
+      "mesh": 1,
+      "name": "bagilu_Material.001_0"
+    },
+    {
+      "mesh": 2,
+      "name": "bagilu_Material.001_0"
+    },
+    {
+      "children": [
+        9
+      ],
+      "matrix": [
+        28.521320343017464,
+        2.4934131080830827e-06,
+        -0.0,
+        -0.0,
+        2.859379958629352e-13,
+        -3.2707493041845515e-06,
+        20.075716018676488,
+        -0.0,
+        -1.9078778436261163e-05,
+        218.23577880859,
+        3.555512144801769e-05,
+        -0.0,
+        -19.750133514404297,
+        218.23577880859375,
+        -104.55010986328125,
+        1.0
+      ],
+      "name": "chukattu"
+    },
+    {
+      "mesh": 3,
+      "name": "chukattu_Material.003_0"
+    },
+    {
+      "children": [
+        11
+      ],
+      "matrix": [
+        -6.30868673324585,
+        -0.0,
+        -0.0,
+        -0.0,
+        -0.0,
+        -6.308686733245843,
+        -2.7576145537630155e-07,
+        -0.0,
+        -0.0,
+        2.7576145537630155e-07,
+        -6.308686733245843,
+        -0.0,
+        10.992066383361816,
+        215.0808868408203,
+        -67.35570526123047,
+        1.0
+      ],
+      "name": "handal"
+    },
+    {
+      "mesh": 4,
+      "name": "handal_Material.002_0"
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Sketchfab_Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ]
+}
