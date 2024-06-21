@@ -7,12 +7,14 @@ set(GLFW "C:/Users/adria/OneDrive/Documents/Visual Studio 2022/Libraries/glfw-3.
 set(GLM "C:/Users/adria/OneDrive/Documents/Visual Studio 2022/Libraries/glm") # GLM
 set(STB "C:/Users/adria/OneDrive/Documents/Visual Studio 2022/Libraries/stb") # STB
 set(LOADER "C:/Users/adria/OneDrive/Documents/Visual Studio 2022/Libraries/tinyobjloader") # STB
+set(LOADERGLTF "C:/Users/adria/OneDrive/Documents/Visual Studio 2022/Libraries/tinygltf") # STB
 # List of directories to add to the include path:
 # all headers in these directories can be included in the source code
 # (Vulkan headers must be omitted from here)
 list(APPEND INCLUDE_DIRS "${GLFW}/include" ${GLM} headers)
 list(APPEND INCLUDE_DIRS "${STB}")
 list(APPEND INCLUDE_DIRS "${LOADER}")
+list(APPEND INCLUDE_DIRS "${LOADERGLTF}")
 # List of libraries to link to the executable:
 # all these libraries will be linked to the compiled executable
 # (Vulkan library must be omitted from here)

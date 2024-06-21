@@ -1,9 +1,11 @@
 //
 
 #define TINYOBJLOADER_IMPLEMENTATION
+#define TINYGLTF_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+
 
 #include "ObjectLoader.h"
-
 
 //
 // Created by adria on 10/06/2024.
@@ -30,9 +32,10 @@ void ObjectLoader::loadModel(ObjectInformation* objectInformation, uint32_t inde
     //std::string modelPathWaterMelon = "models/furniture/Laptop/SAMSUNG_Laptop.obj";
     //std::string modelPath1 = "models/viking_room.obj";
 
-    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, modelPath.c_str())) {
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, modelPath.c_str(), "models/furniture/CoconutTree/")) {
         throw std::runtime_error(warn + err);
     }
+
 
     //std::unordered_map<Vertex, uint32_t> uniqueVertices{};
 
@@ -136,7 +139,12 @@ void ObjectLoader::loadAllElements(){
 
     for (int i = 0; i < listObjects->size(); ++i) {
         if(listObjects->at(i)->mustBeLoaded){
-            loadModel(listObjects->at(i), i);
+
+            if(listObjects->at(i)->isGltf){
+                loadGLTFModel(listObjects->at(i), i);
+            }else{
+                loadModel(listObjects->at(i), i);
+            }
         }
     }
 }
@@ -240,3 +248,155 @@ void ObjectLoader::transformVertex(std::vector<Vertex> & tempVertices, std::vect
 
     std::transform(tempVertices.begin(), tempVertices.end(), verticesSB.begin(), [](const Vertex& x) {return skyBoxVertex{x.pos};});
 }
+
+template<typename T>
+void processAttribute(tinygltf::Model& model, const std::map<std::string, int>& attributes, const std::string& attributeName, int componentCount, std::vector<Vertex>& vertices, uint32_t index, bool hasNormalMap) {
+    if (attributes.find(attributeName) != attributes.end()) {
+        const auto& accessor = model.accessors[attributes.find(attributeName)->second];
+        const tinygltf::BufferView& bufferView = model.bufferViews[accessor.bufferView];
+        const tinygltf::Buffer& buffer = model.buffers[bufferView.buffer];
+        const T* bufferData = reinterpret_cast<const T*>(&buffer.data[accessor.byteOffset + bufferView.byteOffset]);
+
+        for (size_t i = 0; i < accessor.count; i++) {
+            Vertex vertex;
+            for (int j = 0; j < componentCount; j++) {
+                // Depending on the component count, assign to correct vertex attribute
+            }
+            // Additional vertex setup
+            vertices.push_back(vertex);
+        }
+    }
+}
+
+
+void ze(ObjectInformation* objectInformation, uint32_t index) {
+    tinygltf::Model model;
+    tinygltf::TinyGLTF loader;
+    std::string err;
+    std::string warn;
+
+    std::string modelPath = MODEL_PATH + objectInformation->modelPath;
+    if (!loader.LoadASCIIFromFile(&model, &err, &warn, modelPath)) {
+        throw std::runtime_error("Failed to load glTF file: " + warn + err);
+    }
+
+    std::cout << "Loaded: " + objectInformation->modelPath + "\n";
+
+    // Process each mesh
+    for (const auto& mesh : model.meshes) {
+        for (const auto& primitive : mesh.primitives) {
+            // Check and process each required attribute
+            processAttribute<float>(model, primitive.attributes, "POSITION", 3, objectInformation->vertices, index, objectInformation->hasNormalMap);
+            processAttribute<float>(model, primitive.attributes, "NORMAL", 3, objectInformation->vertices, index, objectInformation->hasNormalMap);
+            processAttribute<float>(model, primitive.attributes, "TEXCOORD_0", 2, objectInformation->vertices, index, objectInformation->hasNormalMap);
+
+            // Handle indices
+            const auto& indexAccessor = model.accessors[primitive.indices];
+            const tinygltf::BufferView& indexView = model.bufferViews[indexAccessor.bufferView];
+            const tinygltf::Buffer& indexBuffer = model.buffers[indexView.buffer];
+            const uint16_t* indices = reinterpret_cast<const uint16_t*>(&indexBuffer.data[indexAccessor.byteOffset + indexView.byteOffset]);
+
+            for (size_t i = 0; i < indexAccessor.count; i++) {
+                objectInformation->localIndices.push_back(indices[i]);
+            }
+        }
+    }
+}
+
+
+// Function to load a GLTF model
+void ObjectLoader::loadGLTFModel(ObjectInformation* objectInformation, uint32_t index) {
+    tinygltf::Model model;
+    tinygltf::TinyGLTF loader;
+    std::string err;
+    std::string warn;
+
+    std::string modelPath = MODEL_PATH + objectInformation->modelPath;
+    if (!loader.LoadASCIIFromFile(&model, &err, &warn, modelPath.c_str())) {
+        throw std::runtime_error(warn + err);
+    }
+
+    std::cout << "Loaded: " + objectInformation->modelPath + "\n";
+
+    for (const auto& mesh : model.meshes) {
+        for (const auto& primitive : mesh.primitives) {
+            // Access vertex positions
+            const auto& posAccessor = model.accessors[primitive.attributes.find("POSITION")->second];
+            const tinygltf::BufferView& posView = model.bufferViews[posAccessor.bufferView];
+            const tinygltf::Buffer& posBuffer = model.buffers[posView.buffer];
+            const float* positions = reinterpret_cast<const float*>(&posBuffer.data[posAccessor.byteOffset + posView.byteOffset]);
+
+            // Access normals
+            const auto& normAccessor = model.accessors[primitive.attributes.find("NORMAL")->second];
+            const tinygltf::BufferView& normView = model.bufferViews[normAccessor.bufferView];
+            const tinygltf::Buffer& normBuffer = model.buffers[normView.buffer];
+            const float* normals = reinterpret_cast<const float*>(&normBuffer.data[normAccessor.byteOffset + normView.byteOffset]);
+
+            // Access texture coordinates
+            const auto& texAccessor = model.accessors[primitive.attributes.find("TEXCOORD_0")->second];
+            const tinygltf::BufferView& texView = model.bufferViews[texAccessor.bufferView];
+            const tinygltf::Buffer& texBuffer = model.buffers[texView.buffer];
+            const float* texCoords = reinterpret_cast<const float*>(&texBuffer.data[texAccessor.byteOffset + texView.byteOffset]);
+
+            // Access indices
+            const auto& indexAccessor = model.accessors[primitive.indices];
+            const tinygltf::BufferView& indexView = model.bufferViews[indexAccessor.bufferView];
+            const tinygltf::Buffer& indexBuffer = model.buffers[indexView.buffer];
+            const uint32_t * indices = reinterpret_cast<const uint32_t *>(&indexBuffer.data[indexAccessor.byteOffset + indexView.byteOffset]);
+
+            for (size_t i = 0; i < indexAccessor.count; i += 3) {
+                uint16_t idx0 = indices[i];
+                uint16_t idx1 = indices[i + 1];
+                uint16_t idx2 = indices[i + 2];
+
+                glm::vec3 v0 = { positions[3 * idx0 + 0], positions[3 * idx0 + 1], positions[3 * idx0 + 2] };
+                glm::vec3 v1 = { positions[3 * idx1 + 0], positions[3 * idx1 + 1], positions[3 * idx1 + 2] };
+                glm::vec3 v2 = { positions[3 * idx2 + 0], positions[3 * idx2 + 1], positions[3 * idx2 + 2] };
+
+                glm::vec3 normal0 = { normals[3 * idx0 + 0], normals[3 * idx0 + 1], normals[3 * idx0 + 2] };
+                glm::vec3 normal1 = { normals[3 * idx1 + 0], normals[3 * idx1 + 1], normals[3 * idx1 + 2] };
+                glm::vec3 normal2 = { normals[3 * idx2 + 0], normals[3 * idx2 + 1], normals[3 * idx2 + 2] };
+
+                glm::vec2 texCoord0 = { texCoords[2 * idx0 + 0], 1.0f - texCoords[2 * idx0 + 1] };
+                glm::vec2 texCoord1 = { texCoords[2 * idx1 + 0], 1.0f - texCoords[2 * idx1 + 1] };
+                glm::vec2 texCoord2 = { texCoords[2 * idx2 + 0], 1.0f - texCoords[2 * idx2 + 1] };
+
+                glm::vec3 faceNormal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
+
+                Vertex vertex0{}, vertex1{}, vertex2{};
+
+                vertex0.pos = v0;
+                vertex0.normal = normal0;
+                vertex0.texCoord = texCoord0;
+                vertex0.color = { 1.0f, 0.0f, 1.0f };
+                vertex0.objectIndex = index;
+                vertex0.hasNormal = objectInformation->hasNormalMap ? 1 : 0;
+
+                vertex1.pos = v1;
+                vertex1.normal = normal1;
+                vertex1.texCoord = texCoord1;
+                vertex1.color = { 1.0f, 0.0f, 1.0f };
+                vertex1.objectIndex = index;
+                vertex1.hasNormal = objectInformation->hasNormalMap ? 1 : 0;
+
+                vertex2.pos = v2;
+                vertex2.normal = normal2;
+                vertex2.texCoord = texCoord2;
+                vertex2.color = { 1.0f, 0.0f, 1.0f };
+                vertex2.objectIndex = index;
+                vertex2.hasNormal = objectInformation->hasNormalMap ? 1 : 0;
+
+                computeTangentAndBitangent(vertex0, vertex1, vertex2);
+
+                objectInformation->vertices.push_back(vertex0);
+                objectInformation->vertices.push_back(vertex1);
+                objectInformation->vertices.push_back(vertex2);
+
+                objectInformation->localIndices.push_back(objectInformation->vertices.size() - 3);
+                objectInformation->localIndices.push_back(objectInformation->vertices.size() - 2);
+                objectInformation->localIndices.push_back(objectInformation->vertices.size() - 1);
+            }
+        }
+    }
+}
+
