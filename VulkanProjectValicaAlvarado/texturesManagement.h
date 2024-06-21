@@ -261,7 +261,7 @@ void loadTextures(std::vector<tinyobj::material_t> &materials,
 }
 
 void deleteTextureImagesViews(VkDevice &device, uint32_t indexDelete, uint32_t &mipLevels,
-                                    std::vector<VkImageView> &textureImageViews){
+                              std::vector<VkImageView> &textureImageViews){
     vkDestroyImageView(device, textureImageViews[indexDelete], nullptr);
 
     textureImageViews.erase(textureImageViews.begin() + indexDelete);
@@ -278,10 +278,10 @@ void createTextureImageViews(VkDevice &device, std::vector<VkImage> &textureImag
 
     for (int i = 0; i < textureImages.size(); ++i) {
         textureImageViews.push_back(createImageView(textureImages[i], VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT,
-                                           mipLevels, device));
+                                                    mipLevels, device));
     }
-    
-    
+
+
 }
 
 void createTextureImageView(VkDevice &device, VkImage &textureImage, uint32_t &mipLevels,
@@ -446,8 +446,8 @@ void deleteTextureImages(VkDevice &device,
 }
 
 void updateTextureImagesAdd(uint32_t &mipLevels, VkDevice &device, VkPhysicalDevice &physicalDevice,
-                         VkCommandPool &commandPool, VkQueue &graphicsQueue, std::vector<VkImage> &textureImages,
-                         std::vector<VkDeviceMemory> &textureImageMemorys, std::string newTexturePath){
+                            VkCommandPool &commandPool, VkQueue &graphicsQueue, std::vector<VkImage> &textureImages,
+                            std::vector<VkDeviceMemory> &textureImageMemorys, std::string newTexturePath){
 
     int texWidth, texHeight, texChannels;
     std::string texturePath = "textures/" + newTexturePath;
@@ -494,7 +494,7 @@ void updateTextureImagesAdd(uint32_t &mipLevels, VkDevice &device, VkPhysicalDev
     vkFreeMemory(device, stagingBufferMemory, nullptr);
 
     //generateMipmaps(textureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, mipLevels, physicalDevice,
-     //               device, commandPool, graphicsQueue);
+    //               device, commandPool, graphicsQueue);
 
     textureImages.push_back(textureImage);
     textureImageMemorys.push_back(textureImageMemory);

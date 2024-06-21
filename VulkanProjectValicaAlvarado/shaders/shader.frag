@@ -83,11 +83,11 @@ void main() {
     //BlinnPhong();
     lambertModel();
 
-/*
-    if(inIndex == 4) {
-        outColor = vec4(1.0, 1.0, 1.0, 1.0);
-    }else{
-        outColor = vec4(texture(texSamplerArray[inIndex], fragTexCoord).rgb, 1.0);
-    }
-*/
+    /*
+        if(inIndex == 4) {
+            outColor = vec4(1.0, 1.0, 1.0, 1.0);
+        }else{
+            outColor = vec4(texture(texSamplerArray[inIndex], fragTexCoord).rgb, 1.0);
+        }
+    */
 }

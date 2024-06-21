@@ -81,7 +81,7 @@ void createFramebuffers() {
 void changeOrthogonalView(GLFWwindow* &window, int screenWidth, int screenHeight, bool &normalProj) {
 
     glm::mat4 M = glm::mat4(1.0f / 20.0f,0,0,0,  0,-4.0f / 60.f,0,0,
-                  0,0,1.0f/(0.1f-500.0f),0, 0,0,0.1f/(0.1f-500.0f),1);
+                            0,0,1.0f/(0.1f-500.0f),0, 0,0,0.1f/(0.1f-500.0f),1);
     // Update ubo.view with the orthogonal transformation matrix
     if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) {
         if(normalProj) {
@@ -157,8 +157,8 @@ void changeIsometricView(GLFWwindow* &window, int screenWidth, int screenHeight,
 
         // Adjust aspect ratio based on screen dimensions
         ubo.proj = glm::scale(glm::mat4(1.0), glm::vec3(1,-1,1)) * glm::frustum(-isometricSize * screenWidth / static_cast<float>(screenHeight),
-                                isometricSize * screenWidth / static_cast<float>(screenHeight),
-                              -isometricSize, isometricSize, 0.1f, 500.0f);
+                                                                                isometricSize * screenWidth / static_cast<float>(screenHeight),
+                                                                                -isometricSize, isometricSize, 0.1f, 500.0f);
         ubo.proj[1][1] *= -1;
     }
 }
@@ -627,9 +627,9 @@ void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkCom
 }
 
 void createMatrixUniformBuffer(VkDevice &device, VkPhysicalDevice &physicalDevice, VkExtent2D &swapChainExtent,
-                          std::vector<VkBuffer> &uniformBuffers, std::vector<VkDeviceMemory> &uniformBuffersMemory,
-                          std::vector<void*> &uniformBuffersMapped,
-                          const int maxFramesInFlight) {
+                               std::vector<VkBuffer> &uniformBuffers, std::vector<VkDeviceMemory> &uniformBuffersMemory,
+                               std::vector<void*> &uniformBuffersMapped,
+                               const int maxFramesInFlight) {
 
     MatrixBufferObject mubo {};
     mubo.model[0] = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 10.0f, 10.0f));

@@ -301,7 +301,7 @@ private:
         createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImage,
                            textureImageMemory);
         createTextureImages(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImages,
-                           textureImageMemorys, texturePaths);
+                            textureImageMemorys, texturePaths);
         createTextureImages(mipLevels, device, physicalDevice, commandPool, graphicsQueue, normalImages,
                             normalImageMemorys, normalPaths);
 
@@ -1035,7 +1035,7 @@ private:
         matrixLayoutBinding.descriptorCount = 1;
         matrixLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         matrixLayoutBinding.pImmutableSamplers = nullptr;
-        matrixLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        matrixLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
         std::array<VkDescriptorSetLayoutBinding, 2> bindings = {skyBoxLayoutBinding, matrixLayoutBinding};
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
