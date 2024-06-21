@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <chrono>
+#include <utility>
 #include <vector>
 #include <cstring>
 #include <cstdlib>
@@ -41,11 +42,34 @@ struct ObjectInformation{
     bool mustBeLoaded;
     std::string modelPath;
 
-    glm::mat4 modelMatrix;
+    glm::mat4 modelMatrix{};
     std::string texturePath;
 
     bool hasNormalMap;
     std::string normalPath;
+
+    uint32_t objectGroup;
+
+    ObjectInformation(){}
+
+    ObjectInformation(
+            std::string modelPath,
+            glm::mat4 modelMatrix,
+            const std::string& texturePath
+            ){
+        vertices = {};
+        localIndices = {};
+
+        mustBeLoaded = true;
+        this->modelPath = std::move(modelPath);
+        this->texturePath = texturePath;
+
+        this->modelMatrix = modelMatrix;
+        hasNormalMap = false;
+        normalPath = texturePath;
+
+        objectGroup = 0;
+    }
 };
 
 

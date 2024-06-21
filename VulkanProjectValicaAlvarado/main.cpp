@@ -1358,7 +1358,7 @@ private:
         objHouse.hasNormalMap = false;
         objHouse.normalPath = "";
 
-
+/*
         ObjectInformation objMorris {};
         objMorris.modelPath = "furniture/MorrisChair/morrisChair.obj";
         objMorris.texturePath = "furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png";
@@ -1366,6 +1366,13 @@ private:
         objMorris.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 3.0f, 3.0f));
         objMorris.hasNormalMap = true;
         objMorris.normalPath = "furniture/MorrisChair/morrisChair_smallChairMat_Normal.tga.png";
+*/
+
+        ObjectInformation objMorris = ObjectInformation(
+                "furniture/MorrisChair/morrisChair.obj",
+                glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 3.0f, 3.0f)),
+                "furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png"
+                );
 
 
         ObjectInformation objPlane{};
