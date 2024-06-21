@@ -37,7 +37,7 @@ void ObjectLoader::loadModel(ObjectInformation* objectInformation, uint32_t inde
     }
 
 
-    //std::unordered_map<Vertex, uint32_t> uniqueVertices{};
+    std::unordered_map<Vertex, uint32_t> uniqueVertices{};
 
     for (const auto& shape : shapes) {
         for (size_t i = 0; i < shape.mesh.indices.size(); i += 3) {
@@ -102,6 +102,7 @@ void ObjectLoader::loadModel(ObjectInformation* objectInformation, uint32_t inde
                 vertex2.hasNormal = 0;
             }
 
+            /*
             objectInformation->vertices.push_back(vertex0);
             objectInformation->vertices.push_back(vertex1);
             objectInformation->vertices.push_back(vertex2);
@@ -109,25 +110,26 @@ void ObjectLoader::loadModel(ObjectInformation* objectInformation, uint32_t inde
             objectInformation->localIndices.push_back(i);
             objectInformation->localIndices.push_back(i+1);
             objectInformation->localIndices.push_back(i+2);
+             */
 
-            /*
+
             if (uniqueVertices.count(vertex0) == 0) {
-                uniqueVertices[vertex0] = static_cast<uint32_t>(vertices.size());
-                vertices.push_back(vertex0);
+                uniqueVertices[vertex0] = static_cast<uint32_t>(objectInformation->vertices.size());
+                objectInformation->vertices.push_back(vertex0);
             }
             if (uniqueVertices.count(vertex1) == 0) {
-                uniqueVertices[vertex1] = static_cast<uint32_t>(vertices.size());
-                vertices.push_back(vertex1);
+                uniqueVertices[vertex1] = static_cast<uint32_t>(objectInformation->vertices.size());
+                objectInformation->vertices.push_back(vertex1);
             }
             if (uniqueVertices.count(vertex2) == 0) {
-                uniqueVertices[vertex2] = static_cast<uint32_t>(vertices.size());
-                vertices.push_back(vertex2);
+                uniqueVertices[vertex2] = static_cast<uint32_t>(objectInformation->vertices.size());
+                objectInformation->vertices.push_back(vertex2);
             }
 
-            indices.push_back(uniqueVertices[vertex0]);
-            indices.push_back(uniqueVertices[vertex1]);
-            indices.push_back(uniqueVertices[vertex2]);
-            */
+            objectInformation->localIndices.push_back(uniqueVertices[vertex0]);
+            objectInformation->localIndices.push_back(uniqueVertices[vertex1]);
+            objectInformation->localIndices.push_back(uniqueVertices[vertex2]);
+
         }
     }
 

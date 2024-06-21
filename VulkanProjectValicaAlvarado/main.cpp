@@ -89,18 +89,6 @@ struct SwapChainSupportDetails {
 };
 
 
-namespace std {
-    template<> struct hash<Vertex> {
-        size_t operator()(Vertex const& vertex) const {
-            size_t hash1 = hash<glm::vec3>()(vertex.pos);
-            size_t hash2 = hash<glm::vec3>()(vertex.color);
-            size_t hash3 = hash<glm::vec2>()(vertex.texCoord);
-            size_t hash4 = hash<glm::vec3>()(vertex.normal);
-            return ((hash1 ^ (hash2 << 1)) >> 1) ^ (hash3 << 1) ^ hash4;
-        }
-    };
-}
-
 class HelloTriangleApplication {
 public:
     void run() {

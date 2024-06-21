@@ -90,6 +90,22 @@ struct Vertex {
     }
 };
 
+namespace std {
+    template<>
+    struct hash<Vertex> {
+        size_t operator()(const Vertex& vertex) const {
+            return hash<glm::vec3>()(vertex.pos) ^
+                   (hash<glm::vec3>()(vertex.color) << 1) ^
+                   (hash<glm::vec2>()(vertex.texCoord) << 1) ^
+                   (hash<glm::vec3>()(vertex.normal) << 1) ^
+                   (hash<glm::int32>()(vertex.objectIndex) << 1) ^
+                   (hash<int8_t>()(vertex.hasNormal) << 1) ^
+                   (hash<glm::vec3>()(vertex.tangent) << 1) ^
+                   (hash<glm::vec3>()(vertex.bitangent) << 1);
+        }
+    };
+}
+
 struct skyBoxVertex {
     glm::vec3 pos;
 
