@@ -89,18 +89,6 @@ struct SwapChainSupportDetails {
 };
 
 
-namespace std {
-    template<> struct hash<Vertex> {
-        size_t operator()(Vertex const& vertex) const {
-            size_t hash1 = hash<glm::vec3>()(vertex.pos);
-            size_t hash2 = hash<glm::vec3>()(vertex.color);
-            size_t hash3 = hash<glm::vec2>()(vertex.texCoord);
-            size_t hash4 = hash<glm::vec3>()(vertex.normal);
-            return ((hash1 ^ (hash2 << 1)) >> 1) ^ (hash3 << 1) ^ hash4;
-        }
-    };
-}
-
 class HelloTriangleApplication {
 public:
     void run() {
@@ -1348,6 +1336,7 @@ private:
         objTurret.mustBeLoaded = true;
         objTurret.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(15.0f, 15.0f, 15.0f));
         objTurret.hasNormalMap = false;
+        objTurret.isGltf = false;
         objTurret.normalPath = "";
 
         ObjectInformation objHouse {};
@@ -1356,7 +1345,17 @@ private:
         objHouse.mustBeLoaded = true;
         objHouse.modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(60, 0, 0));
         objHouse.hasNormalMap = false;
+        objHouse.isGltf = false;
         objHouse.normalPath = "";
+
+        ObjectInformation objGLTF {};
+        objGLTF.modelPath = "furniture/Bed/scene.gltf";
+        objGLTF.texturePath = "furniture/House/mondrian.png";
+        objGLTF.mustBeLoaded = true;
+        objGLTF.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(60, 60, 60));
+        objGLTF.hasNormalMap = false;
+        objGLTF.isGltf = true;
+        objGLTF.normalPath = "";
 
 /*
         ObjectInformation objMorris {};
@@ -1371,7 +1370,8 @@ private:
         ObjectInformation objMorris = ObjectInformation(
                 "furniture/MorrisChair/morrisChair.obj",
                 glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 3.0f, 3.0f)),
-                "furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png"
+                "furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png",
+                false
                 );
 
 
@@ -1397,11 +1397,13 @@ private:
         listActualObjectInfos.push_back(objHouse);
         listActualObjectInfos.push_back(objMorris);
         listActualObjectInfos.push_back(objPlane);
+        listActualObjectInfos.push_back(objGLTF);
 
         listObjectInfos.push_back(&listActualObjectInfos[0]);
         listObjectInfos.push_back(&listActualObjectInfos[1]);
         listObjectInfos.push_back(&listActualObjectInfos[2]);
         listObjectInfos.push_back(&listActualObjectInfos[3]);
+        listObjectInfos.push_back(&listActualObjectInfos[4]);
 
         isStart = true;
 

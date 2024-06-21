@@ -6,6 +6,7 @@
 #define VULKANPROJECTVALICAALVARADO_OBJECTLOADER_H
 
 #include <tiny_obj_loader.h>
+#include <tiny_gltf.h>
 
 #include <GLFW/glfw3.h>
 
@@ -39,23 +40,24 @@ struct ObjectInformation{
     std::vector<uint32_t> localIndices;
 
     //If the object is to be loaded
-    bool mustBeLoaded;
+    bool mustBeLoaded{};
     std::string modelPath;
 
     glm::mat4 modelMatrix{};
     std::string texturePath;
 
-    bool hasNormalMap;
+    bool hasNormalMap{};
     std::string normalPath;
 
-    uint32_t objectGroup;
+    bool isGltf{};
 
     ObjectInformation(){}
 
     ObjectInformation(
             std::string modelPath,
             glm::mat4 modelMatrix,
-            const std::string& texturePath
+            const std::string& texturePath,
+            bool isGltf
             ){
         vertices = {};
         localIndices = {};
@@ -68,7 +70,7 @@ struct ObjectInformation{
         hasNormalMap = false;
         normalPath = texturePath;
 
-        objectGroup = 0;
+        this->isGltf = isGltf;
     }
 };
 
@@ -100,6 +102,8 @@ public:
     void computeTangentAndBitangent(Vertex& v0, Vertex& v1, Vertex& v2);
 
     void transformVertex(std::vector<Vertex> & tempVertices, std::vector<skyBoxVertex> & verticesSB);
+
+    void loadGLTFModel(ObjectInformation* objectInformation, uint32_t index);
 };
 
 
