@@ -1349,6 +1349,7 @@ private:
         objTurret.hasNormalMap = false;
         objTurret.isGltf = false;
         objTurret.normalPath = "";
+
 /*
         ObjectInformation objHouse {};
         objHouse.modelPath = "furniture/House/house_04.obj";
@@ -1393,10 +1394,9 @@ private:
                 "furniture/WildWestPiano/Piano_Wood_BaseColor.png",
                 false
                 );
-        glm::mat4 aux = objWildWestPiano.modelMatrix;
-        objWildWestPiano.modelMatrix = glm::translate(aux,  glm::vec3(7.0f, 0.0f, -0.4f));
-        objWildWestPiano.modelMatrix = glm::rotate(objWildWestPiano.modelMatrix, glm::radians(55.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        //objWildWestPiano.modelMatrix = glm::translate(objWildWestPiano.modelMatrix, glm::vec3(0.0f, 1.0f, 0.0f));
+
+        objWildWestPiano.translateModel(7.0f, 0.0f, -0.4f);
+        objWildWestPiano.rotateModel(60.0f, 'z');
 
         ObjectInformation objTVCabinet = ObjectInformation(
                 "furniture/TVCabinet/Tes.obj",
@@ -1404,9 +1404,8 @@ private:
                 "furniture/TVCabinet/TCA_Dif.png",
                 false
         );
-        objTVCabinet.modelMatrix = glm::translate(objTVCabinet.modelMatrix, glm::vec3(-450.0f, 1600.0f, -180.0f));
-        objTVCabinet.modelMatrix = glm::rotate(objTVCabinet.modelMatrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
+        objTVCabinet.translateModel(-450.0f, 1600.0f, -180.0f);
+        objTVCabinet.rotateModel(90.0f, 'x');
 
         ObjectInformation objTruck = ObjectInformation(
                 "Cars/keytruck.obj",
@@ -1415,7 +1414,6 @@ private:
                 false
         );
 
-
         ObjectInformation objCat = ObjectInformation(
                 "animals/cat/Cat.obj",
                 glm::scale(glm::mat4(1.0f), glm::vec3(3.0f)),
@@ -1423,9 +1421,9 @@ private:
                 false
         );
 
-       objCat.modelMatrix = glm::translate(objCat.modelMatrix, glm::vec3(110.0f, 20.0f, -24.0));
-       objCat.modelMatrix = glm::rotate(objCat.modelMatrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-       objCat.modelMatrix = glm::rotate(objCat.modelMatrix, glm::radians(15.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        objCat.translateModel(110.0f, 20.0f, -24.0);
+        objCat.rotateModel(90.0f, 'x');
+        objCat.rotateModel(15.0f, 'y');
 
         ObjectInformation floor = ObjectInformation(
                 "furniture/CyberpunkFlooring/scene.gltf",
@@ -1434,7 +1432,7 @@ private:
                 true
         );
 
-        floor.modelMatrix = glm::translate(floor.modelMatrix, glm::vec3(0.0f, 0.0f, -96.0f));
+        floor.translateModel(0.0f, 0.0f, -96.0f);
 
         ObjectInformation obj = ObjectInformation(
                 "furniture/MorrisChair/morrisChair.obj",
@@ -1442,7 +1440,6 @@ private:
                 "furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png",
                 false
         );
-
 
         ObjectInformation objPlane{};
         objPlane.modelPath = "furniture/MorrisChair/morrisChair.obj";

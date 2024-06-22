@@ -52,7 +52,7 @@ void updateTransformationData(int pos, GLFWwindow * &window, std::vector<ObjectI
     const float fixedMoveSpeed = moveSpeed * deltaTime;
 
     const glm::mat4 M = listObjectInfos.at(pos)->modelMatrix;
-    //printf(", : %d ," ,int(listObjectInfos.at(pos)->vertices.size()));
+    printf(", : %d ," ,int(listObjectInfos.at(pos)->vertices.size()));
     if(listObjectInfos.at(pos)->modelSize == modelSize::TINY){
         sizeSpeed = 0.1f;
     }else if(listObjectInfos.at(pos)->modelSize == modelSize::SMALL){
@@ -127,7 +127,7 @@ void changeCurrentModel(bool &keyPressed, GLFWwindow *&window, int &currentTrans
             currentTransformationModel++;
         }
     }
-    if(!glfwGetKey(window, GLFW_KEY_9) && !glfwGetKey(window, GLFW_KEY_8)){
+    if(!glfwGetKey(window, GLFW_KEY_9) && !glfwGetKey(window, GLFW_KEY_8) && listObjectInfos.at(currentTransformationModel)->isGltf){
         if(listObjectInfos.at(currentTransformationModel)->vertices.size() <= 2000){
             listObjectInfos.at(currentTransformationModel)->modelSize = modelSize::TINY;
         }else if(listObjectInfos.at(currentTransformationModel)->vertices.size() <= 4000){
@@ -139,6 +139,9 @@ void changeCurrentModel(bool &keyPressed, GLFWwindow *&window, int &currentTrans
         }else if(listObjectInfos.at(currentTransformationModel)->vertices.size() <= 10000){
             listObjectInfos.at(currentTransformationModel)->modelSize = modelSize::GIGANTIC;
         }
+        keyPressed = false;
+    }else if(!glfwGetKey(window, GLFW_KEY_9) && !glfwGetKey(window, GLFW_KEY_8)){
+        listObjectInfos.at(currentTransformationModel)->modelSize = modelSize::GIGANTIC;
         keyPressed = false;
     }
 }

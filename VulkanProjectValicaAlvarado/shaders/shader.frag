@@ -1,9 +1,9 @@
 #version 450
 
-layout(set = 0, binding = 4) uniform sampler2D texSamplerArray[10];
-layout(set = 0, binding = 5) uniform sampler2D normalSamplerArray[10];
+layout(set = 0, binding = 4) uniform sampler2D texSamplerArray[20];
+layout(set = 0, binding = 5) uniform sampler2D normalSamplerArray[20]; // Doesn't work but it is key
 
-layout(binding = 1) uniform sampler2D texSampler;
+layout(binding = 1) uniform sampler2D texSampler; // Texture sampler
 
 layout(location = 0) in vec3 fragPos;
 layout(location = 1) in vec2 fragTexCoord;
@@ -16,6 +16,7 @@ layout(location = 6) in vec3 outCamPos;
 layout(location = 0) out vec4 outColor;
 
 layout(binding = 2) uniform LightBufferObject {
+    vec3 lightDir;
     vec3 lightPos;
     vec3 viewPos;
     vec3 lightColor;
@@ -24,6 +25,38 @@ layout(binding = 2) uniform LightBufferObject {
     vec3 specularColor;
     float shininess;
 } ubo2;
+
+vec3 BRDF(vec3 V, vec3 N, vec3 L, vec3 Md, vec3 Ms, float gamma) {
+    vec3 Diffuse = Md * clamp(dot(N, L),0.0,1.0);
+    vec3 Specular = Ms * vec3(pow(clamp(dot(N, normalize(V + L)),0.0,1.0), gamma));
+    return (Diffuse + Specular);
+}
+
+void Blinn(){
+    vec3 Norm = normalize(fragNormal);
+    vec3 EyeDir = normalize(ubo2.viewPos - fragPos);
+    vec3 Albedo = texture(texSamplerArray[outIndex], fragTexCoord).rgb;
+    float pex = 200.0f;
+    float metallic = 1.0f;
+    vec3 L = ubo2.lightDir;
+    vec3 lightColor = ubo2.lightColor.rgb;
+
+    vec3 DiffSpec = BRDF(EyeDir, Norm, L, Albedo, vec3(metallic), pex);
+
+    // A special type of non-uniform ambient color, invented for this course
+    const vec3 cxp = vec3(1.0,0.5,0.5) * 0.15;
+    const vec3 cxn = vec3(0.9,0.6,0.4) * 0.15;
+    const vec3 cyp = vec3(0.3,1.0,1.0) * 0.15;
+    const vec3 cyn = vec3(0.5,0.5,0.5) * 0.15;
+    const vec3 czp = vec3(0.8,0.2,0.4) * 0.15;
+    const vec3 czn = vec3(0.3,0.6,0.7) * 0.15;
+
+    vec3 Ambient =((Norm.x > 0 ? cxp : cxn) * (Norm.x * Norm.x) +
+    (Norm.y > 0 ? cyp : cyn) * (Norm.y * Norm.y) +
+    (Norm.z > 0 ? czp : czn) * (Norm.z * Norm.z)) * Albedo;
+
+    outColor = vec4(DiffSpec * lightColor.rgb + Ambient, 1.0f);
+}
 
 void lambertModel(){
     //vec3 lightDirection = normalize(ubo2.lightPos - fragPos);
@@ -56,14 +89,24 @@ void lambertModel(){
     outColor = vec4(Diffuse1 + Diffuse2 + Diffuse3 + Diffuse4 + Ambient, 1.0);
 }
 
-void BlinnPhong(){
+void BlinnPhong(){ // Just do Blinn. This function has a couple of problems
+    vec3 Norm = normalize(fragNormal);
+    vec3 EyeDir = normalize(ubo2.viewPos - fragPos);
+    vec3 Albedo = texture(texSamplerArray[outIndex], fragTexCoord).rgb;
+    float pex = 200.0f;
+    float metallic = 1.0f;
+    vec3 L = ubo2.lightDir;
+    vec3 lightColor = ubo2.lightColor.rgb;
+
+    vec3 DiffSpec = BRDF(EyeDir, Norm, L, Albedo, vec3(metallic), pex);
+
     vec3 norm = normalize(fragNormal);
     vec3 lightDir = normalize(ubo2.lightPos - fragPos);
     vec3 viewDir = normalize(outCamPos - fragPos);
     vec3 halfwayDir = normalize(lightDir + viewDir);
 
     // Ambient
-    vec3 ambient = ubo2.ambientColor;
+    vec3 ambient = ubo2.ambientColor; // Ambient is wrong
 
     // Diffuse
     float diff = max(dot(norm, lightDir), 0.0);
@@ -75,13 +118,13 @@ void BlinnPhong(){
 
     // Combine results
     vec3 result = diffuse ;
-    outColor = vec4(texture(texSamplerArray[outIndex], fragTexCoord).rgb * result * ubo2.lightColor, 1.0);
+    outColor = vec4(DiffSpec *  ubo2.lightColor, 1.0);
 }
 
 
 void main() {
-    //BlinnPhong();
-    lambertModel();
+    //lambertModel();
+    Blinn();
 
     /*
         if(inIndex == 4) {
@@ -89,5 +132,5 @@ void main() {
         }else{
             outColor = vec4(texture(texSamplerArray[inIndex], fragTexCoord).rgb, 1.0);
         }
-    */
+*/
 }

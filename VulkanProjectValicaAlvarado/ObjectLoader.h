@@ -80,6 +80,10 @@ struct ObjectInformation{
 
         this->isGltf = isGltf;
     }
+
+    void translateModel(float x, float y, float z);
+    void scaleModel(float amount);
+    void rotateModel(float degrees, char axis);
 };
 
 

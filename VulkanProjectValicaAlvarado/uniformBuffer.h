@@ -35,10 +35,11 @@ struct skyBoxUniformBufferObject{
     alignas(16) glm::mat4 mvpMat;
 };
 
-struct LightsBufferObject {
+struct LightsBufferObject{
+    alignas(16) glm::vec3 lightDir;
     glm::vec3 lightPos;
-    glm::vec3 viewPos;
-    glm::vec3 lightColor;
+    alignas(16) glm::vec3 viewPos;
+    alignas(16) glm::vec3 lightColor;
     glm::vec3 ambientColor;
     glm::vec3 diffuseColor;
     glm::vec3 specularColor;
@@ -445,6 +446,7 @@ void updateUniformBuffer(uint32_t currentImage, GLFWwindow * &window,
                * ubo.view;
 
     LightsBufferObject lbo{};
+    lbo.lightDir = glm::vec3(1.0f, 1.0f, 1.0f);
     lbo.lightPos = glm::vec3(2.0f, 4.0f, -2.0f);
     lbo.viewPos = glm::vec3(0.0f, 0.0f, 0.0f);
     lbo.lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
