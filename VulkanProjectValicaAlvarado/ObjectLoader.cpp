@@ -10,6 +10,31 @@
 //
 // Created by adria on 10/06/2024.
 
+void ObjectInformation::translateModel(float x, float y, float z) {
+    this->modelMatrix = glm::translate(this->modelMatrix, glm::vec3(x, y, z));
+}
+
+void ObjectInformation::scaleModel(float amount) {
+    this->modelMatrix = glm::scale(this->modelMatrix, glm::vec3(amount, amount, amount));
+}
+
+void ObjectInformation::rotateModel(float degrees, char axis){
+    switch(axis){
+        case 'x':
+            this->modelMatrix = glm::rotate(this->modelMatrix, glm::radians(degrees) , glm::vec3(1.0f, 0.0f, 0.0f));
+            break;
+        case 'y':
+            this->modelMatrix = glm::rotate(this->modelMatrix, glm::radians(degrees) , glm::vec3(0.0f, 1.0f, 0.0f));
+            break;
+        case 'z':
+            this->modelMatrix = glm::rotate(this->modelMatrix, glm::radians(degrees) , glm::vec3(0.0f, 0.0f, 1.0f));
+            break;
+        default:
+            printf("Specify one axis (x, y, z) for function: void rotateModel(float degrees, char axis)");
+            break;
+    }
+}
+
 ObjectLoader::ObjectLoader() {
 
 }

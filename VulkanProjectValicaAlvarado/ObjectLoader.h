@@ -36,7 +36,7 @@
 const std::string MODEL_PATH = "models/";
 
 enum class modelSize{
-    TINY, SMALL, MEDIUM, BIG, GIGANTIC
+    TINY, SMALL, MEDIUM, BIG, GIGANTIC, GLTF
 };
 
 struct ObjectInformation{

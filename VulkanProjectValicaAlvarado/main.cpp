@@ -1330,6 +1330,14 @@ private:
     }
 
     void createObjectVector(){
+        ObjectInformation objCarpet = ObjectInformation(
+                "furniture/Carpet/round-carpet.obj",
+                glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 3.0f, 3.0f)),
+                "furniture/Carpet/red_carpet.jpg",
+                false);
+        objCarpet.scaleModel(3.1f);
+        objCarpet.translateModel(0.0f, 0.0f, -7.5f);
+
         ObjectInformation pokerRoom{};
         pokerRoom.modelPath = "furniture/Poker Room/scene.gltf";
         pokerRoom.texturePath = "furniture/House/mondrian.png";
@@ -1428,7 +1436,7 @@ private:
         ObjectInformation floor = ObjectInformation(
                 "furniture/CyberpunkFlooring/scene.gltf",
                 glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f)),
-                "furniture/CyberpunkFlooring/Material_44_baseColor.png",
+                "furniture/CyberpunkFlooring/wood_livingroom.jpg",
                 true
         );
 
@@ -1461,7 +1469,7 @@ private:
         listActualObjectInfos.push_back(floor);
         listActualObjectInfos.push_back(objWildWestPiano);
         listActualObjectInfos.push_back(objTVCabinet);
-        listActualObjectInfos.push_back(floor);
+        listActualObjectInfos.push_back(objCarpet);
         listActualObjectInfos.push_back(objCat);
         //listActualObjectInfos.push_back(objTruck);
        //listActualObjectInfos.push_back(pokerRoom);

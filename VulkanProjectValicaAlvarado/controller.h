@@ -63,6 +63,8 @@ void updateTransformationData(int pos, GLFWwindow * &window, std::vector<ObjectI
         sizeSpeed = 3.5f;
     }else if(listObjectInfos.at(pos)->modelSize == modelSize::GIGANTIC){
         sizeSpeed = 8.5f;
+    }else if(listObjectInfos.at(pos)->modelSize == modelSize::GLTF){
+        sizeSpeed = 12.0f;
     }
 
     bool shiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
@@ -136,12 +138,12 @@ void changeCurrentModel(bool &keyPressed, GLFWwindow *&window, int &currentTrans
             listObjectInfos.at(currentTransformationModel)->modelSize = modelSize::MEDIUM;
         }else if(listObjectInfos.at(currentTransformationModel)->vertices.size() <= 7500){
             listObjectInfos.at(currentTransformationModel)->modelSize = modelSize::BIG;
-        }else if(listObjectInfos.at(currentTransformationModel)->vertices.size() <= 10000){
+        }else if(listObjectInfos.at(currentTransformationModel)->vertices.size() <= 1000000){
             listObjectInfos.at(currentTransformationModel)->modelSize = modelSize::GIGANTIC;
         }
         keyPressed = false;
     }else if(!glfwGetKey(window, GLFW_KEY_9) && !glfwGetKey(window, GLFW_KEY_8)){
-        listObjectInfos.at(currentTransformationModel)->modelSize = modelSize::GIGANTIC;
+        listObjectInfos.at(currentTransformationModel)->modelSize = modelSize::GLTF;
         keyPressed = false;
     }
 }
