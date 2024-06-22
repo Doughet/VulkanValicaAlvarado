@@ -35,6 +35,10 @@
 
 const std::string MODEL_PATH = "models/";
 
+enum class modelSize{
+    TINY, SMALL, MEDIUM, BIG, GIGANTIC
+};
+
 struct ObjectInformation{
     std::vector<Vertex> vertices;
     std::vector<uint32_t> localIndices;
@@ -50,6 +54,8 @@ struct ObjectInformation{
     std::string normalPath;
 
     bool isGltf{};
+
+    modelSize modelSize;
 
     ObjectInformation(){}
 
@@ -69,6 +75,8 @@ struct ObjectInformation{
         this->modelMatrix = modelMatrix;
         hasNormalMap = false;
         normalPath = texturePath;
+
+        modelSize = modelSize::MEDIUM;
 
         this->isGltf = isGltf;
     }

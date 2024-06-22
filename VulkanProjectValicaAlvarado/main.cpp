@@ -1319,7 +1319,7 @@ private:
         skyBoxObj.modelPath = "skyBox/skyBox.obj";
         skyBoxObj.texturePath = "skybox/Daylight Box UV.png";
         skyBoxObj.mustBeLoaded = true;
-        skyBoxObj.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(150.0f, 150.0f, 150.0f));
+        skyBoxObj.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(20.0f, 20.0f, 20.0f));
 
         listActualSkyBoxInfos.push_back(skyBoxObj);
         listSkyBoxInfos.push_back(&listActualSkyBoxInfos[0]);
@@ -1330,6 +1330,14 @@ private:
     }
 
     void createObjectVector(){
+        ObjectInformation pokerRoom{};
+        pokerRoom.modelPath = "furniture/Poker Room/scene.gltf";
+        pokerRoom.texturePath = "furniture/PokerRoom/material_0_baseColor.png";
+        pokerRoom.mustBeLoaded = true;
+        pokerRoom.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+        pokerRoom.hasNormalMap = false;
+        pokerRoom.normalPath = "";
+
         ObjectInformation objTurret {};
         objTurret.modelPath = "turret.obj";
         objTurret.texturePath = "furniture/House/mondrian.png";
@@ -1338,7 +1346,7 @@ private:
         objTurret.hasNormalMap = false;
         objTurret.isGltf = false;
         objTurret.normalPath = "";
-
+/*
         ObjectInformation objHouse {};
         objHouse.modelPath = "furniture/House/house_04.obj";
         objHouse.texturePath = "furniture/House/mondrian.png";
@@ -1347,6 +1355,7 @@ private:
         objHouse.hasNormalMap = false;
         objHouse.isGltf = false;
         objHouse.normalPath = "";
+*/
 
         ObjectInformation objGLTF {};
         objGLTF.modelPath = "furniture/Bed/scene.gltf";
@@ -1371,8 +1380,44 @@ private:
                 "furniture/MorrisChair/morrisChair.obj",
                 glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 3.0f, 3.0f)),
                 "furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png",
+                false);
+               // "furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png"
+
+
+        ObjectInformation objWildWestPiano = ObjectInformation(
+                "furniture/WildWestPiano/Piano.obj",
+                glm::scale(glm::mat4(1.0f), glm::vec3(200.0f, 200.0f, 200.0f)),
+                "furniture/WildWestPiano/Piano_Wood_BaseColor.png",
                 false
                 );
+        glm::mat4 aux = objWildWestPiano.modelMatrix;
+        objWildWestPiano.modelMatrix = glm::translate(aux,  glm::vec3(7.0f, 0.0f, 0.0f));
+        objWildWestPiano.modelMatrix = glm::rotate(objWildWestPiano.modelMatrix, glm::radians(55.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        //objWildWestPiano.modelMatrix = glm::translate(objWildWestPiano.modelMatrix, glm::vec3(0.0f, 1.0f, 0.0f));
+
+        ObjectInformation objTVCabinet = ObjectInformation(
+                "furniture/TVCabinet/Tes.obj",
+                glm::scale(glm::mat4(1.0f), glm::vec3(0.35f, 0.35f, 0.35f)),
+                "furniture/TVCabinet/TCA_Dif.png",
+                false
+        );
+        objTVCabinet.modelMatrix = glm::rotate(objTVCabinet.modelMatrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        objTVCabinet.modelMatrix = glm::translate(objTVCabinet.modelMatrix, glm::vec3(0.0f, -0.5f, 0.0f));
+
+
+        ObjectInformation objTruck = ObjectInformation(
+                "Cars/keytruck.obj",
+                glm::scale(glm::mat4(1.0f), glm::vec3(100.0f, 100.0f, 100.0f)),
+                "Cars/Mitsubishi.png",
+                false
+        );
+
+        ObjectInformation obj = ObjectInformation(
+                "furniture/MorrisChair/morrisChair.obj",
+                glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 3.0f, 3.0f)),
+                "furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png",
+                false
+        );
 
 
         ObjectInformation objPlane{};
@@ -1392,10 +1437,14 @@ private:
                 0, 1, 3, 2, 3, 1
         };
 
-
-        listActualObjectInfos.push_back(objTurret);
-        listActualObjectInfos.push_back(objHouse);
+        listActualObjectInfos.push_back(objWildWestPiano);
+        listActualObjectInfos.push_back(objTVCabinet);
+        //listActualObjectInfos.push_back(objTruck);
+        listActualObjectInfos.push_back(pokerRoom);
+        //listActualObjectInfos.push_back(objTurret);
+       // listActualObjectInfos.push_back(objHouse);
         listActualObjectInfos.push_back(objMorris);
+        //listActualObjectInfos.push_back(objPlane);
         listActualObjectInfos.push_back(objPlane);
         listActualObjectInfos.push_back(objGLTF);
 

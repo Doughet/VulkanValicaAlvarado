@@ -24,7 +24,7 @@
 #include <unordered_map>
 
 
-
+#include "ObjectLoader.h"
 
 /**
  * @brief Function that modifies a selected model from listObjectInfos by applying a trasnformation from the glm
@@ -47,30 +47,43 @@ void updateTransformationData(int pos, GLFWwindow * &window, std::vector<ObjectI
     const float moveSpeed = 5.0f;  // Units per second
     const float scaleSpeed = 0.5f; // Scale factor per second
     const float rotateSpeedDegrees = 35.0f; // Degrees per second
+    float sizeSpeed;
 
     const float fixedMoveSpeed = moveSpeed * deltaTime;
 
     const glm::mat4 M = listObjectInfos.at(pos)->modelMatrix;
+    //printf(", : %d ," ,int(listObjectInfos.at(pos)->vertices.size()));
+    if(listObjectInfos.at(pos)->modelSize == modelSize::TINY){
+        sizeSpeed = 0.1f;
+    }else if(listObjectInfos.at(pos)->modelSize == modelSize::SMALL){
+        sizeSpeed = 1.0f;
+    }else if(listObjectInfos.at(pos)->modelSize == modelSize::MEDIUM){
+        sizeSpeed = 1.8f;
+    }else if(listObjectInfos.at(pos)->modelSize == modelSize::BIG){
+        sizeSpeed = 3.5f;
+    }else if(listObjectInfos.at(pos)->modelSize == modelSize::GIGANTIC){
+        sizeSpeed = 8.5f;
+    }
 
     bool shiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
 
     if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) { // y-axis movement
         if(shiftPressed) {
-            listObjectInfos.at(pos)->modelMatrix = glm::translate(M, glm::vec3(0.0f, fixedMoveSpeed, 0.0f));
+            listObjectInfos.at(pos)->modelMatrix = glm::translate(M, glm::vec3(0.0f, fixedMoveSpeed*sizeSpeed, 0.0f));
         }else{
-            listObjectInfos.at(pos)->modelMatrix = glm::translate( M,glm::vec3(0.0f, - fixedMoveSpeed, 0.0f));
+            listObjectInfos.at(pos)->modelMatrix = glm::translate( M,glm::vec3(0.0f, - fixedMoveSpeed*sizeSpeed, 0.0f));
         }
     } else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) { // x-axis movement
         if(shiftPressed) {
-            listObjectInfos.at(pos)->modelMatrix = glm::translate( M, glm::vec3(- fixedMoveSpeed, 0.0f, 0.0f));
+            listObjectInfos.at(pos)->modelMatrix = glm::translate( M, glm::vec3(- fixedMoveSpeed*sizeSpeed, 0.0f, 0.0f));
         }else{
-            listObjectInfos.at(pos)->modelMatrix = glm::translate( M, glm::vec3(fixedMoveSpeed, 0.0f, 0.0f));
+            listObjectInfos.at(pos)->modelMatrix = glm::translate( M, glm::vec3(fixedMoveSpeed*sizeSpeed, 0.0f, 0.0f));
         }
     } else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) { // z-axis movement
         if(shiftPressed) {
-            listObjectInfos.at(pos)->modelMatrix = glm::translate( M, glm::vec3(0.0f, 0.0f, fixedMoveSpeed));
+            listObjectInfos.at(pos)->modelMatrix = glm::translate( M, glm::vec3(0.0f, 0.0f, fixedMoveSpeed*sizeSpeed));
         }else{
-            listObjectInfos.at(pos)->modelMatrix = glm::translate( M, glm::vec3(0.0f, 0.0f,- fixedMoveSpeed));
+            listObjectInfos.at(pos)->modelMatrix = glm::translate( M, glm::vec3(0.0f, 0.0f,- fixedMoveSpeed*sizeSpeed));
         }
     } else if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) { // Scaling section
         float fixedScaleSpeed = scaleSpeed * deltaTime;
@@ -115,6 +128,17 @@ void changeCurrentModel(bool &keyPressed, GLFWwindow *&window, int &currentTrans
         }
     }
     if(!glfwGetKey(window, GLFW_KEY_9) && !glfwGetKey(window, GLFW_KEY_8)){
+        if(listObjectInfos.at(currentTransformationModel)->vertices.size() <= 2000){
+            listObjectInfos.at(currentTransformationModel)->modelSize = modelSize::TINY;
+        }else if(listObjectInfos.at(currentTransformationModel)->vertices.size() <= 4000){
+            listObjectInfos.at(currentTransformationModel)->modelSize = modelSize::SMALL;
+        }else if(listObjectInfos.at(currentTransformationModel)->vertices.size() <= 6000){
+            listObjectInfos.at(currentTransformationModel)->modelSize = modelSize::MEDIUM;
+        }else if(listObjectInfos.at(currentTransformationModel)->vertices.size() <= 7500){
+            listObjectInfos.at(currentTransformationModel)->modelSize = modelSize::BIG;
+        }else if(listObjectInfos.at(currentTransformationModel)->vertices.size() <= 10000){
+            listObjectInfos.at(currentTransformationModel)->modelSize = modelSize::GIGANTIC;
+        }
         keyPressed = false;
     }
 }
@@ -136,9 +160,13 @@ void addObject(bool &keyPressedAdd, GLFWwindow *&window, uint32_t & selectedObje
             keyPressedAdd = true;
             selectedObject = 1;
             mustAdd = true;
-        }else if (glfwGetKey(window, GLFW_KEY_I)){
+        }/*else if (glfwGetKey(window, GLFW_KEY_I)){
             keyPressedAdd = true;
             selectedObject = 2;
+            mustAdd = true;
+        }*/else if (glfwGetKey(window, GLFW_KEY_X)) {
+            keyPressedAdd = true;
+            selectedObject = 3;
             mustAdd = true;
         }
     }
@@ -267,10 +295,10 @@ void getSixAxis(float &deltaT, glm::vec3 &m, glm::vec3 &r, bool &fire, GLFWwindo
     if(glfwGetKey(window, GLFW_KEY_W)) {
         m.z = -1.0f;
     }
-    if(glfwGetKey(window, GLFW_KEY_R)) {
+    if(glfwGetKey(window, GLFW_KEY_R)) { // Does not work
         m.y = 1.0f;
     }
-    if(glfwGetKey(window, GLFW_KEY_F)) {
+    if(glfwGetKey(window, GLFW_KEY_F)) { // Does not work
         m.y = -1.0f;
     }
     if(normalProj == true) {
