@@ -261,13 +261,13 @@ private:
     float heightImage = (float)sizeImage / HEIGHT;
     float widthImage = (float)sizeImage / WIDTH;
     std::vector<textVertex> textVertices = {
-            {{-1, -1}, {0.0f, 1}},
-            {{ -1 + widthImage, -1}, {1, 1}},
-            {{ -1 + widthImage,  -1 + heightImage}, {1, 0.0f}},
-            {{-1,  -1 + heightImage}, {0.0f, 0.0f}}
+            {{-1, -1}, {1, 0}},
+            {{ -1 + widthImage, -1}, {0, 0}},
+            {{ -1 + widthImage,  -1 + heightImage}, {0, 1}},
+            {{-1,  -1 + heightImage}, {1, 1}}
     };
 
-    std::vector<uint32_t > textIndices = {0, 1, 2, 2, 3, 0};
+    std::vector<uint32_t > textIndices = {0, 2, 1, 2, 0, 3};
 
 
     VkBuffer vertexBufferText;
@@ -655,19 +655,19 @@ private:
         /* 1: Delete position of the VertexBuffer and move the following positions one step to the lef so that there are
          no empty spots (same for the IndexBuffer)*/
         //Move the points in the vectors
-        size_t sizeVertices = listObjectInfos[posModel]->vertices.size();
-        size_t sizeIndices = listObjectInfos[posModel]->localIndices.size();
+        size_t sizeVertices = objectInformation.vertices.size();
+        size_t sizeIndices = objectInformation.localIndices.size();
 
         size_t sizeUntilVertices = 0;
         size_t sizeUntilIndices = 0;
 
         for (int i = 0; i < posModel; ++i) {
-            sizeUntilVertices += listObjectInfos[i]->vertices.size();
-            sizeUntilIndices += listObjectInfos[i]->localIndices.size();
+            sizeUntilVertices += listActualObjectInfos[i].vertices.size();
+            sizeUntilIndices += listActualObjectInfos[i].localIndices.size();
         }
 
         movePointsVertexVector(sizeUntilVertices, sizeVertices);
-        movePointsIndicesVector(sizeUntilIndices, sizeIndices);
+        movePointsIndicesVector(sizeUntilIndices, sizeIndices, sizeVertices);
         //Update the buffers
 
 
@@ -733,10 +733,10 @@ private:
         std::transform(vertices.begin() + objectPos, vertices.end(), vertices.begin() + objectPos, displacement);
     }
 
-    void movePointsIndicesVector(uint32_t objectPos, uint32_t objectSizeIndices){
+    void movePointsIndicesVector(uint32_t objectPos, uint32_t objectSizeIndices, uint32_t sizeVertices){
         indices.erase(indices.begin() + objectPos, indices.begin() + objectPos + objectSizeIndices);
 
-        auto displacement = [&objectSizeIndices](int x) { return x - objectSizeIndices; };
+        auto displacement = [sizeVertices](int x) { return x - sizeVertices; };
 
         std::transform(indices.begin() + objectPos, indices.end(), indices.begin() + objectPos, displacement);
     }
@@ -1291,7 +1291,7 @@ private:
         rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
         rasterizer.lineWidth = 1.0f;
         rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-        rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         rasterizer.depthBiasEnable = VK_FALSE;
 
         VkPipelineMultisampleStateCreateInfo multisampling{};
@@ -1792,7 +1792,7 @@ private:
        listObjectInfos.push_back(&listActualObjectInfos[3]);
         listObjectInfos.push_back(&listActualObjectInfos[4]);
         listObjectInfos.push_back(&listActualObjectInfos[5]);
-      //  listObjectInfos.push_back(&listActualObjectInfos[6]);
+        listObjectInfos.push_back(&listActualObjectInfos[6]);
 
         isStart = true;
 
@@ -2776,7 +2776,7 @@ private:
 
 
     void createVertexBuffer(std::vector<Vertex> & vertices, VkBuffer & vertexBuffer, VkDeviceMemory & vertexBufferMemory) {
-        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size() * 3;
+        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
         if(bufferSize == 0){
             bufferSize = 1;
         }
