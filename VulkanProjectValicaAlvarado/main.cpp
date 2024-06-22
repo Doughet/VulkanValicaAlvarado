@@ -1332,11 +1332,14 @@ private:
     void createObjectVector(){
         ObjectInformation pokerRoom{};
         pokerRoom.modelPath = "furniture/Poker Room/scene.gltf";
-        pokerRoom.texturePath = "furniture/PokerRoom/material_0_baseColor.png";
+        pokerRoom.texturePath = "furniture/House/mondrian.png";
         pokerRoom.mustBeLoaded = true;
-        pokerRoom.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+        pokerRoom.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(100.0f, 100.0f, 100.0f));
         pokerRoom.hasNormalMap = false;
         pokerRoom.normalPath = "";
+        pokerRoom.isGltf = true;
+      //  pokerRoom.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+
 
         ObjectInformation objTurret {};
         objTurret.modelPath = "turret.obj";
@@ -1391,18 +1394,18 @@ private:
                 false
                 );
         glm::mat4 aux = objWildWestPiano.modelMatrix;
-        objWildWestPiano.modelMatrix = glm::translate(aux,  glm::vec3(7.0f, 0.0f, 0.0f));
+        objWildWestPiano.modelMatrix = glm::translate(aux,  glm::vec3(7.0f, 0.0f, -0.4f));
         objWildWestPiano.modelMatrix = glm::rotate(objWildWestPiano.modelMatrix, glm::radians(55.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         //objWildWestPiano.modelMatrix = glm::translate(objWildWestPiano.modelMatrix, glm::vec3(0.0f, 1.0f, 0.0f));
 
         ObjectInformation objTVCabinet = ObjectInformation(
                 "furniture/TVCabinet/Tes.obj",
-                glm::scale(glm::mat4(1.0f), glm::vec3(0.35f, 0.35f, 0.35f)),
+                glm::scale(glm::mat4(1.0f), glm::vec3(0.55f, 0.55f, 0.55f)),
                 "furniture/TVCabinet/TCA_Dif.png",
                 false
         );
+        objTVCabinet.modelMatrix = glm::translate(objTVCabinet.modelMatrix, glm::vec3(-450.0f, 1600.0f, -180.0f));
         objTVCabinet.modelMatrix = glm::rotate(objTVCabinet.modelMatrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        objTVCabinet.modelMatrix = glm::translate(objTVCabinet.modelMatrix, glm::vec3(0.0f, -0.5f, 0.0f));
 
 
         ObjectInformation objTruck = ObjectInformation(
@@ -1411,6 +1414,27 @@ private:
                 "Cars/Mitsubishi.png",
                 false
         );
+
+
+        ObjectInformation objCat = ObjectInformation(
+                "animals/cat/Cat.obj",
+                glm::scale(glm::mat4(1.0f), glm::vec3(3.0f)),
+                "animals/cat/Cat_diffuse.jpeg",
+                false
+        );
+
+       objCat.modelMatrix = glm::translate(objCat.modelMatrix, glm::vec3(110.0f, 20.0f, -24.0));
+       objCat.modelMatrix = glm::rotate(objCat.modelMatrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+       objCat.modelMatrix = glm::rotate(objCat.modelMatrix, glm::radians(15.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+        ObjectInformation floor = ObjectInformation(
+                "furniture/CyberpunkFlooring/scene.gltf",
+                glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f)),
+                "furniture/CyberpunkFlooring/Material_44_baseColor.png",
+                true
+        );
+
+        floor.modelMatrix = glm::translate(floor.modelMatrix, glm::vec3(0.0f, 0.0f, -96.0f));
 
         ObjectInformation obj = ObjectInformation(
                 "furniture/MorrisChair/morrisChair.obj",
@@ -1437,22 +1461,27 @@ private:
                 0, 1, 3, 2, 3, 1
         };
 
+        listActualObjectInfos.push_back(floor);
         listActualObjectInfos.push_back(objWildWestPiano);
         listActualObjectInfos.push_back(objTVCabinet);
+        listActualObjectInfos.push_back(floor);
+        listActualObjectInfos.push_back(objCat);
         //listActualObjectInfos.push_back(objTruck);
-        listActualObjectInfos.push_back(pokerRoom);
+       //listActualObjectInfos.push_back(pokerRoom);
         //listActualObjectInfos.push_back(objTurret);
        // listActualObjectInfos.push_back(objHouse);
         listActualObjectInfos.push_back(objMorris);
-        //listActualObjectInfos.push_back(objPlane);
         listActualObjectInfos.push_back(objPlane);
-        listActualObjectInfos.push_back(objGLTF);
+        //listActualObjectInfos.push_back(objPlane);
+        //listActualObjectInfos.push_back(objGLTF);
 
         listObjectInfos.push_back(&listActualObjectInfos[0]);
         listObjectInfos.push_back(&listActualObjectInfos[1]);
         listObjectInfos.push_back(&listActualObjectInfos[2]);
-        listObjectInfos.push_back(&listActualObjectInfos[3]);
+       listObjectInfos.push_back(&listActualObjectInfos[3]);
         listObjectInfos.push_back(&listActualObjectInfos[4]);
+        listObjectInfos.push_back(&listActualObjectInfos[5]);
+      //  listObjectInfos.push_back(&listActualObjectInfos[6]);
 
         isStart = true;
 
