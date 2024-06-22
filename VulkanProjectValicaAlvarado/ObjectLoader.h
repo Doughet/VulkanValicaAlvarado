@@ -57,8 +57,15 @@ struct ObjectInformation{
 
     modelSize modelSize;
 
+    uint32_t indexPresentation;
+    std::string presentationPath;
+
+
+
+
     ObjectInformation(){}
 
+    // THIS IS THE CONSTRUCTOR FOR INSTANTIATING THE OBJECT
     ObjectInformation(
             std::string modelPath,
             glm::mat4 modelMatrix,
@@ -84,6 +91,35 @@ struct ObjectInformation{
     void translateModel(float x, float y, float z);
     void scaleModel(float amount);
     void rotateModel(float degrees, char axis);
+
+    // THIS IS THE CONSTRUCTOR FOR PRESENTING THE ADDING OBJECT
+
+    ObjectInformation(
+            std::string modelPath,
+            glm::mat4 modelMatrix,
+            const std::string& texturePath,
+            bool isGltf,
+            uint32_t indexPresentation,
+            std::string presentationPath
+    ){
+        vertices = {};
+        localIndices = {};
+
+        mustBeLoaded = true;
+        this->modelPath = std::move(modelPath);
+        this->texturePath = texturePath;
+
+        this->modelMatrix = modelMatrix;
+        hasNormalMap = false;
+        normalPath = texturePath;
+
+        modelSize = modelSize::MEDIUM;
+
+        this->isGltf = isGltf;
+
+        this->indexPresentation = indexPresentation;
+        this->presentationPath = presentationPath;
+    }
 };
 
 
@@ -116,6 +152,8 @@ public:
     void transformVertex(std::vector<Vertex> & tempVertices, std::vector<skyBoxVertex> & verticesSB);
 
     void loadGLTFModel(ObjectInformation* objectInformation, uint32_t index);
+
+    void createLoadablesVector(std::vector<ObjectInformation> & loadables);
 };
 
 

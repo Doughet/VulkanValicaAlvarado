@@ -427,3 +427,37 @@ void ObjectLoader::loadGLTFModel(ObjectInformation* objectInformation, uint32_t 
     }
 }
 
+
+
+void ObjectLoader::createLoadablesVector(std::vector<ObjectInformation> & loadables){
+    ObjectInformation objectCoconutTree = ObjectInformation(
+            "furniture/CoconutTree/coconutTree.obj",
+            glm::mat4(1.0f),
+            "furniture/CoconutTree/coconutTreeTexture.jpg",
+            false,
+            0,
+            "presentations/furniture/CoconutTree/coconutPresentation.png"
+            );
+
+    ObjectInformation objectLaptop = ObjectInformation(
+            "furniture/Laptop/SAMSUNG_Laptop.obj",
+            glm::mat4(1.0f),
+            "furniture/Laptop/SLT_Dif.png",
+            false,
+            1,
+            "textures/furniture/Laptop/SLT_Dif.png"
+    );
+
+    ObjectInformation objectCat = ObjectInformation(
+            "animals/cat/Cat.obj",
+            glm::mat4(1.0f),
+            "animals/cat/Cat_diffuse.jpeg",
+            false,
+            2,
+            "presentations/animals/cat/catPresentation.png"
+    );
+
+    loadables.push_back(objectCoconutTree);
+    loadables.push_back(objectLaptop);
+    loadables.push_back(objectCat);
+}

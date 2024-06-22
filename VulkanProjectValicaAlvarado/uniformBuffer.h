@@ -442,7 +442,7 @@ void updateUniformBuffer(uint32_t currentImage, GLFWwindow * &window,
     ubo.view = glm::rotate(glm::mat4(1), -ROT_SPEED * r.z * deltaT,
                            glm::vec3(0, 0, 1)) * ubo.view;
     ubo.view = glm::translate(glm::mat4(1), -glm::vec3(
-            MOVE_SPEED * m.x * deltaT, /*MOVE_SPEED * m.y * deltaT*/0.0f, MOVE_SPEED * m.z * deltaT))
+            MOVE_SPEED * m.x * deltaT,MOVE_SPEED * m.y * deltaT, MOVE_SPEED * m.z * deltaT))
                * ubo.view;
 
     LightsBufferObject lbo{};
@@ -465,7 +465,11 @@ void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, VkR
                          VkPipelineLayout &pipelineLayout, std::vector<uint32_t> &indices,
                          std::vector<VkDescriptorSet> &descriptorSets, VkPipeline &graphicsPipelineSB, VkBuffer &vertexBufferSB, VkBuffer &indexBufferSB,
                          VkPipelineLayout &pipelineLayoutSB, std::vector<uint32_t> &indicesSB,
-                         std::vector<VkDescriptorSet> &descriptorSetsSB, uint32_t &currentFrame) {
+                         std::vector<VkDescriptorSet> &descriptorSetsSB,
+                         VkPipeline &graphicsPipelineText, VkBuffer &vertexBufferText, VkBuffer &indexBufferText,
+                         VkPipelineLayout &pipelineLayoutText, std::vector<uint32_t> &indicesText,
+                         std::vector<VkDescriptorSet> &descriptorSetsText,
+                         uint32_t &currentFrame) {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -519,8 +523,6 @@ void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, VkR
     // Change the pipeline to the second one and draw with it
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineSB);
 
-    // You might not need to set the viewport and scissor again if they remain the same.
-    // If the pipeline state is static and doesn't require changing these, you can skip these lines.
     vkCmdSetViewport(commandBuffer, 0, 1, &viewport);  // Optional: only if viewport changes
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);    // Optional: only if scissor changes
 
@@ -533,6 +535,25 @@ void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, VkR
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayoutSB, 0, 1, &descriptorSetsSB[currentFrame], 0, nullptr);
 
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indicesSB.size()), 1, 0, 0, 0);
+
+
+    //SELECT THE THIRD ONE
+
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineText);
+
+    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);  // Optional: only if viewport changes
+    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);    // Optional: only if scissor changes
+
+    VkBuffer vertexBuffersText[] = {vertexBufferText};
+    VkDeviceSize offsetsText[] = {0};
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffersText, offsetsText);
+
+    vkCmdBindIndexBuffer(commandBuffer, indexBufferText, 0, VK_INDEX_TYPE_UINT32);
+
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayoutText, 0, 1, &descriptorSetsText[currentFrame], 0, nullptr);
+
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indicesSB.size()), 1, 0, 0, 0);
+
 
     vkCmdEndRenderPass(commandBuffer);
 

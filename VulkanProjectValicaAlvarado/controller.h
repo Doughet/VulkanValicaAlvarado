@@ -157,26 +157,37 @@ void changeCurrentModel(bool &keyPressed, GLFWwindow *&window, int &currentTrans
  */
 void addObject(bool &keyPressedAdd, GLFWwindow *&window, uint32_t & selectedObject, bool &mustAdd){
     if(keyPressedAdd == false) {
-        if(glfwGetKey(window, GLFW_KEY_Y)) {
+        if(glfwGetKey(window, GLFW_KEY_ENTER)) {
             keyPressedAdd = true;
-            selectedObject = 0;
-            mustAdd = true;
-        }else if (glfwGetKey(window, GLFW_KEY_U)){
-            keyPressedAdd = true;
-            selectedObject = 1;
-            mustAdd = true;
-        }/*else if (glfwGetKey(window, GLFW_KEY_I)){
-            keyPressedAdd = true;
-            selectedObject = 2;
-            mustAdd = true;
-        }*/else if (glfwGetKey(window, GLFW_KEY_X)) {
-            keyPressedAdd = true;
-            selectedObject = 3;
             mustAdd = true;
         }
     }
-    if(!glfwGetKey(window, GLFW_KEY_Y) && !glfwGetKey(window, GLFW_KEY_U) && !glfwGetKey(window, GLFW_KEY_I)){
+    if(!glfwGetKey(window, GLFW_KEY_ENTER)){
         keyPressedAdd = false;
+    }
+}
+
+/**
+ * @brief
+ * @param keyPressedSelectObject
+ * @param window
+ * @param selectedObject
+ * @param mustAdd
+ */
+void selectAddObjectIndex(bool &keyPressedSelectObject, GLFWwindow *&window, uint32_t & selectedObject, uint32_t min, uint32_t max, bool & mustChangeSelectedObject){
+    if(keyPressedSelectObject == false) {
+        if(glfwGetKey(window, GLFW_KEY_V) && selectedObject > min) {
+            keyPressedSelectObject = true;
+            selectedObject -= 1;
+            mustChangeSelectedObject = true;
+        }else if (glfwGetKey(window, GLFW_KEY_B) && selectedObject < max ) {
+            keyPressedSelectObject = true;
+            selectedObject += 1;
+            mustChangeSelectedObject = true;
+        }
+    }
+    if(!glfwGetKey(window, GLFW_KEY_V) && !glfwGetKey(window, GLFW_KEY_B)){
+        keyPressedSelectObject = false;
     }
 }
 
