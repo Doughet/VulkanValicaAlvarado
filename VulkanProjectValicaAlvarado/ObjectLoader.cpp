@@ -202,7 +202,7 @@ void ObjectLoader::fillVertexAndIndices(){
 void ObjectLoader::addObject(ObjectInformation* objectInformation, std::vector<std::string> & texturePaths, std::vector<std::string> & normalPaths, std::vector<ObjectInformation*> &listObjectInfos, std::vector<Vertex> & vertices, std::vector<uint32_t> & indices){
 
     if(objectInformation->mustBeLoaded){
-        loadModel(objectInformation, texturePaths.size());
+        loadModel(objectInformation, listObjectInfos.size());
     }
 
     texturePaths.push_back(objectInformation->texturePath);
