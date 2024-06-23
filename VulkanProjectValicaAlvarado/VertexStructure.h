@@ -134,6 +134,7 @@ struct skyBoxVertex {
 struct textVertex{
     glm::vec2 pos;
     glm::vec2 texCoord;
+    int imageIndex;
 
     static VkVertexInputBindingDescription getBindingDescription() {
         VkVertexInputBindingDescription bindingDescription{};
@@ -144,8 +145,8 @@ struct textVertex{
         return bindingDescription;
     }
 
-    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
-        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
 
         // Position attribute
         attributeDescriptions[0].binding = 0;  // Matches the binding in getBindingDescription
@@ -158,6 +159,12 @@ struct textVertex{
         attributeDescriptions[1].location = 1;  // Shader location for texture coordinates
         attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;  // vec2 in GLSL
         attributeDescriptions[1].offset = offsetof(textVertex, texCoord);  // Offset in the vertex structure
+
+        // Texture coordinate attribute
+        attributeDescriptions[2].binding = 0;  // Same binding as position
+        attributeDescriptions[2].location = 2;  // Shader location for texture coordinates
+        attributeDescriptions[2].format = VK_FORMAT_R32_SINT;  // vec2 in GLSL
+        attributeDescriptions[2].offset = offsetof(textVertex, imageIndex);  // Offset in the vertex structure
 
         return attributeDescriptions;
     }

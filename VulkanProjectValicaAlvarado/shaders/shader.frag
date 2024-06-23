@@ -1,9 +1,9 @@
 #version 450
 
-layout(set = 0, binding = 4) uniform sampler2D texSamplerArray[20];
-layout(set = 0, binding = 5) uniform sampler2D normalSamplerArray[20]; // Doesn't work but it is key
+layout(set = 0, binding = 4) uniform sampler2D texSamplerArray[10];
+layout(set = 0, binding = 5) uniform sampler2D normalSamplerArray[10];
 
-layout(binding = 1) uniform sampler2D texSampler; // Texture sampler
+layout(binding = 1) uniform sampler2D texSampler;
 
 layout(location = 0) in vec3 fragPos;
 layout(location = 1) in vec2 fragTexCoord;
@@ -23,7 +23,11 @@ layout(binding = 2) uniform LightBufferObject {
     vec3 ambientColor;
     vec3 diffuseColor;
     vec3 specularColor;
+    vec3 directionDir[10];
+    vec3 pointPos[10];
+    int pointsNumber;
     float shininess;
+
 } ubo2;
 
 vec3 BRDF(vec3 V, vec3 N, vec3 L, vec3 Md, vec3 Ms, float gamma) {
@@ -38,10 +42,27 @@ void Blinn(){
     vec3 Albedo = texture(texSamplerArray[outIndex], fragTexCoord).rgb;
     float pex = 200.0f;
     float metallic = 1.0f;
-    vec3 L = ubo2.lightDir;
-    vec3 lightColor = ubo2.lightColor.rgb;
 
-    vec3 DiffSpec = BRDF(EyeDir, Norm, L, Albedo, vec3(metallic), pex);
+    vec3 lightColor = ubo2.lightColor.rgb;
+    vec3 DiffSpec = vec3(0.0f);
+
+
+    //POINT LIGHTS
+    for (int i = 0; i < ubo2.pointsNumber; i++) {
+        vec3 L = normalize(ubo2.pointPos[i] - fragPos);
+        float distance = distance(ubo2.pointPos[i], fragPos);
+        float attenuation = 1.0 / (1.0 + pow(distance, 2.0));
+
+        DiffSpec += BRDF(EyeDir, Norm, L, Albedo * attenuation, vec3(metallic), pex);
+    }
+
+    //DIRECTIONAL LIGHTS
+    for (int i = 0; i < 10; i++) {
+        vec3 L = normalize(ubo2.directionDir[i]);
+
+        DiffSpec += BRDF(EyeDir, Norm, L, Albedo, vec3(metallic), pex);
+    }
+
 
     // A special type of non-uniform ambient color, invented for this course
     const vec3 cxp = vec3(1.0,0.5,0.5) * 0.15;
@@ -55,7 +76,9 @@ void Blinn(){
     (Norm.y > 0 ? cyp : cyn) * (Norm.y * Norm.y) +
     (Norm.z > 0 ? czp : czn) * (Norm.z * Norm.z)) * Albedo;
 
-    outColor = vec4(DiffSpec * lightColor.rgb + Ambient, 1.0f);
+    vec3 result = DiffSpec * lightColor.rgb;
+
+    outColor = vec4(clamp(result, 0.0f, 1.0f), 1.0f);
 }
 
 void lambertModel(){
@@ -106,7 +129,7 @@ void BlinnPhong(){ // Just do Blinn. This function has a couple of problems
     vec3 halfwayDir = normalize(lightDir + viewDir);
 
     // Ambient
-    vec3 ambient = ubo2.ambientColor; // Ambient is wrong
+    vec3 ambient = ubo2.ambientColor;
 
     // Diffuse
     float diff = max(dot(norm, lightDir), 0.0);
@@ -118,13 +141,13 @@ void BlinnPhong(){ // Just do Blinn. This function has a couple of problems
 
     // Combine results
     vec3 result = diffuse ;
-    outColor = vec4(DiffSpec *  ubo2.lightColor, 1.0);
+    outColor = vec4(texture(texSamplerArray[outIndex], fragTexCoord).rgb * result * ubo2.lightColor, 1.0);
 }
 
 
 void main() {
-    //lambertModel();
     Blinn();
+    //lambertModel();
 
     /*
         if(inIndex == 4) {
@@ -132,5 +155,5 @@ void main() {
         }else{
             outColor = vec4(texture(texSamplerArray[inIndex], fragTexCoord).rgb, 1.0);
         }
-*/
+    */
 }

@@ -104,6 +104,21 @@ void updateTransformationData(int pos, GLFWwindow * &window, std::vector<ObjectI
     }
 }
 
+void addlight(bool &keyPressed, GLFWwindow *&window, std::vector<glm::vec3> & pointLights, std::vector<glm::vec3> & directionLights){
+    if(keyPressed == false) {
+        if(glfwGetKey(window, GLFW_KEY_K)) {
+            keyPressed = true;
+            pointLights.push_back(glm::vec3(0.0, 1.0, 0.0));
+        }else if(glfwGetKey(window, GLFW_KEY_L)){
+            keyPressed = true;
+            directionLights.push_back(glm::vec3(0.0, -1.0, 0.0));
+        }
+    }
+    if(!glfwGetKey(window, GLFW_KEY_M) && !glfwGetKey(window, GLFW_KEY_L)){
+        keyPressed = false;
+    }
+}
+
 
 /**
  * @brief This function allows the user to select a model from listObjectInfos to modify it later in other functions.
