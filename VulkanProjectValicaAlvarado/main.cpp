@@ -203,6 +203,7 @@ private:
     bool keyPressedAdd = false;
     bool keyPressedAddSelect = false;
     bool keyPressedDelete = false;
+    bool keyPressedLight = false;
     int currentTransformationModel = 0;
     uint32_t addObjectIndex = 0;
     bool mustAddObject = false;
@@ -242,16 +243,20 @@ private:
 
     std::string texturePathSB;
 
+    //LIGHTS OBJECTS
+    std::vector<glm::vec3> directionalLights;
+    std::vector<glm::vec3> pointLights;
+
 
     //TEXT ELEMENTS
     VkDescriptorSetLayout DSLText;
     VkPipelineLayout pipelineLayoutText;
     VkPipeline graphicsPipelineText;
 
-    VkImage TextImage;
-    VkDeviceMemory TextImageMemory;
-    VkImageView TextImageView;
-    VkSampler TextSampler;
+    VkImage TextImage[2];
+    VkDeviceMemory TextImageMemory[2];
+    VkImageView TextImageView[2];
+    VkSampler TextSampler[2];
     std::vector<VkDescriptorSet> descriptorSetsText;
 
     //std::vector<textVertex> textVertices;
@@ -261,13 +266,19 @@ private:
     float heightImage = (float)sizeImage / HEIGHT;
     float widthImage = (float)sizeImage / WIDTH;
     std::vector<textVertex> textVertices = {
-            {{-1, -1}, {1, 0}},
-            {{ -1 + widthImage, -1}, {0, 0}},
-            {{ -1 + widthImage,  -1 + heightImage}, {0, 1}},
-            {{-1,  -1 + heightImage}, {1, 1}}
+            {{-1, -1}, {1, 0}, 0},
+            {{ -1 + widthImage, -1}, {0, 0}, 0},
+            {{ -1 + widthImage,  -1 + heightImage}, {0, 1}, 0},
+            {{-1,  -1 + heightImage}, {1, 1}, 0},
+            {{-1 + widthImage, -1}, {1, 0}, 1},
+            {{ -1 + 2 * widthImage, -1}, {0, 0}, 1},
+            {{ -1 + 2 * widthImage,  -1 + heightImage}, {0, 1}, 1},
+            {{-1 + widthImage,  -1 + heightImage}, {1, 1}, 1}
     };
 
-    std::vector<uint32_t > textIndices = {0, 2, 1, 2, 0, 3};
+    std::vector<uint32_t > textIndices = {0, 2, 1, 2, 0, 3,
+                                          4, 6, 5, 6, 4, 7,
+                                          };
 
 
     VkBuffer vertexBufferText;
@@ -346,8 +357,10 @@ private:
         createTextureImages(mipLevels, device, physicalDevice, commandPool, graphicsQueue, normalImages,
                             normalImageMemorys, normalPaths);
 
-        createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, TextImage,
-                           TextImageMemory, "fonts/tata_0.png");
+        createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, TextImage[0],
+                           TextImageMemory[0], "fonts/tata_0.png");
+        createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, TextImage[1],
+                           TextImageMemory[1], "fonts/tata_0.png");
 
         //TEXT IMAGE
 
@@ -355,13 +368,15 @@ private:
         createTextureImageView(device, textureImage, mipLevels, textureImageView);
         createTextureImageViews(device, textureImages, mipLevels, textureImageViews);
         createTextureImageViews(device, normalImages, mipLevels, normalImageViews);
-        createTextureImageView(device, TextImage, mipLevels, TextImageView);
+        createTextureImageView(device, TextImage[0], mipLevels, TextImageView[0]);
+        createTextureImageView(device, TextImage[1], mipLevels, TextImageView[1]);
 
 
         createTextureSampler(physicalDevice, device, textureSampler);
         createTextureSamplers(physicalDevice, device, textureSamplers, texturePaths.size());
         createTextureSamplers(physicalDevice, device, normalSamplers, normalPaths.size());
-        createTextureSampler(physicalDevice, device, TextSampler);
+        createTextureSampler(physicalDevice, device, TextSampler[0]);
+        createTextureSampler(physicalDevice, device, TextSampler[1]);
 
 
         //CREATE SKYBOX
@@ -443,6 +458,9 @@ private:
             float deltaTime = currentTime - lastTime;
             lastTime = currentTime;
 
+            //lights management
+            addlight(keyPressedLight, window, pointLights, directionalLights);
+
             changeCurrentModel(keyPressed, window, currentTransformationModel, listObjectInfos);
             selectAddObjectIndex(keyPressedAddSelect, window, addObjectIndex, 0, loadablesVector.size()-1, mustChangeSelectedObject);
             addObject(keyPressedAdd, window, addObjectIndex, mustAddObject);
@@ -453,7 +471,7 @@ private:
             changeOrthogonalView(window, WIDTH, HEIGHT, normalProj);
             changeIsometricView(window, WIDTH, HEIGHT, normalProj);
             regularProj(window, WIDTH, HEIGHT, normalProj);
-            updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped, normalProj);
+            updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped, normalProj, pointLights, directionalLights);
             glfwPollEvents();
 
             if(mustAddObject){
@@ -627,16 +645,19 @@ private:
         vkDeviceWaitIdle(device);
 
         //FREE THE IMAGES AND EVERYTHING
-        vkDestroyImageView(device, TextImageView, nullptr);
-        vkFreeMemory(device, TextImageMemory, nullptr);
-        vkDestroyImage(device, TextImage, nullptr);
-        vkDestroySampler(device, TextSampler, nullptr);
+        vkDestroyImageView(device, TextImageView[0], nullptr);
+        vkFreeMemory(device, TextImageMemory[0], nullptr);
+        vkDestroyImage(device, TextImage[0], nullptr);
+        vkDestroySampler(device, TextSampler[0], nullptr);
+
+
 
 
         //LOAD THE IMAGES, IMAGE VIEWS, SAMPLER ETC ETC
-        createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, TextImage, TextImageMemory, objectInformation.presentationPath);
-        createTextureImageView(device, TextImage, mipLevels, TextImageView);
-        createTextureSampler(physicalDevice, device, TextSampler);
+        createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, TextImage[0], TextImageMemory[0], objectInformation.presentationPath);
+        createTextureImageView(device, TextImage[0], mipLevels, TextImageView[0]);
+        createTextureSampler(physicalDevice, device, TextSampler[0]);
+
 
 
         //REBUILD THE DESCRIPTOR
@@ -822,11 +843,17 @@ private:
         vkDestroyImage(device, skyboxImage, nullptr);
         vkFreeMemory(device, skyboxImageMemory, nullptr);
 
-        vkDestroySampler(device, TextSampler, nullptr);
-        vkDestroyImageView(device, TextImageView, nullptr);
+        vkDestroySampler(device, TextSampler[0], nullptr);
+        vkDestroyImageView(device, TextImageView[0], nullptr);
 
-        vkDestroyImage(device, TextImage, nullptr);
-        vkFreeMemory(device, TextImageMemory, nullptr);
+        vkDestroyImage(device, TextImage[0], nullptr);
+        vkFreeMemory(device, TextImageMemory[0], nullptr);
+
+        vkDestroySampler(device, TextSampler[1], nullptr);
+        vkDestroyImageView(device, TextImageView[1], nullptr);
+
+        vkDestroyImage(device, TextImage[1], nullptr);
+        vkFreeMemory(device, TextImageMemory[1], nullptr);
 
 
         vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
@@ -1179,7 +1206,7 @@ private:
     void createTextDescriptorSetLayout(){
         VkDescriptorSetLayoutBinding textLayoutBinding{};
         textLayoutBinding.binding = 0;
-        textLayoutBinding.descriptorCount = 1;
+        textLayoutBinding.descriptorCount = 2;
         textLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         textLayoutBinding.pImmutableSamplers = nullptr;
         textLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -2423,10 +2450,13 @@ private:
         }
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            VkDescriptorImageInfo imageInfo{};
-            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView = TextImageView;
-            imageInfo.sampler = TextSampler;
+            VkDescriptorImageInfo imageInfo[2]{};
+            imageInfo[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfo[0].imageView = TextImageView[0];
+            imageInfo[0].sampler = TextSampler[0];
+            imageInfo[1].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfo[1].imageView = TextImageView[1];
+            imageInfo[1].sampler = TextSampler[1];
 
             std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
 
@@ -2435,8 +2465,8 @@ private:
             descriptorWrites[0].dstBinding = 0;
             descriptorWrites[0].dstArrayElement = 0;
             descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            descriptorWrites[0].descriptorCount = 1;
-            descriptorWrites[0].pImageInfo = &imageInfo;
+            descriptorWrites[0].descriptorCount = 2;
+            descriptorWrites[0].pImageInfo = &imageInfo[0];
 
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
@@ -2444,10 +2474,13 @@ private:
 
     void updateTextDescriptorSets(){
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            VkDescriptorImageInfo imageInfo{};
-            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView = TextImageView;
-            imageInfo.sampler = TextSampler;
+            VkDescriptorImageInfo imageInfo[2]{};
+            imageInfo[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfo[0].imageView = TextImageView[0];
+            imageInfo[0].sampler = TextSampler[0];
+            imageInfo[1].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfo[1].imageView = TextImageView[1];
+            imageInfo[1].sampler = TextSampler[1];
 
             std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
 
@@ -2456,8 +2489,8 @@ private:
             descriptorWrites[0].dstBinding = 0;
             descriptorWrites[0].dstArrayElement = 0;
             descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            descriptorWrites[0].descriptorCount = 1;
-            descriptorWrites[0].pImageInfo = &imageInfo;
+            descriptorWrites[0].descriptorCount = 2;
+            descriptorWrites[0].pImageInfo = &imageInfo[0];
 
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
@@ -2657,7 +2690,7 @@ private:
 
         //updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped);
 
-        updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped, normalProj);
+        //updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped, normalProj);
         updateMatrixUniformBuffer(currentFrame, listActualObjectInfos, matrixUniformBuffersMapped);
 
         vkResetFences(device, 1, &inFlightFences[currentFrame]);

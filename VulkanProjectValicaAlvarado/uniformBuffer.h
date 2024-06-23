@@ -40,9 +40,15 @@ struct LightsBufferObject{
     glm::vec3 lightPos;
     alignas(16) glm::vec3 viewPos;
     alignas(16) glm::vec3 lightColor;
-    glm::vec3 ambientColor;
-    glm::vec3 diffuseColor;
-    glm::vec3 specularColor;
+    alignas(16)glm::vec3 ambientColor;
+    alignas(16)glm::vec3 diffuseColor;
+    alignas(16)glm::vec3 specularColor;
+    //DIRECTIONAL LIGHTS
+    alignas(16)glm::vec3 directionDir[10];
+
+    //POINT LIGHTS
+    alignas(16)glm::vec3 pointPos[10];
+    int pointsNumber;
     float shininess;
 };
 
@@ -387,7 +393,8 @@ void updateMatrixUniformBuffer(uint32_t currentImage, std::vector<ObjectInformat
 }
 
 void updateUniformBuffer(uint32_t currentImage, GLFWwindow * &window,
-                         std::vector<void*> &uniformBuffersMapped, std::vector<void*> &lightsBuffersMapped, bool &normalProj) {
+                         std::vector<void*> &uniformBuffersMapped, std::vector<void*> &lightsBuffersMapped, bool &normalProj,
+                         std::vector<glm::vec3> pointLights, std::vector<glm::vec3> directionLights) {
     static bool debounce = false;
     static int curDebounce = 0;
 
@@ -446,14 +453,31 @@ void updateUniformBuffer(uint32_t currentImage, GLFWwindow * &window,
                * ubo.view;
 
     LightsBufferObject lbo{};
-    lbo.lightDir = glm::vec3(1.0f, 1.0f, 1.0f);
+    lbo.lightDir = glm::vec3(0.0f, 1.0f, 0.0f);
     lbo.lightPos = glm::vec3(2.0f, 4.0f, -2.0f);
-    lbo.viewPos = glm::vec3(0.0f, 0.0f, 0.0f);
+
+    glm::mat4 inverseViewMatrix = glm::inverse(ubo.view);
+    lbo.viewPos = glm::vec3(inverseViewMatrix[3]);
+
     lbo.lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     lbo.ambientColor = glm::vec3(0.1f, 0.1f, 0.1f);
     lbo.diffuseColor = glm::vec3(0.5f, 0.5f, 0.5f);
     lbo.specularColor = glm::vec3(1.0f, 1.0f, 1.0f);
     lbo.shininess = 32.0f;
+
+    for (int i = 0; i < pointLights.size(); ++i) {
+        lbo.pointPos[i] = pointLights.at(i);
+    }
+
+    for (int i = 0; i < directionLights.size(); ++i) {
+        lbo.directionDir[i] = directionLights.at(i);
+    }
+
+    lbo.pointsNumber = pointLights.size();
+
+    //lbo.directionDir[0] = glm::vec3(-1.0f, -0.0f, -0.0f);
+
+    //lbo.pointPos[0] = glm::vec3(0.0f, 0.0, 30.0f);
 
     memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
     memcpy(lightsBuffersMapped[currentImage], &lbo, sizeof(lbo));
@@ -674,6 +698,7 @@ void createMatrixUniformBuffer(VkDevice &device, VkPhysicalDevice &physicalDevic
     }
     std::cout << "Buffer Matrix Created \n";
 }
+
 
 
 void createUniformBuffers(VkDevice &device, VkPhysicalDevice &physicalDevice, VkExtent2D &swapChainExtent,
