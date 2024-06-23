@@ -35,8 +35,8 @@
 #include "texturesManagement.h"
 #include "CharInfoStructure.h"
 
-const uint32_t WIDTH = 1920;
-const uint32_t HEIGHT = 1080;
+const uint32_t WIDTH = 1000;//1920;
+const uint32_t HEIGHT = 600;//1080;
 
 const std::string TEXTURE_PATH = "textures/";
 
@@ -1641,14 +1641,8 @@ private:
     }
 
     void createObjectVector(){
-        ObjectInformation objCarpet = ObjectInformation(
-                "furniture/Carpet/round-carpet.obj",
-                glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 3.0f, 3.0f)),
-                "furniture/Carpet/red_carpet.jpg",
-                false);
-        objCarpet.scaleModel(3.1f);
-        objCarpet.translateModel(0.0f, 0.0f, -7.5f);
-
+        createLivingRoom(listActualObjectInfos, listObjectInfos);
+/*
         ObjectInformation pokerRoom{};
         pokerRoom.modelPath = "furniture/Poker Room/scene.gltf";
         pokerRoom.texturePath = "furniture/House/mondrian.png";
@@ -1658,8 +1652,8 @@ private:
         pokerRoom.normalPath = "";
         pokerRoom.isGltf = true;
       //  pokerRoom.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-
-
+*/
+/*
         ObjectInformation objTurret {};
         objTurret.modelPath = "turret.obj";
         objTurret.texturePath = "furniture/House/mondrian.png";
@@ -1668,7 +1662,7 @@ private:
         objTurret.hasNormalMap = false;
         objTurret.isGltf = false;
         objTurret.normalPath = "";
-
+*/
 /*
         ObjectInformation objHouse {};
         objHouse.modelPath = "furniture/House/house_04.obj";
@@ -1699,64 +1693,10 @@ private:
         objMorris.normalPath = "furniture/MorrisChair/morrisChair_smallChairMat_Normal.tga.png";
 */
 
-        ObjectInformation objMorris = ObjectInformation(
-                "furniture/MorrisChair/morrisChair.obj",
-                glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 3.0f, 3.0f)),
-                "furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png",
-                false);
-               // "furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png"
-
-
-        ObjectInformation objWildWestPiano = ObjectInformation(
-                "furniture/WildWestPiano/Piano.obj",
-                glm::scale(glm::mat4(1.0f), glm::vec3(200.0f, 200.0f, 200.0f)),
-                "furniture/WildWestPiano/Piano_Wood_BaseColor.png",
-                false
-                );
-
-        objWildWestPiano.translateModel(7.0f, 0.0f, -0.4f);
-        objWildWestPiano.rotateModel(60.0f, 'z');
-
-        ObjectInformation objTVCabinet = ObjectInformation(
-                "furniture/TVCabinet/Tes.obj",
-                glm::scale(glm::mat4(1.0f), glm::vec3(0.55f, 0.55f, 0.55f)),
-                "furniture/TVCabinet/TCA_Dif.png",
-                false
-        );
-        objTVCabinet.translateModel(-450.0f, 1600.0f, -180.0f);
-        objTVCabinet.rotateModel(90.0f, 'x');
-
         ObjectInformation objTruck = ObjectInformation(
                 "Cars/keytruck.obj",
                 glm::scale(glm::mat4(1.0f), glm::vec3(100.0f, 100.0f, 100.0f)),
                 "Cars/Mitsubishi.png",
-                false
-        );
-
-        ObjectInformation objCat = ObjectInformation(
-                "animals/cat/Cat.obj",
-                glm::scale(glm::mat4(1.0f), glm::vec3(3.0f)),
-                "animals/cat/Cat_diffuse.jpeg",
-                false
-        );
-
-        objCat.translateModel(110.0f, 20.0f, -24.0);
-        objCat.rotateModel(90.0f, 'x');
-        objCat.rotateModel(15.0f, 'y');
-
-        ObjectInformation floor = ObjectInformation(
-                "furniture/CyberpunkFlooring/scene.gltf",
-                glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f)),
-                "furniture/CyberpunkFlooring/wood_livingroom.jpg",
-                true
-        );
-
-        floor.translateModel(0.0f, 0.0f, -96.0f);
-
-        ObjectInformation obj = ObjectInformation(
-                "furniture/MorrisChair/morrisChair.obj",
-                glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 3.0f, 3.0f)),
-                "furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png",
                 false
         );
 
@@ -1777,27 +1717,6 @@ private:
                 0, 1, 3, 2, 3, 1
         };
 
-        listActualObjectInfos.push_back(floor);
-        listActualObjectInfos.push_back(objWildWestPiano);
-        listActualObjectInfos.push_back(objTVCabinet);
-        listActualObjectInfos.push_back(objCarpet);
-        listActualObjectInfos.push_back(objCat);
-        //listActualObjectInfos.push_back(objTruck);
-       //listActualObjectInfos.push_back(pokerRoom);
-        //listActualObjectInfos.push_back(objTurret);
-       // listActualObjectInfos.push_back(objHouse);
-        listActualObjectInfos.push_back(objMorris);
-        listActualObjectInfos.push_back(objPlane);
-        //listActualObjectInfos.push_back(objPlane);
-        //listActualObjectInfos.push_back(objGLTF);
-
-        listObjectInfos.push_back(&listActualObjectInfos[0]);
-        listObjectInfos.push_back(&listActualObjectInfos[1]);
-        listObjectInfos.push_back(&listActualObjectInfos[2]);
-       listObjectInfos.push_back(&listActualObjectInfos[3]);
-        listObjectInfos.push_back(&listActualObjectInfos[4]);
-        listObjectInfos.push_back(&listActualObjectInfos[5]);
-        listObjectInfos.push_back(&listActualObjectInfos[6]);
 
         isStart = true;
 

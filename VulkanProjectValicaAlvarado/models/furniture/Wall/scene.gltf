@@ -3,24 +3,24 @@
     {
       "bufferView": 2,
       "componentType": 5126,
-      "count": 24,
+      "count": 65532,
       "max": [
-        1000.0,
-        -900.0,
-        700.0
+        2.972905158996582,
+        -0.06666138023138046,
+        2.750110387802124
       ],
       "min": [
-        -900.0,
-        -1000.0,
-        0.0
+        -3.448131799697876,
+        -0.25606003403663635,
+        0.05166660249233246
       ],
       "type": "VEC3"
     },
     {
       "bufferView": 2,
-      "byteOffset": 288,
+      "byteOffset": 786384,
       "componentType": 5126,
-      "count": 24,
+      "count": 65532,
       "max": [
         1.0,
         1.0,
@@ -34,68 +34,207 @@
       "type": "VEC3"
     },
     {
-      "bufferView": 1,
+      "bufferView": 3,
       "componentType": 5126,
-      "count": 24,
+      "count": 65532,
       "max": [
-        200.0,
-        101.0
+        0.9999998807907104,
+        1.0,
+        0.9999997019767761,
+        1.0
       ],
       "min": [
-        -100.0,
-        -69.0
+        -0.9990370273590088,
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 65532,
+      "max": [
+        0.9997425079345703,
+        0.9899901151657104
+      ],
+      "min": [
+        0.000244140625,
+        0.0001224471488967538
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 524256,
+      "componentType": 5126,
+      "count": 65532,
+      "max": [
+        0.9997425079345703,
+        0.9899901151657104
+      ],
+      "min": [
+        0.000244140625,
+        0.0001224471488967538
       ],
       "type": "VEC2"
     },
     {
       "bufferView": 0,
       "componentType": 5125,
-      "count": 36,
+      "count": 280134,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 1572768,
+      "componentType": 5126,
+      "count": 5375,
+      "max": [
+        2.972890615463257,
+        -0.06666181236505508,
+        2.750105381011963
+      ],
+      "min": [
+        -3.386826515197754,
+        -0.21901805698871613,
+        0.05173151195049286
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 1637268,
+      "componentType": 5126,
+      "count": 5375,
+      "max": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "min": [
+        -0.4389812648296356,
+        -1.0,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "byteOffset": 1048512,
+      "componentType": 5126,
+      "count": 5375,
+      "max": [
+        0.9999998211860657,
+        1.0,
+        0.9999988079071045,
+        1.0
+      ],
+      "min": [
+        -0.999113917350769,
+        -0.9467329978942871,
+        -1.0,
+        -1.0
+      ],
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 1048512,
+      "componentType": 5126,
+      "count": 5375,
+      "max": [
+        0.9997009038925171,
+        0.9294432401657104
+      ],
+      "min": [
+        0.000244140625,
+        0.0004701210418716073
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 1091512,
+      "componentType": 5126,
+      "count": 5375,
+      "max": [
+        0.9997009038925171,
+        0.9294432401657104
+      ],
+      "min": [
+        0.000244140625,
+        0.0004701210418716073
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 1120536,
+      "componentType": 5125,
+      "count": 19863,
       "type": "SCALAR"
     }
   ],
   "asset": {
     "extras": {
-      "author": "Keith_Pamment (https://sketchfab.com/Keith_Pamment)",
+      "author": "Christians (https://sketchfab.com/Realitycapturestudio)",
       "license": "SKETCHFAB Standard (https://sketchfab.com/licenses)",
-      "source": "https://sketchfab.com/3d-models/eg1002-2024-v1-v100-wall-1-2309959a659a41fe93f2af2c6603d73e",
-      "title": "EG1002_2024_v1 V100_wall_1"
+      "source": "https://sketchfab.com/3d-models/distressed-painted-wall-64m-section-682f9c19cc64496b87a91e551523e486",
+      "title": "Distressed Painted Wall 6.4m Section"
     },
-    "generator": "Sketchfab-16.7.0",
+    "generator": "Sketchfab-15.87.0",
     "version": "2.0"
   },
   "bufferViews": [
     {
       "buffer": 0,
-      "byteLength": 144,
+      "byteLength": 1199988,
       "name": "floatBufferViews",
       "target": 34963
     },
     {
       "buffer": 0,
-      "byteLength": 192,
-      "byteOffset": 144,
+      "byteLength": 1134512,
+      "byteOffset": 1199988,
       "byteStride": 8,
       "name": "floatBufferViews",
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteLength": 576,
-      "byteOffset": 336,
+      "byteLength": 1701768,
+      "byteOffset": 2334500,
       "byteStride": 12,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 1134512,
+      "byteOffset": 4036268,
+      "byteStride": 16,
       "name": "floatBufferViews",
       "target": 34962
     }
   ],
   "buffers": [
     {
-      "byteLength": 912,
+      "byteLength": 5170780,
       "uri": "scene.bin"
     }
   ],
   "extensionsUsed": [
     "KHR_materials_specular"
+  ],
+  "images": [
+    {
+      "uri": "textures/Wall_2_6.4mtr_u1_v1_baseColor.jpeg"
+    },
+    {
+      "uri": "textures/Wall_2_6.4mtr_u1_v1_normal.png"
+    }
   ],
   "materials": [
     {
@@ -110,8 +249,15 @@
           "specularFactor": 0.0
         }
       },
-      "name": "Scene_-_Root",
+      "name": "Wall_2_6.4mtr_u1_v1",
+      "normalTexture": {
+        "index": 1,
+        "texCoord": 1
+      },
       "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
         "metallicFactor": 0.0,
         "roughnessFactor": 0.0
       }
@@ -119,15 +265,34 @@
   ],
   "meshes": [
     {
-      "name": "Object_0",
+      "name": "Wall_2_6.4mtr_Wall_2_6.4mtr_u1_v1_0",
       "primitives": [
         {
           "attributes": {
             "NORMAL": 1,
             "POSITION": 0,
-            "TEXCOORD_0": 2
+            "TANGENT": 2,
+            "TEXCOORD_0": 3,
+            "TEXCOORD_1": 4
           },
-          "indices": 3,
+          "indices": 5,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Wall_2_6.4mtr_Wall_2_6.4mtr_u1_v1_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 7,
+            "POSITION": 6,
+            "TANGENT": 8,
+            "TEXCOORD_0": 9,
+            "TEXCOORD_1": 10
+          },
+          "indices": 11,
           "material": 0,
           "mode": 4
         }
@@ -139,17 +304,60 @@
       "children": [
         1
       ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
       "name": "Sketchfab_model"
     },
     {
       "children": [
         2
       ],
-      "name": "root"
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "Wall_2_6.4mtr.fbx"
     },
     {
       "children": [
         3
+      ],
+      "name": "RootNode"
+    },
+    {
+      "children": [
+        4,
+        5
       ],
       "matrix": [
         1.0,
@@ -158,10 +366,10 @@
         0.0,
         0.0,
         2.220446049250313e-16,
-        1.0,
-        0.0,
-        0.0,
         -1.0,
+        0.0,
+        0.0,
+        1.0,
         2.220446049250313e-16,
         0.0,
         0.0,
@@ -169,17 +377,23 @@
         0.0,
         1.0
       ],
-      "name": "GLTF_SceneRootNode"
-    },
-    {
-      "children": [
-        4
-      ],
-      "name": "Body7_0"
+      "name": "Wall_2_6.4mtr"
     },
     {
       "mesh": 0,
-      "name": "Object_4"
+      "name": "Wall_2_6.4mtr_Wall_2_6.4mtr_u1_v1_0"
+    },
+    {
+      "mesh": 1,
+      "name": "Wall_2_6.4mtr_Wall_2_6.4mtr_u1_v1_0"
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
     }
   ],
   "scene": 0,
@@ -189,6 +403,16 @@
       "nodes": [
         0
       ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
     }
   ]
 }

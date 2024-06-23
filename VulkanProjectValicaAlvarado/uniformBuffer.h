@@ -100,12 +100,12 @@ void changeOrthogonalView(GLFWwindow* &window, int screenWidth, int screenHeight
         ubo.proj = glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, 0.1f, 100.0f);
 
         // Ensure the Y coordinate is flipped if necessary (depends on coordinate system)
-
+        ubo.proj[1][1] *= -1;
         // Adjust aspect ratio based on screen dimensions
         ubo.proj = glm::ortho(-orthoSize * screenWidth / static_cast<float>(screenHeight),
                               orthoSize * screenWidth / static_cast<float>(screenHeight),
                               -orthoSize, orthoSize, 0.1f, 100.0f);
-        ubo.proj[1][1] *= -1;
+
     }
 }
 

@@ -461,3 +461,131 @@ void ObjectLoader::createLoadablesVector(std::vector<ObjectInformation> & loadab
     loadables.push_back(objectLaptop);
     loadables.push_back(objectCat);
 }
+
+void createEmptyRoom(std::vector<ObjectInformation> &listActualObjectInfos, std::vector<ObjectInformation*> &listObjectInfos,
+                     bool insideFunction){
+
+    ObjectInformation objWall1 = ObjectInformation(
+            "furniture/Wall/wall.obj",
+            glm::scale(glm::mat4(1.0f), glm::vec3(155.0f, 20.0f, 150.0f)),
+            "furniture/Wall/wall_4.jpg",
+            false);
+    objWall1.rotateModel(180.0f, 'x');
+    objWall1.translateModel(2.2f, -60.0f,  -4.75f);
+
+    ObjectInformation objWall2 = ObjectInformation(
+            "furniture/Wall/wall.obj",
+            glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f)),
+            "furniture/Wall/wall_4.jpg",
+            false);
+    objWall2.rotateModel(90, 'z');
+    objWall2.modelMatrix = glm::scale(objWall2.modelMatrix, glm::vec3(110.0f, 20.0f, 150.0f));
+    objWall2.translateModel(2.2f, -83.5f, -1.3f);
+
+    ObjectInformation floor = ObjectInformation(
+            "furniture/CyberpunkFlooring/scene.gltf",
+            glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f)),
+            "furniture/CyberpunkFlooring/wood_livingroom.jpg",
+            true);
+    floor.translateModel(0.0f, 0.0f, -96.0f);
+
+
+    listActualObjectInfos.push_back(floor);
+    listActualObjectInfos.push_back(objWall1);
+    listActualObjectInfos.push_back(objWall2);
+
+    if(!insideFunction){
+        listObjectInfos.push_back(&listActualObjectInfos[0]);
+        listObjectInfos.push_back(&listActualObjectInfos[1]);
+        listObjectInfos.push_back(&listActualObjectInfos[2]);
+    }
+}
+
+void createLivingRoom(std::vector<ObjectInformation> &listActualObjectInfos, std::vector<ObjectInformation*> &listObjectInfos){
+    createEmptyRoom(listActualObjectInfos, listObjectInfos, true);
+    ObjectInformation objMorris = ObjectInformation(
+            "furniture/MorrisChair/morrisChair.obj",
+            glm::scale(glm::mat4(1.0f), glm::vec3(3.0f)),
+            "furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png",
+            false);
+
+    ObjectInformation objCarpet = ObjectInformation(
+            "furniture/Carpet/round-carpet.obj",
+            glm::scale(glm::mat4(1.0f), glm::vec3(3.0f)),
+            "furniture/Carpet/red_carpet.jpg",
+            false);
+    objCarpet.scaleModel(3.1f);
+    objCarpet.translateModel(0.0f, 0.0f, -7.5f);
+
+    ObjectInformation objWildWestPiano = ObjectInformation(
+            "furniture/WildWestPiano/Piano.obj",
+            glm::scale(glm::mat4(1.0f), glm::vec3(200.0f)),
+            "furniture/WildWestPiano/Piano_Wood_BaseColor.png",
+            false);
+    objWildWestPiano.translateModel(7.8f, 0.0f, -0.4f);
+    objWildWestPiano.rotateModel(90.0f, 'z');
+
+    ObjectInformation objTVCabinet = ObjectInformation(
+            "furniture/TVCabinet/Tes.obj",
+            glm::scale(glm::mat4(1.0f), glm::vec3(0.55f)),
+            "furniture/TVCabinet/TCA_Dif.png",
+            false);
+    objTVCabinet.translateModel(-455.0f, 2000.0f, -180.0f);
+    objTVCabinet.rotateModel(90.0f, 'x');
+
+    ObjectInformation objCat = ObjectInformation(
+            "animals/cat/Cat.obj",
+            glm::scale(glm::mat4(1.0f), glm::vec3(3.0f)),
+            "animals/cat/Cat_diffuse.jpeg",
+            false);
+
+    objCat.translateModel(110.0f, 20.0f, -24.0);
+    objCat.rotateModel(90.0f, 'x');
+    objCat.rotateModel(15.0f, 'y');
+
+    ObjectInformation objPlant1 = ObjectInformation(
+            "furniture/PlantAsset/scene.gltf",
+            glm::scale(glm::mat4(1.0f), glm::vec3(6.0f)),
+            "furniture/PlantAsset/Material.002_baseColor.jpeg",
+            true);
+
+    ObjectInformation objVintageLamp = ObjectInformation(
+            "furniture/VintageLamp/scene.gltf",
+            glm::scale(glm::mat4(1.0f), glm::vec3(9.0f)),
+            "furniture/VintageLamp/Lamp_baseColor.png",
+            true);
+
+    objVintageLamp.modelMatrix[1][1] *= -1;
+    objVintageLamp.translateModel(15.0f, 15.0f, 12.0f);
+    objVintageLamp.rotateModel(90, 'x');
+
+    ObjectInformation objSofa = ObjectInformation(
+            "furniture/Sofa/scene.gltf",
+            glm::scale(glm::mat4(1.0f), glm::vec3(13.0f)),
+            "furniture/Sofa/Material_baseColor.jpeg",
+            true);
+
+    objSofa.scaleModel(15.0f);
+    objSofa.translateModel(0.0f, 0.0f, 0.1f);
+    objSofa.rotateModel(-83, 'z');
+
+
+    listActualObjectInfos.push_back(objWildWestPiano);
+    listActualObjectInfos.push_back(objTVCabinet);
+    listActualObjectInfos.push_back(objCarpet);
+    listActualObjectInfos.push_back(objCat);
+    //listActualObjectInfos.push_back(objMorris);
+    //listActualObjectInfos.push_back(objVintageLamp);
+    listActualObjectInfos.push_back(objSofa);
+    //listActualObjectInfos.push_back(objTable);
+
+    listObjectInfos.push_back(&listActualObjectInfos[0]);
+    listObjectInfos.push_back(&listActualObjectInfos[1]);
+    listObjectInfos.push_back(&listActualObjectInfos[2]);
+    listObjectInfos.push_back(&listActualObjectInfos[3]);
+    listObjectInfos.push_back(&listActualObjectInfos[4]);
+    listObjectInfos.push_back(&listActualObjectInfos[5]);
+    listObjectInfos.push_back(&listActualObjectInfos[6]);
+    listObjectInfos.push_back(&listActualObjectInfos[7]);
+   // listObjectInfos.push_back(&listActualObjectInfos[8]);
+}

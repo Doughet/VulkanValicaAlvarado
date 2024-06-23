@@ -154,7 +154,12 @@ public:
     void loadGLTFModel(ObjectInformation* objectInformation, uint32_t index);
 
     void createLoadablesVector(std::vector<ObjectInformation> & loadables);
+
 };
+
+    void createLivingRoom(std::vector<ObjectInformation> &listActualObjectInfos, std::vector<ObjectInformation*> &listObjectInfos);
+    void createEmptyRoom(std::vector<ObjectInformation> &listActualObjectInfos, std::vector<ObjectInformation*> &listObjectInfos,
+                         bool insideFunction);
 
 
 #endif //VULKANPROJECTVALICAALVARADO_OBJECTLOADER_H
