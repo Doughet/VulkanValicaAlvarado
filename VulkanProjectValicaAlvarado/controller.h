@@ -111,11 +111,24 @@ void addlight(bool &keyPressed, GLFWwindow *&window, std::vector<glm::vec3> & po
             pointLights.push_back(glm::vec3(0.0, 1.0, 0.0));
         }else if(glfwGetKey(window, GLFW_KEY_L)){
             keyPressed = true;
-            directionLights.push_back(glm::vec3(0.0, -1.0, 0.0));
+            directionLights.push_back(glm::vec3(0.0, 1.0, 1.0));
         }
     }
     if(!glfwGetKey(window, GLFW_KEY_M) && !glfwGetKey(window, GLFW_KEY_L)){
         keyPressed = false;
+    }
+}
+
+void launchChangeScreen(GLFWwindow *&window, bool & mustChangeScreen){
+    if(glfwGetKey(window, GLFW_KEY_SPACE)){
+        mustChangeScreen = true;
+    }
+}
+
+void closeEscape(GLFWwindow *&window){
+    // Standard procedure to quit when the ESC key is pressed
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE)) {
+        glfwSetWindowShouldClose(window, GL_TRUE);
     }
 }
 

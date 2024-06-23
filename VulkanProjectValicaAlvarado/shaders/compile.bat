@@ -7,4 +7,7 @@ C:/VulkanSDK/1.3.275.0/Bin/glslc.exe skybox.frag -o skyBoxfrag.spv
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe text.vert -o textvert.spv
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe text.frag -o textfrag.spv
 
+C:/VulkanSDK/1.3.275.0/Bin/glslc.exe menu.vert -o menuvert.spv
+C:/VulkanSDK/1.3.275.0/Bin/glslc.exe menu.frag -o menufrag.spv
+
 pause
