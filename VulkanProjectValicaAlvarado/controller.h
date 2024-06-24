@@ -26,6 +26,31 @@
 
 #include "ObjectLoader.h"
 
+void decomposeMatrix(const glm::mat4& M, glm::vec3& scale, glm::quat& rotation, glm::vec3& translation) {
+    // Extract translation
+    translation.x = M[3][0];
+    translation.y = M[3][1];
+    translation.z = M[3][2];
+
+    // Extract scale
+    glm::mat3 M3x3(M);
+    scale.x = glm::length(M3x3[0]);
+    scale.y = glm::length(M3x3[1]);
+    scale.z = glm::length(M3x3[2]);
+
+    // Remove the scaling component
+    if (scale.x != 0) M3x3[0] /= scale.x;
+    if (scale.y != 0) M3x3[1] /= scale.y;
+    if (scale.z != 0) M3x3[2] /= scale.z;
+
+    // Extract rotation
+    rotation = glm::quat_cast(M3x3);
+}
+
+void computeMatrix(glm::mat4& M, glm::mat4& scale, glm::mat4& rotation, glm::mat4& translation){
+    M = translation * rotation * scale;
+}
+
 /**
  * @brief Function that modifies a selected model from listObjectInfos by applying a trasnformation from the glm
  * library. If the user presses the 1 key it will make it move positively through the y axis. And if shift happens to
@@ -52,10 +77,12 @@ void updateTransformationData(int pos, GLFWwindow * &window, std::vector<ObjectI
     const float fixedMoveSpeed = moveSpeed * deltaTime;
 
     const glm::mat4 M = listObjectInfos.at(pos)->modelMatrix;
-  //  printf(", : %d ," ,int(listObjectInfos.at(pos)->vertices.size()));
+    //printf(", : %d ," ,int(listObjectInfos.at(pos)->vertices.size()));
     if(listObjectInfos.at(pos)->modelSize == modelSize::TINY){
-        sizeSpeed = 0.6f;
+        sizeSpeed = 0.1f;
     }else if(listObjectInfos.at(pos)->modelSize == modelSize::SMALL){
+        sizeSpeed = 1.0f;
+    }else if(listObjectInfos.at(pos)->modelSize == modelSize::MEDIUM){
         sizeSpeed = 1.8f;
     }else if(listObjectInfos.at(pos)->modelSize == modelSize::MEDIUM){
         sizeSpeed = 2.3f;
@@ -64,44 +91,64 @@ void updateTransformationData(int pos, GLFWwindow * &window, std::vector<ObjectI
     }else if(listObjectInfos.at(pos)->modelSize == modelSize::GIGANTIC){
         sizeSpeed = 8.5f;
     }else if(listObjectInfos.at(pos)->modelSize == modelSize::GLTF){
-        sizeSpeed = 100000.0f;
+        sizeSpeed = 12.0f;
     }
+
+    glm::vec3 translation, scale;
+    glm::quat rotation;
+    decomposeMatrix(M, scale, rotation, translation);
+
+    glm::mat4 translationMat = glm::translate(glm::mat4(1.0f), translation );
+
+    glm::mat4 rotationMat = glm::mat4 (rotation);
+
+    glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), scale);
+
 
     bool shiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
 
     if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) { // y-axis movement
         if(shiftPressed) {
-            listObjectInfos.at(pos)->modelMatrix = glm::translate(M, glm::vec3(0.0f, fixedMoveSpeed*sizeSpeed, 0.0f));
+            translationMat = glm::translate(glm::mat4(1.0f), translation + glm::vec3(0.0f, fixedMoveSpeed*sizeSpeed, 0.0f));
         }else{
-            listObjectInfos.at(pos)->modelMatrix = glm::translate( M,glm::vec3(0.0f, - fixedMoveSpeed*sizeSpeed, 0.0f));
+            translationMat = glm::translate(glm::mat4(1.0f), translation + glm::vec3(0.0f, -fixedMoveSpeed*sizeSpeed, 0.0f));
         }
     } else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) { // x-axis movement
         if(shiftPressed) {
-            listObjectInfos.at(pos)->modelMatrix = glm::translate( M, glm::vec3(- fixedMoveSpeed*sizeSpeed, 0.0f, 0.0f));
+            translationMat = glm::translate(glm::mat4(1.0f), translation + glm::vec3(-fixedMoveSpeed*sizeSpeed, 0.0f, 0.0f));
         }else{
-            listObjectInfos.at(pos)->modelMatrix = glm::translate( M, glm::vec3(fixedMoveSpeed*sizeSpeed, 0.0f, 0.0f));
+            translationMat = glm::translate(glm::mat4(1.0f), translation + glm::vec3(fixedMoveSpeed*sizeSpeed, 0.0f, 0.0f));
         }
     } else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) { // z-axis movement
         if(shiftPressed) {
-            listObjectInfos.at(pos)->modelMatrix = glm::translate( M, glm::vec3(0.0f, 0.0f, fixedMoveSpeed*sizeSpeed));
+            translationMat = glm::translate(glm::mat4(1.0f), translation + glm::vec3(0.0f, 0.0f, fixedMoveSpeed*sizeSpeed));
         }else{
-            listObjectInfos.at(pos)->modelMatrix = glm::translate( M, glm::vec3(0.0f, 0.0f,- fixedMoveSpeed*sizeSpeed));
+            translationMat = glm::translate(glm::mat4(1.0f), translation + glm::vec3(0.0f, 0.0f, -fixedMoveSpeed*sizeSpeed));
         }
     } else if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) { // Scaling section
         float fixedScaleSpeed = scaleSpeed * deltaTime;
         if(shiftPressed) {
-            listObjectInfos.at(pos)->modelMatrix = glm::scale(M, glm::vec3(1.0f + fixedScaleSpeed));
+            scaleMat =  glm::scale(glm::mat4(1.0f), glm::vec3(1 + fixedScaleSpeed)) * glm::scale(glm::mat4(1.0f), scale);
         }else{
-            listObjectInfos.at(pos)->modelMatrix = glm::scale(M, glm::vec3(1.0f - fixedScaleSpeed));
+            scaleMat =  glm::scale(glm::mat4(1.0f), glm::vec3(1 - fixedScaleSpeed)) * glm::scale(glm::mat4(1.0f), scale);
         }
     }else if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS) { // Rotating
         float fixedRotateSpeed = glm::radians(rotateSpeedDegrees * deltaTime);
         if (shiftPressed) {
-            listObjectInfos.at(pos)->modelMatrix = glm::rotate(M, fixedRotateSpeed, glm::vec3(0.0f, 0.0f, 1.0f));
+            glm::mat4 newRotateMatrix = glm::rotate(glm::mat4(1.0f), fixedRotateSpeed, glm::vec3(0.0f, 0.0f, 1.0f));
+            rotationMat = newRotateMatrix * glm::mat4 (rotation);
         } else {
-            listObjectInfos.at(pos)->modelMatrix = glm::rotate(M, - fixedRotateSpeed, glm::vec3(0.0f, 0.0f, 1.0f));
+            glm::mat4 newRotateMatrix = glm::rotate(glm::mat4(1.0f), -fixedRotateSpeed, glm::vec3(0.0f, 0.0f, 1.0f));
+            rotationMat = newRotateMatrix * glm::mat4 (rotation);
         }
     }
+
+    computeMatrix(
+            listObjectInfos.at(pos)->modelMatrix,
+            scaleMat,
+            rotationMat,
+            translationMat
+            );
 }
 
 void addlight(bool &keyPressed, GLFWwindow *&window, std::vector<glm::vec3> & pointLights, std::vector<glm::vec3> & directionLights){
@@ -112,6 +159,7 @@ void addlight(bool &keyPressed, GLFWwindow *&window, std::vector<glm::vec3> & po
         }else if(glfwGetKey(window, GLFW_KEY_L)){
             keyPressed = true;
             directionLights.push_back(glm::vec3(0.0, 1.0, 1.0));
+            directionLights.push_back(glm::vec3(0.0, -1.0, -1.0));
         }
     }
     if(!glfwGetKey(window, GLFW_KEY_M) && !glfwGetKey(window, GLFW_KEY_L)){

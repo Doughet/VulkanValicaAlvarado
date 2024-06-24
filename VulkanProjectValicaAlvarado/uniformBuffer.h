@@ -57,6 +57,10 @@ struct MatrixBufferObject{
     glm::mat4 model[20];
 };
 
+struct TimeBuffer{
+    float time;
+};
+
 UniformBufferObject ubo{};
 UniformBufferObject aux{};
 
@@ -150,6 +154,19 @@ uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, V
     }
 
     throw std::runtime_error("failed to find suitable memory type!");
+}
+
+void updateTimeBuffer(uint32_t currentImage,
+                               std::vector<void*> &timeBufferMapped,
+                               float currentTime){
+
+
+    TimeBuffer tbo{
+    };
+
+    tbo.time = currentTime;
+
+    memcpy(timeBufferMapped[currentImage], &tbo, sizeof(tbo));
 }
 
 void updateMatrixUniformBuffer(uint32_t currentImage, std::vector<ObjectInformation> listActualObjectInfos,
@@ -291,10 +308,6 @@ void recordCommandBufferApplication(VkCommandBuffer commandBuffer, uint32_t imag
     renderPassInfo.pClearValues = clearValues.data();
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-    // Draw with the first pipeline
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -308,16 +321,6 @@ void recordCommandBufferApplication(VkCommandBuffer commandBuffer, uint32_t imag
     scissor.offset = {0, 0};
     scissor.extent = swapChainExtent;
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-    VkBuffer vertexBuffers[] = {vertexBuffer};
-    VkDeviceSize offsets[] = {0};
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-
-    vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
-
-    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
     // Change the pipeline to the second one and draw with it
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineSB);
@@ -334,6 +337,23 @@ void recordCommandBufferApplication(VkCommandBuffer commandBuffer, uint32_t imag
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayoutSB, 0, 1, &descriptorSetsSB[currentFrame], 0, nullptr);
 
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indicesSB.size()), 1, 0, 0, 0);
+
+
+
+    // Draw with the first pipeline
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+
+
+    VkBuffer vertexBuffers[] = {vertexBuffer};
+    VkDeviceSize offsets[] = {0};
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+    vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
+
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+
 
 
     //SELECT THE THIRD ONE
@@ -539,6 +559,26 @@ void createMatrixUniformBuffer(VkDevice &device, VkPhysicalDevice &physicalDevic
 }
 
 
+void createTimeBuffer(VkDevice &device, VkPhysicalDevice &physicalDevice, VkExtent2D &swapChainExtent,
+                      std::vector<VkBuffer> &timeBuffers, std::vector<VkDeviceMemory> &timeBuffersMemory,
+                      std::vector<void*> &timeBuffersMapped,
+                      const int maxFramesInFlight){
+
+    TimeBuffer tbo {0};
+
+    VkDeviceSize bufferSize = sizeof(TimeBuffer);
+
+    timeBuffers.resize(maxFramesInFlight);
+    timeBuffersMemory.resize(maxFramesInFlight);
+    timeBuffersMapped.resize(maxFramesInFlight);
+
+    for (size_t i = 0; i < maxFramesInFlight; i++) {
+        createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                     timeBuffers[i], timeBuffersMemory[i], device, physicalDevice);
+        vkMapMemory(device, timeBuffersMemory[i], 0, bufferSize, 0, &timeBuffersMapped[i]);
+    }
+}
 
 void createUniformBuffers(VkDevice &device, VkPhysicalDevice &physicalDevice, VkExtent2D &swapChainExtent,
                           std::vector<VkBuffer> &uniformBuffers, std::vector<VkDeviceMemory> &uniformBuffersMemory,

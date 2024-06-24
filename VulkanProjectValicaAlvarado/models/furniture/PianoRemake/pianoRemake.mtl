@@ -1,0 +1,37 @@
+# Blender MTL File: 'None'
+# Material Count: 3
+
+newmtl Material.001
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd C:\\Users\\adria\\Downloads\\wild-west-style-wooden-piano\\textures\\BakingDiffuse.png
+
+newmtl Piano_Keys
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump C:\\Users\\adria\\Downloads\\gltfpiano\\textures\\Piano_Keys_normal.png
+map_Kd C:\\Users\\adria\\Downloads\\gltfpiano\\textures\\Piano_Keys_baseColor.png
+
+newmtl Piano_Metal
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump C:\\Users\\adria\\Downloads\\gltfpiano\\textures\\Piano_Metal_normal.png
+map_Kd C:\\Users\\adria\\Downloads\\gltfpiano\\textures\\Piano_Metal_baseColor.png

@@ -554,6 +554,8 @@ void createKitchen(std::vector<ObjectInformation> &listActualObjectInfos, std::v
                                                            "furniture/OrnamentalWoodenDiningTable/Table_Leg_Wood_BaseColor.png",
                                                            false);
 
+
+
     listActualObjectInfos.push_back(objBaseKitchen);
     listActualObjectInfos.push_back(objFridge);
     //listActualObjectInfos.push_back(objPlant);

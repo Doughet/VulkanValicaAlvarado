@@ -219,6 +219,10 @@ private:
     std::vector<VkDeviceMemory> lightsBuffersMemory;
     std::vector<void*> lightsBuffersMapped;
 
+    std::vector<VkBuffer> timeBuffers;
+    std::vector<VkDeviceMemory> timeBuffersMemory;
+    std::vector<void*> timeBuffersMapped;
+
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
 
@@ -267,9 +271,26 @@ private:
     std::vector<ObjectInformation*> listSkyBoxInfos;
     std::vector<ObjectInformation> listActualSkyBoxInfos;
 
-    std::vector<Vertex> tempVerticesSB;
-    std::vector<skyBoxVertex> skyBoxVertices;
-    std::vector<uint32_t> skyBoxIndices;
+    std::vector<skyBoxVertex> skyBoxVertices = {
+            {{-1.0f,  -1.0f, 0.9f}, {0, 0}}, {{1.0f, -1.0f, 0.9f}, {1, 0}}, {{ 1.0f, 1.0f, 0.9f}, {1, 1}}, {{ -1.0f, 1.0f, 0.9f}, {0, 1}},
+            //{{ 1.0f,  1.0f, -1.0f}}, {{-1.0f,  1.0f, -1.0f}},
+            /*{{-1.0f, -1.0f,  1.0f}}, {{-1.0f, -1.0f, -1.0f}}, {{-1.0f,  1.0f, -1.0f}}, {{-1.0f,  1.0f, -1.0f}}, {{-1.0f,  1.0f,  1.0f}}, {{-1.0f, -1.0f,  1.0f}},
+            {{ 1.0f, -1.0f, -1.0f}}, {{ 1.0f, -1.0f,  1.0f}}, {{ 1.0f,  1.0f,  1.0f}}, {{ 1.0f,  1.0f,  1.0f}}, {{ 1.0f,  1.0f, -1.0f}}, {{ 1.0f, -1.0f, -1.0f}},
+            {{-1.0f, -1.0f,  1.0f}}, {{-1.0f,  1.0f,  1.0f}}, {{ 1.0f,  1.0f,  1.0f}}, {{ 1.0f,  1.0f,  1.0f}}, {{ 1.0f, -1.0f,  1.0f}}, {{-1.0f, -1.0f,  1.0f}},
+            {{-1.0f,  1.0f, -1.0f}}, {{ 1.0f,  1.0f, -1.0f}}, {{ 1.0f,  1.0f,  1.0f}}, {{ 1.0f,  1.0f,  1.0f}}, {{-1.0f,  1.0f,  1.0f}}, {{-1.0f,  1.0f, -1.0f}},
+            {{-1.0f, -1.0f, -1.0f}}, {{-1.0f, -1.0f,  1.0f}}, {{ 1.0f, -1.0f, -1.0f}}, {{ 1.0f, -1.0f, -1.0f}}, {{-1.0f, -1.0f,  1.0f}}, {{ 1.0f, -1.0f,  1.0f}},*/
+    };
+
+
+    std::vector<uint32_t> skyBoxIndices = {
+            0, 2, 1, 2, 0, 3
+    };
+
+    std::vector<std::string> facesSB = {
+            "presentations/animals/cat/catPresentation.png", "presentations/animals/cat/catPresentation.png",
+            "presentations/animals/cat/catPresentation.png", "presentations/animals/cat/catPresentation.png",
+            "presentations/animals/cat/catPresentation.png", "presentations/animals/cat/catPresentation.png"
+    };
 
     VkBuffer vertexBufferSB;
     VkDeviceMemory vertexBufferMemorySB;
@@ -301,14 +322,14 @@ private:
     float heightImage = (float)sizeImage / HEIGHT;
     float widthImage = (float)sizeImage / WIDTH;
     std::vector<textVertex> textVertices = {
-            {{-1, -1}, {1, 0}, 0},
-            {{ -1 + widthImage, -1}, {0, 0}, 0},
-            {{ -1 + widthImage,  -1 + heightImage}, {0, 1}, 0},
-            {{-1,  -1 + heightImage}, {1, 1}, 0},
-            {{-1 + widthImage, -1}, {1, 0}, 1},
-            {{ -1 + 2 * widthImage, -1}, {0, 0}, 1},
-            {{ -1 + 2 * widthImage,  -1 + heightImage}, {0, 1}, 1},
-            {{-1 + widthImage,  -1 + heightImage}, {1, 1}, 1}
+            {{-1, -1}, {0, 0}, 0},
+            {{ -1 + widthImage, -1}, {1, 0}, 0},
+            {{ -1 + widthImage,  -1 + heightImage}, {1, 1}, 0},
+            {{-1,  -1 + heightImage}, {0, 1}, 0},
+            {{-1 + widthImage, -1}, {0, 0}, 1},
+            {{ -1 + 2 * widthImage, -1}, {1, 0}, 1},
+            {{ -1 + 2 * widthImage,  -1 + heightImage}, {1, 1}, 1},
+            {{-1 + widthImage,  -1 + heightImage}, {0, 1}, 1}
     };
 
     std::vector<uint32_t > textIndices = {0, 2, 1, 2, 0, 3,
@@ -340,10 +361,10 @@ private:
     std::vector<VkDescriptorSet> descriptorSetsMenu;
 
     std::vector<menuVertex> menuVertices = {
-            {{-1, -1}, {1, 0}},
-            {{ 1, -1}, {0, 0}},
-            {{ 1,  1}, {0, 1}},
-            {{-1,  1}, {1, 1}},
+            {{-1, -1}, {0, 0}},
+            {{ 1, -1}, {1, 0}},
+            {{ 1,  1}, {1, 1}},
+            {{-1,  1}, {0, 1}},
     };
 
     std::vector<uint32_t > menuIndices = {0, 2, 1, 2, 0, 3};
@@ -454,6 +475,7 @@ private:
             float deltaTime = currentTime - lastTime;
             lastTime = currentTime;
 
+
             closeEscape(window);
 
             if(CurrentScene.index == MenuScene.index){
@@ -473,6 +495,14 @@ private:
                 changeIsometricView(window, WIDTH, HEIGHT, normalProj);
                 regularProj(window, normalProj);
                 updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped, normalProj, pointLights, directionalLights);
+                updateTimeBuffer(currentFrame, timeBuffersMapped, currentTime);
+
+                glm::vec3 translation, scale;
+                glm::quat rotation;
+                decomposeMatrix(listActualObjectInfos.at(0).modelMatrix, scale, rotation, translation);
+
+                printf("%f, %f, %f \n", translation.x, translation.y, translation.z);
+
             }
 
             glfwPollEvents();
@@ -832,6 +862,9 @@ private:
 
             vkDestroyBuffer(device, matrixUniformBuffers[i], nullptr);
             vkFreeMemory(device, matrixUniformBuffersMemory[i], nullptr);
+
+            vkDestroyBuffer(device, timeBuffers[i], nullptr);
+            vkFreeMemory(device, timeBuffersMemory[i], nullptr);
         }
 
         vkDestroyDescriptorPool(device, descriptorPool, nullptr);
@@ -1190,7 +1223,7 @@ private:
 
     void LoadSceneMenuInit(){
         createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, menuImage,
-                           menuImageMemory, "presentations/animals/cat/catPresentation.png");
+                           menuImageMemory, "presentations/menu.png");
         createTextureImageView(device, menuImage, mipLevels, menuImageView);
         createTextureSampler(physicalDevice, device, menuSampler);
 
@@ -1253,11 +1286,11 @@ private:
         createSkyBoxTextures(texturePathSB);
 
         createObjectLoader();
-        createSkyBoxLoader();
+        //createSkyBoxLoader();
 
 
         launchObjectLoader();
-        launchSkyBoxLoader();
+        //launchSkyBoxLoader();
 
         createVertexBuffer(vertices, vertexBuffer, vertexBufferMemory);
 
@@ -1282,6 +1315,9 @@ private:
                              MAX_FRAMES_IN_FLIGHT);
         createMatrixUniformBuffer(device, physicalDevice, swapChainExtent, matrixUniformBuffers, matrixUniformBuffersMemory,
                                   matrixUniformBuffersMapped, MAX_FRAMES_IN_FLIGHT);
+        createTimeBuffer(device, physicalDevice, swapChainExtent, timeBuffers, timeBuffersMemory,
+                             timeBuffersMapped,
+                             MAX_FRAMES_IN_FLIGHT);
     }
 
     void UnLoadSceneApplication(){
@@ -1416,7 +1452,14 @@ private:
         matrixLayoutBinding.pImmutableSamplers = nullptr;
         matrixLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {skyBoxLayoutBinding, matrixLayoutBinding};
+        VkDescriptorSetLayoutBinding timeLayoutBinding{};
+        timeLayoutBinding.binding = 2;
+        timeLayoutBinding.descriptorCount = 1;
+        timeLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        timeLayoutBinding.pImmutableSamplers = nullptr;
+        timeLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings = {skyBoxLayoutBinding, matrixLayoutBinding, timeLayoutBinding};
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
@@ -1759,9 +1802,9 @@ private:
 
         VkPipelineDepthStencilStateCreateInfo depthStencil{};
         depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        depthStencil.depthTestEnable = VK_TRUE;
-        depthStencil.depthWriteEnable = VK_TRUE;
-        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencil.depthTestEnable = VK_FALSE;
+        depthStencil.depthWriteEnable = VK_FALSE;
+        depthStencil.depthCompareOp = VK_COMPARE_OP_ALWAYS;
         depthStencil.depthBoundsTestEnable = VK_FALSE;
         depthStencil.stencilTestEnable = VK_FALSE;
 
@@ -1951,7 +1994,7 @@ private:
 
     void createSkyBoxTextures(std::string texturePathSB){
         createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, skyboxImage,
-                           skyboxImageMemory, "fonts/tata_0.png");
+                           skyboxImageMemory, "presentations/animals/cat/catPresentation.png");
         createTextureImageView(device, skyboxImage, mipLevels, skyboxImageView);
         createTextureSampler(physicalDevice, device, skyboxSampler);
     }
@@ -1972,9 +2015,9 @@ private:
     }
 
     void createObjectVector(){
-        //createLivingRoom(listActualObjectInfos, listObjectInfos);
         createKitchen(listActualObjectInfos, listObjectInfos);
-/*
+        //createLivingRoom(listActualObjectInfos, listObjectInfos);
+        /*
         ObjectInformation pokerRoom{};
         pokerRoom.modelPath = "furniture/Poker Room/scene.gltf";
         pokerRoom.texturePath = "furniture/House/mondrian.png";
@@ -2005,7 +2048,7 @@ private:
         objHouse.isGltf = false;
         objHouse.normalPath = "";
 */
-
+/*
         ObjectInformation objGLTF {};
         objGLTF.modelPath = "furniture/Bed/scene.gltf";
         objGLTF.texturePath = "furniture/House/mondrian.png";
@@ -2014,6 +2057,7 @@ private:
         objGLTF.hasNormalMap = false;
         objGLTF.isGltf = true;
         objGLTF.normalPath = "";
+        */
 
 /*
         ObjectInformation objMorris {};
@@ -2025,6 +2069,7 @@ private:
         objMorris.normalPath = "furniture/MorrisChair/morrisChair_smallChairMat_Normal.tga.png";
 */
 
+/*
         ObjectInformation objTruck = ObjectInformation(
                 "Cars/keytruck.obj",
                 glm::scale(glm::mat4(1.0f), glm::vec3(100.0f, 100.0f, 100.0f)),
@@ -2049,7 +2094,7 @@ private:
                 0, 1, 3, 2, 3, 1
         };
 
-
+*/
         isStart = true;
 
         for (int i = 0; i < listObjectInfos.size(); ++i) {
@@ -2396,7 +2441,7 @@ private:
 
 */
     void createSkyBoxLoader(){
-        skyBoxLoader = ObjectLoader(&listSkyBoxInfos, &tempVerticesSB, &skyBoxIndices);
+        //skyBoxLoader = ObjectLoader(&listSkyBoxInfos, &tempVerticesSB, &skyBoxIndices);
     }
 
     void createObjectLoader(){
@@ -2406,7 +2451,7 @@ private:
     void launchSkyBoxLoader(){
         skyBoxLoader.loadAllElements();
         skyBoxLoader.fillVertexAndIndices();
-        skyBoxLoader.transformVertex(tempVerticesSB, skyBoxVertices);
+        //skyBoxLoader.transformVertex(tempVerticesSB, skyBoxVertices);
     }
 
     void launchObjectLoader(){
@@ -2745,7 +2790,12 @@ private:
             uniforBufferInfo.offset = 0;
             uniforBufferInfo.range = sizeof(UniformBufferObject);
 
-            std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+            VkDescriptorBufferInfo timeBufferInfo{};
+            timeBufferInfo.buffer = timeBuffers[i];
+            timeBufferInfo.offset = 0;
+            timeBufferInfo.range = sizeof(TimeBuffer);
+
+            std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
 
             descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptorWrites[0].dstSet = descriptorSetsSkyBox[i];
@@ -2762,6 +2812,14 @@ private:
             descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptorWrites[1].descriptorCount = 1;
             descriptorWrites[1].pBufferInfo = &uniforBufferInfo;
+
+            descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[2].dstSet = descriptorSetsSkyBox[i];
+            descriptorWrites[2].dstBinding = 2;
+            descriptorWrites[2].dstArrayElement = 0;
+            descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptorWrites[2].descriptorCount = 1;
+            descriptorWrites[2].pBufferInfo = &timeBufferInfo;
 
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
@@ -2950,7 +3008,10 @@ private:
         //updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped, normalProj);
 
         if(CurrentScene.index == ApplicationScene.index){
+            float currentTime = glfwGetTime();
+
             updateMatrixUniformBuffer(currentFrame, listActualObjectInfos, matrixUniformBuffersMapped);
+            updateTimeBuffer(currentFrame, timeBuffersMapped, currentTime);
         }
 
         vkResetFences(device, 1, &inFlightFences[currentFrame]);
