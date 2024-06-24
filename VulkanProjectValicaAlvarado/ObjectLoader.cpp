@@ -504,7 +504,7 @@ void createEmptyRoom(std::vector<ObjectInformation> &listActualObjectInfos, std:
 void createKitchen(std::vector<ObjectInformation> &listActualObjectInfos, std::vector<ObjectInformation*> &listObjectInfos){
 //createEmptyRoom(listActualObjectInfos, listObjectInfos, true);
 
-    ObjectInformation objBaseKitchen = ObjectInformation("furniture/BlenderKitchen/cucinadefinitive2.obj",
+    ObjectInformation objBaseKitchen = ObjectInformation("furniture/BlenderKitchen/PerfectKitchen.obj",
             glm::scale(glm::mat4(1.0f), glm::vec3(60.0f)),
             "BlenderKitchen/KitchenFlooring.jpg",
             false);
