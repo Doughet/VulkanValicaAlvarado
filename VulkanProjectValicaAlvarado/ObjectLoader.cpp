@@ -501,14 +501,27 @@ void createEmptyRoom(std::vector<ObjectInformation> &listActualObjectInfos, std:
     }
 }
 
+void createKitchen(std::vector<ObjectInformation> &listActualObjectInfos, std::vector<ObjectInformation*> &listObjectInfos){
+//createEmptyRoom(listActualObjectInfos, listObjectInfos, true);
+
+    ObjectInformation objBaseKitchen = ObjectInformation("furniture/BlenderKitchen/cucina.obj",
+            glm::scale(glm::mat4(1.0f), glm::vec3(3.0f)),
+            "BlenderKitchen/KitchenFlooring.jpg",
+            false);
+    objBaseKitchen.scaleModel(20.0f);
+
+    listActualObjectInfos.push_back(objBaseKitchen);
+    listObjectInfos.push_back(&listActualObjectInfos[0]);
+}
+
 void createLivingRoom(std::vector<ObjectInformation> &listActualObjectInfos, std::vector<ObjectInformation*> &listObjectInfos){
     createEmptyRoom(listActualObjectInfos, listObjectInfos, true);
-    ObjectInformation objMorris = ObjectInformation(
+   /* ObjectInformation objMorris = ObjectInformation(
             "furniture/MorrisChair/morrisChair.obj",
             glm::scale(glm::mat4(1.0f), glm::vec3(3.0f)),
             "furniture/MorrisChair/morrisChair_smallChairMat_BaseColor.tga.png",
             false);
-
+*/
     ObjectInformation objCarpet = ObjectInformation(
             "furniture/Carpet/round-carpet.obj",
             glm::scale(glm::mat4(1.0f), glm::vec3(3.0f)),
@@ -542,14 +555,14 @@ void createLivingRoom(std::vector<ObjectInformation> &listActualObjectInfos, std
     objCat.translateModel(110.0f, 20.0f, -24.0);
     objCat.rotateModel(90.0f, 'x');
     objCat.rotateModel(15.0f, 'y');
-
+/*
     ObjectInformation objPlant1 = ObjectInformation(
             "furniture/PlantAsset/scene.gltf",
             glm::scale(glm::mat4(1.0f), glm::vec3(6.0f)),
             "furniture/PlantAsset/Material.002_baseColor.jpeg",
             true);
-
-    ObjectInformation objVintageLamp = ObjectInformation(
+*/
+  /*  ObjectInformation objVintageLamp = ObjectInformation(
             "furniture/VintageLamp/scene.gltf",
             glm::scale(glm::mat4(1.0f), glm::vec3(9.0f)),
             "furniture/VintageLamp/Lamp_baseColor.png",
@@ -558,7 +571,7 @@ void createLivingRoom(std::vector<ObjectInformation> &listActualObjectInfos, std
     objVintageLamp.modelMatrix[1][1] *= -1;
     objVintageLamp.translateModel(15.0f, 15.0f, 12.0f);
     objVintageLamp.rotateModel(90, 'x');
-
+*/
     ObjectInformation objSofa = ObjectInformation(
             "furniture/Sofa/scene.gltf",
             glm::scale(glm::mat4(1.0f), glm::vec3(13.0f)),

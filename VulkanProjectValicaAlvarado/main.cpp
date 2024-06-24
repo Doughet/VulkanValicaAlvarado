@@ -469,11 +469,9 @@ private:
                 addObject(keyPressedAdd, window, addObjectIndex, mustAddObject);
                 deleteObject(keyPressedDelete, window, mustDelete);
                 updateTransformationData(currentTransformationModel, window, listObjectInfos, deltaTime);
-                //lookAtModel(currentTransformationModel, window, listObjectInfos, swapChainExtent);
-                //changeIsometricView(window);
                 changeOrthogonalView(window, WIDTH, HEIGHT, normalProj);
                 changeIsometricView(window, WIDTH, HEIGHT, normalProj);
-                regularProj(window, WIDTH, HEIGHT, normalProj);
+                regularProj(window, normalProj);
                 updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped, normalProj, pointLights, directionalLights);
             }
 
@@ -1974,7 +1972,8 @@ private:
     }
 
     void createObjectVector(){
-        createLivingRoom(listActualObjectInfos, listObjectInfos);
+        //createLivingRoom(listActualObjectInfos, listObjectInfos);
+        createKitchen(listActualObjectInfos, listObjectInfos);
 /*
         ObjectInformation pokerRoom{};
         pokerRoom.modelPath = "furniture/Poker Room/scene.gltf";
