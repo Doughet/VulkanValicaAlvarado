@@ -496,6 +496,13 @@ private:
                 regularProj(window, normalProj);
                 updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped, normalProj, pointLights, directionalLights);
                 updateTimeBuffer(currentFrame, timeBuffersMapped, currentTime);
+
+                glm::vec3 translation, scale;
+                glm::quat rotation;
+                decomposeMatrix(listActualObjectInfos.at(0).modelMatrix, scale, rotation, translation);
+
+                printf("%f, %f, %f \n", translation.x, translation.y, translation.z);
+
             }
 
             glfwPollEvents();
@@ -2008,9 +2015,8 @@ private:
     }
 
     void createObjectVector(){
+        createKitchen(listActualObjectInfos, listObjectInfos);
         //createLivingRoom(listActualObjectInfos, listObjectInfos);
-        //createKitchen(listActualObjectInfos, listObjectInfos);
-        createLivingRoom(listActualObjectInfos, listObjectInfos);
         /*
         ObjectInformation pokerRoom{};
         pokerRoom.modelPath = "furniture/Poker Room/scene.gltf";

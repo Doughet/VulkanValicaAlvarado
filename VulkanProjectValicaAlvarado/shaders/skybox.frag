@@ -10,21 +10,16 @@ layout(set = 0, binding = 2) uniform TimeBuffer {
     float time;
 }tbo;
 
-// Function to convert from hue to RGB using trigonometric functions
-vec3 hueToRgb(float hue) {
-    float r = sin(hue * 6.2831853); // 2 * PI
-    float g = sin(hue * 6.2831853 + 2.0943951); // 2 * PI / 3
-    float b = sin(hue * 6.2831853 + 4.1887902); // 4 * PI / 3
-
-    return vec3(r, g, b) * 0.5 + 0.5;
+vec3 oscillateColor(float t, vec3 color1, vec3 color2) {
+    float factor = (sin(t) * 0.5) + 0.5; // Oscillates between 0 and 1
+    return mix(color1, color2, factor);
 }
 
 void main() {
+    vec3 color1 = vec3(234.0 / 255.0, 215.0 / 255.0, 209.0 / 255.0);
+    vec3 color2 = vec3(234.0 / 255.0, 187.0 / 255.0, 168.0 / 255.0);
 
-    // Calculate hue value based on time, wrapping around every 1.0
-    float hue = mod(tbo.time * 0.025f, 1.0); // Adjust 0.1 to control speed
-
-    vec3 color = hueToRgb(hue);
+    vec3 color = oscillateColor(tbo.time, color1, color2);
 
     outColor = vec4(color, 1.0);
 }

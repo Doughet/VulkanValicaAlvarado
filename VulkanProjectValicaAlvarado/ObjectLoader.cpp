@@ -510,6 +510,8 @@ void createKitchen(std::vector<ObjectInformation> &listActualObjectInfos, std::v
             false);
     objBaseKitchen.scaleModel(20.0f);
 
+
+
     listActualObjectInfos.push_back(objBaseKitchen);
     listObjectInfos.push_back(&listActualObjectInfos[0]);
 }
