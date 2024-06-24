@@ -114,6 +114,7 @@ void addlight(bool &keyPressed, GLFWwindow *&window, std::vector<glm::vec3> & po
         }else if(glfwGetKey(window, GLFW_KEY_L)){
             keyPressed = true;
             directionLights.push_back(glm::vec3(0.0, 1.0, 1.0));
+            directionLights.push_back(glm::vec3(0.0, -1.0, -1.0));
         }
     }
     if(!glfwGetKey(window, GLFW_KEY_M) && !glfwGetKey(window, GLFW_KEY_L)){
