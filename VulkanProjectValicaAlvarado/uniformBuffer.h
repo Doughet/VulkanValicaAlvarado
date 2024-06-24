@@ -431,11 +431,6 @@ void updateUniformBuffer(uint32_t currentImage, GLFWwindow * &window,
     auto currentTime = std::chrono::high_resolution_clock::now();
     float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-    // Standard procedure to quit when the ESC key is pressed
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE)) {
-        glfwSetWindowShouldClose(window, GL_TRUE);
-    }
-
     /*   ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
        ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 30.0f);
        ubo.proj[1][1] *= -1;
@@ -483,17 +478,17 @@ void updateUniformBuffer(uint32_t currentImage, GLFWwindow * &window,
     memcpy(lightsBuffersMapped[currentImage], &lbo, sizeof(lbo));
 }
 
-void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, VkRenderPass &renderPass,
-                         std::vector<VkFramebuffer> &swapChainFramebuffers, VkExtent2D &swapChainExtent,
-                         VkPipeline &graphicsPipeline, VkBuffer &vertexBuffer, VkBuffer &indexBuffer,
-                         VkPipelineLayout &pipelineLayout, std::vector<uint32_t> &indices,
-                         std::vector<VkDescriptorSet> &descriptorSets, VkPipeline &graphicsPipelineSB, VkBuffer &vertexBufferSB, VkBuffer &indexBufferSB,
-                         VkPipelineLayout &pipelineLayoutSB, std::vector<uint32_t> &indicesSB,
-                         std::vector<VkDescriptorSet> &descriptorSetsSB,
-                         VkPipeline &graphicsPipelineText, VkBuffer &vertexBufferText, VkBuffer &indexBufferText,
-                         VkPipelineLayout &pipelineLayoutText, std::vector<uint32_t> &indicesText,
-                         std::vector<VkDescriptorSet> &descriptorSetsText,
-                         uint32_t &currentFrame) {
+void recordCommandBufferApplication(VkCommandBuffer commandBuffer, uint32_t imageIndex, VkRenderPass &renderPass,
+                                    std::vector<VkFramebuffer> &swapChainFramebuffers, VkExtent2D &swapChainExtent,
+                                    VkPipeline &graphicsPipeline, VkBuffer &vertexBuffer, VkBuffer &indexBuffer,
+                                    VkPipelineLayout &pipelineLayout, std::vector<uint32_t> &indices,
+                                    std::vector<VkDescriptorSet> &descriptorSets, VkPipeline &graphicsPipelineSB, VkBuffer &vertexBufferSB, VkBuffer &indexBufferSB,
+                                    VkPipelineLayout &pipelineLayoutSB, std::vector<uint32_t> &indicesSB,
+                                    std::vector<VkDescriptorSet> &descriptorSetsSB,
+                                    VkPipeline &graphicsPipelineText, VkBuffer &vertexBufferText, VkBuffer &indexBufferText,
+                                    VkPipelineLayout &pipelineLayoutText, std::vector<uint32_t> &indicesText,
+                                    std::vector<VkDescriptorSet> &descriptorSetsText,
+                                    uint32_t &currentFrame) {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -585,6 +580,70 @@ void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, VkR
         throw std::runtime_error("failed to record command buffer!");
     }
 }
+
+void recordCommandBufferMenu(VkCommandBuffer commandBuffer, uint32_t imageIndex, VkRenderPass &renderPass,
+                                    std::vector<VkFramebuffer> &swapChainFramebuffers, VkExtent2D &swapChainExtent,
+                                    VkPipeline &graphicsPipelineMenu, VkBuffer &vertexBufferMenu, VkBuffer &indexBufferMenu,
+                                    VkPipelineLayout &pipelineLayoutMenu, std::vector<uint32_t> &indicesMenu,
+                                    std::vector<VkDescriptorSet> &descriptorSetsMenu,
+                                    uint32_t &currentFrame) {
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+        throw std::runtime_error("failed to begin recording command buffer!");
+    }
+
+    VkRenderPassBeginInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = renderPass;
+    renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = swapChainExtent;
+
+    std::array<VkClearValue, 2> clearValues{};
+    clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+    clearValues[1].depthStencil = {1.0f, 0};
+
+    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassInfo.pClearValues = clearValues.data();
+
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    // Draw with the first pipeline
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineMenu);
+
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(swapChainExtent.width);
+    viewport.height = static_cast<float>(swapChainExtent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = swapChainExtent;
+    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+    VkBuffer vertexBuffers[] = {vertexBufferMenu};
+    VkDeviceSize offsets[] = {0};
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+    vkCmdBindIndexBuffer(commandBuffer, indexBufferMenu, 0, VK_INDEX_TYPE_UINT32);
+
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayoutMenu, 0, 1, &descriptorSetsMenu[currentFrame], 0, nullptr);
+
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indicesMenu.size()), 1, 0, 0, 0);
+
+    vkCmdEndRenderPass(commandBuffer);
+
+    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+        throw std::runtime_error("failed to record command buffer!");
+    }
+}
+
 
 void createCommandBuffers(VkDevice &device, std::vector<VkCommandBuffer> &commandBuffers, VkCommandPool &commandPool,
                           const int maxFramesInFlight) {

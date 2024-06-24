@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <chrono>
+#include <utility>
 #include <vector>
 #include <cstring>
 #include <cstdlib>
@@ -57,6 +58,33 @@ const bool enableValidationLayers = true;
 #endif
 
 //UniformBufferObject ubo{};
+
+struct Scene{
+    uint16_t index;
+    std::vector<VkPipeline*> pipelineReferences;
+    std::vector<VkPipelineLayout*> pipelineLayoutReferences;
+    std::vector<VkDescriptorSetLayout*> descriptorSetLayoutsReferences;
+    std::vector<std::vector<VkDescriptorSet>*> descriptorSetsReferences;
+
+    Scene(){
+
+    }
+
+    Scene(
+            uint16_t index,
+            std::vector<VkPipeline*> pipelineReferences,
+            std::vector<VkPipelineLayout*> pipelineLayoutReferences,
+            std::vector<VkDescriptorSetLayout*> descriptorSetLayoutsReferences,
+            std::vector<std::vector<VkDescriptorSet>*> descriptorSetsReferences
+            ){
+        this->index = index;
+        this->pipelineReferences = std::move(pipelineReferences);
+        this->pipelineLayoutReferences = std::move(pipelineLayoutReferences);
+        this->descriptorSetLayoutsReferences = std::move(descriptorSetLayoutsReferences);
+        this->descriptorSetsReferences = std::move(descriptorSetsReferences);
+    }
+};
+
 
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
@@ -142,6 +170,12 @@ private:
     VkSampler textureSampler;
 
 
+    //SCENES
+    Scene CurrentScene;
+    Scene MenuScene;
+    Scene ApplicationScene;
+
+
     //TEXTURES
     std::vector<VkImage> textureImages;
     std::vector<VkImageView> textureImageViews;
@@ -208,6 +242,7 @@ private:
     uint32_t addObjectIndex = 0;
     bool mustAddObject = false;
     bool mustChangeSelectedObject = false;
+    bool mustChangeScene = false;
     bool mustDelete = false;
 
     bool normalProj = true;
@@ -289,6 +324,40 @@ private:
     std::string texturePathText;
 
 
+
+
+
+
+    //MENU SCENE
+    VkDescriptorSetLayout DSLMenu;
+    VkPipelineLayout pipelineLayoutMenu;
+    VkPipeline graphicsPipelineMenu;
+
+    VkImage menuImage;
+    VkDeviceMemory menuImageMemory;
+    VkImageView menuImageView;
+    VkSampler menuSampler;
+    std::vector<VkDescriptorSet> descriptorSetsMenu;
+
+    std::vector<menuVertex> menuVertices = {
+            {{-1, -1}, {1, 0}},
+            {{ 1, -1}, {0, 0}},
+            {{ 1,  1}, {0, 1}},
+            {{-1,  1}, {1, 1}},
+    };
+
+    std::vector<uint32_t > menuIndices = {0, 2, 1, 2, 0, 3};
+
+    VkBuffer vertexBufferMenu;
+    VkDeviceMemory vertexBufferMemoryMenu;
+    VkBuffer indexBufferMenu;
+    VkDeviceMemory indexBufferMemoryMenu;
+
+    std::string texturePathMenu;
+
+
+
+
     void initWindow() {
         glfwInit();
 
@@ -314,14 +383,19 @@ private:
         createImageViews();
         createRenderPass();
 
-        //Create object vector for the objects we want to put on the screen
+        createCommandPool();
+        createColorResources();
+        createDepthResources();
+        createFramebuffers();
+
+
+        createScenes();
+
         createObjectVector();
         createSkyBoxVector();
 
-        auto charMap = parseFNT("fonts/tata.fnt");
-        //loadFontTexture(device, physicalDevice, commandPool, graphicsQueue, TextImage, TextImageMemory, TextImageView, TextSampler);
-        //createTextVertices("Hello Vulkan", charMap, 0.5f, 100.0f, 100.0f);
 
+        LoadSceneMenuInit();
 
         //CREATE THE FIRST PIPELINE DESCRIPTOR SET
         createDescriptorSetLayout();
@@ -332,6 +406,10 @@ private:
         //CREATE TEXT PIPELINE DSL
         createTextDescriptorSetLayout();
 
+        //CREATE MENU DSL
+        createMenuDescriptorSetLayout();
+
+
         //CREATE THE FIRST GRAPHIC PIPELINE
         createGraphicsPipeline();
 
@@ -341,98 +419,16 @@ private:
         //CREATE TEXT GRAPHICS PIPELINE
         createTextGraphicsPipeline();
 
-
-        createCommandPool();
-        //createSkyBoxCommandPool();
-        createColorResources();
-        createDepthResources();
-        createFramebuffers();
-
-
-        //CREATE TEXTURES AND NORMALS
-        createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImage,
-                           textureImageMemory, "fonts/tata_0.png");
-        createTextureImages(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImages,
-                            textureImageMemorys, texturePaths);
-        createTextureImages(mipLevels, device, physicalDevice, commandPool, graphicsQueue, normalImages,
-                            normalImageMemorys, normalPaths);
-
-        createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, TextImage[0],
-                           TextImageMemory[0], "fonts/tata_0.png");
-        createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, TextImage[1],
-                           TextImageMemory[1], "fonts/tata_0.png");
-
-        //TEXT IMAGE
-
-
-        createTextureImageView(device, textureImage, mipLevels, textureImageView);
-        createTextureImageViews(device, textureImages, mipLevels, textureImageViews);
-        createTextureImageViews(device, normalImages, mipLevels, normalImageViews);
-        createTextureImageView(device, TextImage[0], mipLevels, TextImageView[0]);
-        createTextureImageView(device, TextImage[1], mipLevels, TextImageView[1]);
-
-
-        createTextureSampler(physicalDevice, device, textureSampler);
-        createTextureSamplers(physicalDevice, device, textureSamplers, texturePaths.size());
-        createTextureSamplers(physicalDevice, device, normalSamplers, normalPaths.size());
-        createTextureSampler(physicalDevice, device, TextSampler[0]);
-        createTextureSampler(physicalDevice, device, TextSampler[1]);
-
-
-        //CREATE SKYBOX
-        createSkyBoxTextures(texturePathSB);
-
-        createObjectLoader();
-        createSkyBoxLoader();
-
-
-        launchObjectLoader();
-        launchSkyBoxLoader();
+        //CREATE MENU GRAPHICS PIPELINE
+        createMenuGraphicsPipeline();
 
 
 
 
-        //loadSceneSphereElements();
-
-        //loadSceneCone();
-        //Create first VBuffer
-        createVertexBuffer(vertices, vertexBuffer, vertexBufferMemory);
-
-        //Create SB VBuffer
-        createSBVertexBuffer(skyBoxVertices, vertexBufferSB, vertexBufferMemorySB);
-
-        //CREATE TEXT VBuffer
-        createTextVertexBuffer(textVertices, vertexBufferText, vertexBufferMemoryText);
-
-        //Create first IBuffer
-        createIndexBuffer(device, physicalDevice, indices, commandPool, graphicsQueue,
-                          indexBuffer, indexBufferMemory);
-        //Create SB IBuffer
-        createIndexBuffer(device, physicalDevice, skyBoxIndices, commandPool, graphicsQueue,
-                          indexBufferSB, indexBufferMemorySB);
-        //CREATE TEXT IBuffer
-        createIndexBuffer(device, physicalDevice, textIndices, commandPool, graphicsQueue,
-                          indexBufferText, indexBufferMemoryText);
-
-
-        createUniformBuffers(device, physicalDevice, swapChainExtent, uniformBuffers, uniformBuffersMemory,
-                             uniformBuffersMapped, lightsBuffers, lightsBuffersMemory, lightsBuffersMapped,
-                             MAX_FRAMES_IN_FLIGHT);
-        createMatrixUniformBuffer(device, physicalDevice, swapChainExtent, matrixUniformBuffers, matrixUniformBuffersMemory,
-                                  matrixUniformBuffersMapped, MAX_FRAMES_IN_FLIGHT);
 
         createDescriptorPool();
-        //createSkyBoxDescriptorPool();
 
-        //CREATE DESCRIPTOR SETS
-        createDescriptorSets();
-
-        //CREATE DESCRIPTOR SETS SKYBOX
-        createSkyBoxDescriptorSets();
-
-        //CREATE TEXT DESCRIPTOR SETS
-        createTextDescriptorSets();
-
+        LoadMenuDescriptors();
 
         createCommandBuffers(device, commandBuffers, commandPool, MAX_FRAMES_IN_FLIGHT);
         createSyncObjects();
@@ -458,20 +454,29 @@ private:
             float deltaTime = currentTime - lastTime;
             lastTime = currentTime;
 
-            //lights management
-            addlight(keyPressedLight, window, pointLights, directionalLights);
+            closeEscape(window);
 
-            changeCurrentModel(keyPressed, window, currentTransformationModel, listObjectInfos);
-            selectAddObjectIndex(keyPressedAddSelect, window, addObjectIndex, 0, loadablesVector.size()-1, mustChangeSelectedObject);
-            addObject(keyPressedAdd, window, addObjectIndex, mustAddObject);
-            deleteObject(keyPressedDelete, window, mustDelete);
-            updateTransformationData(currentTransformationModel, window, listObjectInfos, deltaTime);
-            //lookAtModel(currentTransformationModel, window, listObjectInfos, swapChainExtent);
-            //changeIsometricView(window);
-            changeOrthogonalView(window, WIDTH, HEIGHT, normalProj);
-            changeIsometricView(window, WIDTH, HEIGHT, normalProj);
-            regularProj(window, WIDTH, HEIGHT, normalProj);
-            updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped, normalProj, pointLights, directionalLights);
+            if(CurrentScene.index == MenuScene.index){
+                launchChangeScreen(window, mustChangeScene);
+            }
+
+            if(CurrentScene.index == ApplicationScene.index){
+                //lights management
+                addlight(keyPressedLight, window, pointLights, directionalLights);
+
+                changeCurrentModel(keyPressed, window, currentTransformationModel, listObjectInfos);
+                selectAddObjectIndex(keyPressedAddSelect, window, addObjectIndex, 0, loadablesVector.size()-1, mustChangeSelectedObject);
+                addObject(keyPressedAdd, window, addObjectIndex, mustAddObject);
+                deleteObject(keyPressedDelete, window, mustDelete);
+                updateTransformationData(currentTransformationModel, window, listObjectInfos, deltaTime);
+                //lookAtModel(currentTransformationModel, window, listObjectInfos, swapChainExtent);
+                //changeIsometricView(window);
+                changeOrthogonalView(window, WIDTH, HEIGHT, normalProj);
+                changeIsometricView(window, WIDTH, HEIGHT, normalProj);
+                regularProj(window, WIDTH, HEIGHT, normalProj);
+                updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped, normalProj, pointLights, directionalLights);
+            }
+
             glfwPollEvents();
 
             if(mustAddObject){
@@ -490,6 +495,12 @@ private:
                 changeSelectedObject();
 
                 mustChangeSelectedObject = false;
+            }
+
+            if(mustChangeScene && CurrentScene.index == MenuScene.index){
+                ChangeScene();
+
+                mustChangeScene = false;
             }
 
             drawFrame();
@@ -636,6 +647,12 @@ private:
         createGraphicsPipeline();
 
         createDescriptorSets();
+    }
+
+    void ChangeScene(){
+        CurrentScene = ApplicationScene;
+
+        LoadSceneApplication();
     }
 
     void changeSelectedObject(){
@@ -802,6 +819,10 @@ private:
         vkDestroyPipeline(device, graphicsPipelineText, nullptr);
         vkDestroyPipelineLayout(device, pipelineLayoutText, nullptr);
 
+        vkDestroyPipeline(device, graphicsPipelineMenu, nullptr);
+        vkDestroyPipelineLayout(device, pipelineLayoutMenu, nullptr);
+
+
         vkDestroyRenderPass(device, renderPass, nullptr);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -855,10 +876,18 @@ private:
         vkDestroyImage(device, TextImage[1], nullptr);
         vkFreeMemory(device, TextImageMemory[1], nullptr);
 
+        //MENU
+        vkDestroySampler(device, menuSampler, nullptr);
+        vkDestroyImageView(device, menuImageView, nullptr);
+
+        vkDestroyImage(device, menuImage, nullptr);
+        vkFreeMemory(device, menuImageMemory, nullptr);
+
 
         vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
         vkDestroyDescriptorSetLayout(device, DSLskyBox, nullptr);
         vkDestroyDescriptorSetLayout(device, DSLText, nullptr);
+        vkDestroyDescriptorSetLayout(device, DSLMenu, nullptr);
 
         vkDestroyBuffer(device, indexBuffer, nullptr);
         vkFreeMemory(device, indexBufferMemory, nullptr);
@@ -869,6 +898,9 @@ private:
         vkDestroyBuffer(device, indexBufferText, nullptr);
         vkFreeMemory(device, indexBufferMemoryText, nullptr);
 
+        vkDestroyBuffer(device, indexBufferMenu, nullptr);
+        vkFreeMemory(device, indexBufferMemoryMenu, nullptr);
+
 
         vkDestroyBuffer(device, vertexBuffer, nullptr);
         vkFreeMemory(device, vertexBufferMemory, nullptr);
@@ -878,6 +910,9 @@ private:
 
         vkDestroyBuffer(device, vertexBufferText, nullptr);
         vkFreeMemory(device, vertexBufferMemoryText, nullptr);
+
+        vkDestroyBuffer(device, vertexBufferMenu, nullptr);
+        vkFreeMemory(device, vertexBufferMemoryMenu, nullptr);
 
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -1130,6 +1165,131 @@ private:
         }
     }
 
+    void createScenes(){
+
+        MenuScene = Scene(
+                0,
+                {&graphicsPipelineMenu},
+                {&pipelineLayoutMenu},
+                {&DSLMenu},
+                {&descriptorSetsMenu}
+                );
+
+        ApplicationScene = Scene(
+                1,
+                {&graphicsPipeline, &graphicsPipelineSkyBox, &graphicsPipelineText},
+                {&pipelineLayout, &pipelineLayoutSkyBox, &pipelineLayoutText},
+                {&descriptorSetLayout, &DSLskyBox, &DSLText},
+                {&descriptorSets, &descriptorSetsSkyBox, &descriptorSetsMenu}
+                );
+        CurrentScene = MenuScene;
+    }
+
+    void LoadSceneMenu(){
+        LoadSceneMenuInit();
+        LoadMenuDescriptors();
+    }
+
+    void LoadSceneMenuInit(){
+        createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, menuImage,
+                           menuImageMemory, "presentations/animals/cat/catPresentation.png");
+        createTextureImageView(device, menuImage, mipLevels, menuImageView);
+        createTextureSampler(physicalDevice, device, menuSampler);
+
+
+        createMenuVertexBuffer(menuVertices, vertexBufferMenu, vertexBufferMemoryMenu);
+        createIndexBuffer(device, physicalDevice, menuIndices, commandPool, graphicsQueue,
+                          indexBufferMenu, indexBufferMemoryMenu);
+    }
+
+    void LoadMenuDescriptors(){
+        createMenuDescriptorSets();
+    }
+
+    void LoadSceneApplication(){
+        LoadSceneApplicationInit();
+        LoadApplicationDescriptors();
+    }
+
+    void LoadApplicationDescriptors(){
+        //CREATE DESCRIPTOR SETS
+        createDescriptorSets();
+
+        //CREATE DESCRIPTOR SETS SKYBOX
+        createSkyBoxDescriptorSets();
+
+        //CREATE TEXT DESCRIPTOR SETS
+        createTextDescriptorSets();
+    }
+
+    void LoadSceneApplicationInit(){
+        //CREATE TEXTURES AND NORMALS
+        createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImage,
+                           textureImageMemory, "fonts/tata_0.png");
+        createTextureImages(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImages,
+                            textureImageMemorys, texturePaths);
+        createTextureImages(mipLevels, device, physicalDevice, commandPool, graphicsQueue, normalImages,
+                            normalImageMemorys, normalPaths);
+
+        createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, TextImage[0],
+                           TextImageMemory[0], "fonts/tata_0.png");
+        createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, TextImage[1],
+                           TextImageMemory[1], "fonts/tata_0.png");
+
+        //TEXT IMAGE
+
+        createTextureImageView(device, textureImage, mipLevels, textureImageView);
+        createTextureImageViews(device, textureImages, mipLevels, textureImageViews);
+        createTextureImageViews(device, normalImages, mipLevels, normalImageViews);
+        createTextureImageView(device, TextImage[0], mipLevels, TextImageView[0]);
+        createTextureImageView(device, TextImage[1], mipLevels, TextImageView[1]);
+
+
+        createTextureSampler(physicalDevice, device, textureSampler);
+        createTextureSamplers(physicalDevice, device, textureSamplers, texturePaths.size());
+        createTextureSamplers(physicalDevice, device, normalSamplers, normalPaths.size());
+        createTextureSampler(physicalDevice, device, TextSampler[0]);
+        createTextureSampler(physicalDevice, device, TextSampler[1]);
+
+        //CREATE SKYBOX
+        createSkyBoxTextures(texturePathSB);
+
+        createObjectLoader();
+        createSkyBoxLoader();
+
+
+        launchObjectLoader();
+        launchSkyBoxLoader();
+
+        createVertexBuffer(vertices, vertexBuffer, vertexBufferMemory);
+
+        //Create SB VBuffer
+        createSBVertexBuffer(skyBoxVertices, vertexBufferSB, vertexBufferMemorySB);
+
+        //CREATE TEXT VBuffer
+        createTextVertexBuffer(textVertices, vertexBufferText, vertexBufferMemoryText);
+
+        //Create first IBuffer
+        createIndexBuffer(device, physicalDevice, indices, commandPool, graphicsQueue,
+                          indexBuffer, indexBufferMemory);
+        //Create SB IBuffer
+        createIndexBuffer(device, physicalDevice, skyBoxIndices, commandPool, graphicsQueue,
+                          indexBufferSB, indexBufferMemorySB);
+        //CREATE TEXT IBuffer
+        createIndexBuffer(device, physicalDevice, textIndices, commandPool, graphicsQueue,
+                          indexBufferText, indexBufferMemoryText);
+
+        createUniformBuffers(device, physicalDevice, swapChainExtent, uniformBuffers, uniformBuffersMemory,
+                             uniformBuffersMapped, lightsBuffers, lightsBuffersMemory, lightsBuffersMapped,
+                             MAX_FRAMES_IN_FLIGHT);
+        createMatrixUniformBuffer(device, physicalDevice, swapChainExtent, matrixUniformBuffers, matrixUniformBuffersMemory,
+                                  matrixUniformBuffersMapped, MAX_FRAMES_IN_FLIGHT);
+    }
+
+    void UnLoadSceneApplication(){
+
+    }
+
     void createRenderPass() {
         VkAttachmentDescription colorAttachment{};
         colorAttachment.format = swapChainImageFormat;
@@ -1203,6 +1363,26 @@ private:
         }
     }
 
+    void createMenuDescriptorSetLayout(){
+        VkDescriptorSetLayoutBinding menuLayoutBinding{};
+        menuLayoutBinding.binding = 0;
+        menuLayoutBinding.descriptorCount = 1;
+        menuLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        menuLayoutBinding.pImmutableSamplers = nullptr;
+        menuLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 1> bindings = {menuLayoutBinding};
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+        layoutInfo.pBindings = bindings.data();
+
+        if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &DSLMenu) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create descriptor set layout of the Text!");
+        }
+
+    }
+
     void createTextDescriptorSetLayout(){
         VkDescriptorSetLayoutBinding textLayoutBinding{};
         textLayoutBinding.binding = 0;
@@ -1267,6 +1447,132 @@ private:
         if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor set layout!");
         }
+    }
+
+    void createMenuGraphicsPipeline(){
+        auto vertShaderCode = readFile("shaders/menuvert.spv");
+        auto fragShaderCode = readFile("shaders/menufrag.spv");
+
+        VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
+        VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+
+        VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+        vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+        vertShaderStageInfo.module = vertShaderModule;
+        vertShaderStageInfo.pName = "main";
+
+        VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+        fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        fragShaderStageInfo.module = fragShaderModule;
+        fragShaderStageInfo.pName = "main";
+
+        VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
+
+        VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+        vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+
+        auto bindingDescription = menuVertex::getBindingDescription();
+        auto attributeDescriptions = menuVertex::getAttributeDescriptions();
+
+        vertexInputInfo.vertexBindingDescriptionCount = 1;
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+        vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+        vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+
+        VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+        inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+        VkPipelineViewportStateCreateInfo viewportState{};
+        viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+        viewportState.viewportCount = 1;
+        viewportState.scissorCount = 1;
+
+        VkPipelineRasterizationStateCreateInfo rasterizer{};
+        rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+        rasterizer.depthClampEnable = VK_FALSE;
+        rasterizer.rasterizerDiscardEnable = VK_FALSE;
+        rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+        rasterizer.lineWidth = 1.0f;
+        rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        rasterizer.depthBiasEnable = VK_FALSE;
+
+        VkPipelineMultisampleStateCreateInfo multisampling{};
+        multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+        multisampling.sampleShadingEnable = VK_FALSE;
+        multisampling.rasterizationSamples = msaaSamples;
+        multisampling.sampleShadingEnable = VK_TRUE; // enable sample shading in the pipeline
+        multisampling.minSampleShading = .2f; // min fraction for sample shading; closer to one is smoother
+
+        VkPipelineDepthStencilStateCreateInfo depthStencil{};
+        depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        depthStencil.depthTestEnable = VK_TRUE;
+        depthStencil.depthWriteEnable = VK_TRUE;
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencil.depthBoundsTestEnable = VK_FALSE;
+        depthStencil.stencilTestEnable = VK_FALSE;
+
+        VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+        colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        colorBlendAttachment.blendEnable = VK_FALSE;
+
+        VkPipelineColorBlendStateCreateInfo colorBlending{};
+        colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+        colorBlending.logicOpEnable = VK_FALSE;
+        colorBlending.logicOp = VK_LOGIC_OP_COPY;
+        colorBlending.attachmentCount = 1;
+        colorBlending.pAttachments = &colorBlendAttachment;
+        colorBlending.blendConstants[0] = 0.0f;
+        colorBlending.blendConstants[1] = 0.0f;
+        colorBlending.blendConstants[2] = 0.0f;
+        colorBlending.blendConstants[3] = 0.0f;
+
+        std::vector<VkDynamicState> dynamicStates = {
+                VK_DYNAMIC_STATE_VIEWPORT,
+                VK_DYNAMIC_STATE_SCISSOR
+        };
+        VkPipelineDynamicStateCreateInfo dynamicState{};
+        dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+        dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+        dynamicState.pDynamicStates = dynamicStates.data();
+
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        pipelineLayoutInfo.setLayoutCount = 1;
+        pipelineLayoutInfo.pSetLayouts = &DSLMenu;
+
+        if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayoutMenu) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create pipeline layout!");
+        }
+
+        VkGraphicsPipelineCreateInfo pipelineInfo{};
+        pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        pipelineInfo.stageCount = 2;
+        pipelineInfo.pStages = shaderStages;
+        pipelineInfo.pVertexInputState = &vertexInputInfo;
+        pipelineInfo.pInputAssemblyState = &inputAssembly;
+        pipelineInfo.pViewportState = &viewportState;
+        pipelineInfo.pRasterizationState = &rasterizer;
+        pipelineInfo.pMultisampleState = &multisampling;
+        pipelineInfo.pDepthStencilState = &depthStencil;
+        pipelineInfo.pColorBlendState = &colorBlending;
+        pipelineInfo.pDynamicState = &dynamicState;
+        pipelineInfo.layout = pipelineLayoutMenu;
+        pipelineInfo.renderPass = renderPass;
+        pipelineInfo.subpass = 0;
+        pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+
+        if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipelineMenu) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create graphics pipeline!");
+        }
+
+        vkDestroyShaderModule(device, fragShaderModule, nullptr);
+        vkDestroyShaderModule(device, vertShaderModule, nullptr);
+
     }
 
     void createTextGraphicsPipeline(){
@@ -2341,7 +2647,7 @@ private:
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[0].descriptorCount = MAX_FRAMES_IN_FLIGHT * 4; // For three UBOs per frame
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = MAX_FRAMES_IN_FLIGHT * (texturePaths.size() + normalPaths.size() + 10);
+        poolSizes[1].descriptorCount = MAX_FRAMES_IN_FLIGHT * (texturePaths.size() + normalPaths.size() + 20);
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -2457,6 +2763,39 @@ private:
             descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptorWrites[1].descriptorCount = 1;
             descriptorWrites[1].pBufferInfo = &uniforBufferInfo;
+
+            vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+        }
+    }
+
+    void createMenuDescriptorSets(){
+        std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, DSLMenu);
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        allocInfo.pSetLayouts = layouts.data();
+
+        descriptorSetsMenu.resize(MAX_FRAMES_IN_FLIGHT);
+        if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSetsMenu.data()) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            VkDescriptorImageInfo imageInfo{};
+            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfo.imageView = menuImageView;
+            imageInfo.sampler = menuSampler;
+
+            std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+
+            descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[0].dstSet = descriptorSetsMenu[i];
+            descriptorWrites[0].dstBinding = 0;
+            descriptorWrites[0].dstArrayElement = 0;
+            descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            descriptorWrites[0].descriptorCount = 1;
+            descriptorWrites[0].pImageInfo = &imageInfo;
 
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
@@ -2610,17 +2949,33 @@ private:
         //updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped);
 
         //updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped, normalProj);
-        updateMatrixUniformBuffer(currentFrame, listActualObjectInfos, matrixUniformBuffersMapped);
+
+        if(CurrentScene.index == ApplicationScene.index){
+            updateMatrixUniformBuffer(currentFrame, listActualObjectInfos, matrixUniformBuffersMapped);
+        }
 
         vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
         vkResetCommandBuffer(commandBuffers[currentFrame], /*VkCommandBufferResetFlagBits*/ 0);
-        recordCommandBuffer(commandBuffers[currentFrame], imageIndex, renderPass, swapChainFramebuffers,
-                            swapChainExtent, graphicsPipeline, vertexBuffer, indexBuffer, pipelineLayout, indices,
-                            descriptorSets,
-                            graphicsPipelineSkyBox, vertexBufferSB, indexBufferSB, pipelineLayoutSkyBox, skyBoxIndices, descriptorSetsSkyBox,
-                            graphicsPipelineText, vertexBufferText, indexBufferText, pipelineLayoutText, textIndices, descriptorSetsText,
-                            currentFrame);
+
+        if(CurrentScene.index == ApplicationScene.index){
+            recordCommandBufferApplication(commandBuffers[currentFrame], imageIndex, renderPass, swapChainFramebuffers,
+                                           swapChainExtent, graphicsPipeline, vertexBuffer, indexBuffer, pipelineLayout,
+                                           indices,
+                                           descriptorSets,
+                                           graphicsPipelineSkyBox, vertexBufferSB, indexBufferSB, pipelineLayoutSkyBox,
+                                           skyBoxIndices, descriptorSetsSkyBox,
+                                           graphicsPipelineText, vertexBufferText, indexBufferText, pipelineLayoutText,
+                                           textIndices, descriptorSetsText,
+                                           currentFrame);
+        }else{
+            recordCommandBufferMenu(commandBuffers[currentFrame], imageIndex, renderPass, swapChainFramebuffers,
+                                    swapChainExtent, graphicsPipelineMenu, vertexBufferMenu, indexBufferMenu, pipelineLayoutMenu,
+                                    menuIndices,
+                                    descriptorSetsMenu,
+                                    currentFrame);
+        }
+
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -2665,6 +3020,40 @@ private:
 
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
+
+    void createMenuVertexBuffer(std::vector<menuVertex> & vertices, VkBuffer & vertexBuffer, VkDeviceMemory & vertexBufferMemory){
+        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size() * 3;
+        if(bufferSize == 0){
+            bufferSize = 1;
+        }
+
+        VkDeviceSize actualBufferSize = sizeof(vertices[0]) * vertices.size();
+        if(actualBufferSize == 0){
+            actualBufferSize = 1;
+        }
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                     stagingBuffer, stagingBufferMemory, device, physicalDevice);
+
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        memcpy(data, vertices.data(), (size_t) actualBufferSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                     vertexBuffer, vertexBufferMemory, device, physicalDevice);
+
+        copyBuffer(stagingBuffer, vertexBuffer, bufferSize,
+                   commandPool, device, graphicsQueue);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+    }
+
 
     void createTextVertexBuffer(std::vector<textVertex> & vertices, VkBuffer & vertexBuffer, VkDeviceMemory & vertexBufferMemory){
         VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size() * 3;
