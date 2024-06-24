@@ -504,14 +504,23 @@ void createEmptyRoom(std::vector<ObjectInformation> &listActualObjectInfos, std:
 void createKitchen(std::vector<ObjectInformation> &listActualObjectInfos, std::vector<ObjectInformation*> &listObjectInfos){
 //createEmptyRoom(listActualObjectInfos, listObjectInfos, true);
 
-    ObjectInformation objBaseKitchen = ObjectInformation("furniture/BlenderKitchen/cucina.obj",
+    ObjectInformation objBaseKitchen = ObjectInformation("furniture/BlenderKitchen/cucinadefinitive.obj",
             glm::scale(glm::mat4(1.0f), glm::vec3(3.0f)),
             "BlenderKitchen/KitchenFlooring.jpg",
             false);
     objBaseKitchen.scaleModel(20.0f);
 
+    ObjectInformation objFridge = ObjectInformation("furniture/Blentive.obj",
+                                                         glm::scale(glm::mat4(1.0f), glm::vec3(3.0f)),
+                                                         "BlenderKitchen/KitchenFlooring.jpg",
+                                                         false, 1, "presentation/funiture/FridgeKitchen/FridgeKitchen.png");
+
+
+
     listActualObjectInfos.push_back(objBaseKitchen);
+    listActualObjectInfos.push_back(objFridge);
     listObjectInfos.push_back(&listActualObjectInfos[0]);
+    listObjectInfos.push_back(&listActualObjectInfos[1]);
 }
 
 void createLivingRoom(std::vector<ObjectInformation> &listActualObjectInfos, std::vector<ObjectInformation*> &listObjectInfos){
