@@ -504,23 +504,69 @@ void createEmptyRoom(std::vector<ObjectInformation> &listActualObjectInfos, std:
 void createKitchen(std::vector<ObjectInformation> &listActualObjectInfos, std::vector<ObjectInformation*> &listObjectInfos){
 //createEmptyRoom(listActualObjectInfos, listObjectInfos, true);
 
-    ObjectInformation objBaseKitchen = ObjectInformation("furniture/BlenderKitchen/cucinadefinitive.obj",
-            glm::scale(glm::mat4(1.0f), glm::vec3(3.0f)),
+    ObjectInformation objBaseKitchen = ObjectInformation("furniture/BlenderKitchen/cucinadefinitive2.obj",
+            glm::scale(glm::mat4(1.0f), glm::vec3(60.0f)),
             "BlenderKitchen/KitchenFlooring.jpg",
             false);
-    objBaseKitchen.scaleModel(20.0f);
 
-    ObjectInformation objFridge = ObjectInformation("furniture/Blentive.obj",
-                                                         glm::scale(glm::mat4(1.0f), glm::vec3(3.0f)),
-                                                         "BlenderKitchen/KitchenFlooring.jpg",
-                                                         false, 1, "presentation/funiture/FridgeKitchen/FridgeKitchen.png");
+    ObjectInformation objFridge = ObjectInformation("furniture/KitchenFridge/scene.gltf",
+                                                         glm::scale(glm::mat4(1.0f), glm::vec3(60.0f)),
+                                                         "furniture/KitchenFridge/baked_baseColor.png",
+                                                         true, 1, "presentation/furniture/FridgeKitchen/FridgeKitchen.png");
+    objFridge.rotateModel(180, 'x');
+    objFridge.rotateModel(180, 'y');
+    objFridge.translateModel(-3.0f, 3.5f, 0.0f);
+/*
+    ObjectInformation objPlant = ObjectInformation("furniture/BananaPlantWithPot/scene.gltf",
+                                                    glm::scale(glm::mat4(1.0f), glm::vec3(5.0f)),
+                                                    "furniture/BananaPlantPot/material_3_baseColor.jpeg",
+                                                    true, 1, "presentations/furniture/BananaPlantWithPot/BananaPlantWithPot.png");
+    objPlant.rotateModel(180, 'x');*/
 
+   ObjectInformation objSink = ObjectInformation("furniture/KitchenSink/scene.gltf",
+                                                   glm::scale(glm::mat4(1.0f), glm::vec3(25.0f)),
+                                                   "furniture/KitchenSink/cabinet_baseColor.png",
+                                                   true, 1, "presentations/furniture/KitchenSink/KitchenSink.png");
+   objSink.rotateModel(-180, 'z');
+   objSink.translateModel(-2.0f, -2.0f, 0.0f);
 
+    ObjectInformation objDog = ObjectInformation("animals/dog/Dog.obj",
+                                                  glm::scale(glm::mat4(1.0f), glm::vec3(1.2f)),
+                                                  "animals/dog/Dog_diffuse.jpeg",
+                                                  false/*, 1, "presentations/animals/KitchenSink/KitchenSink.png"*/);
+    objDog.rotateModel(90, 'x');
+    objDog.translateModel(0.0f, 0.0, 0.9);
+
+    ObjectInformation objWineCoolerFridge = ObjectInformation("furniture/WineCoolerFridge/scene.gltf",
+                                                 glm::scale(glm::mat4(1.0f), glm::vec3(100.0f)),
+                                                 "furniture/WineCoolerFridge/Material.001_baseColor.png",
+                                                 true/*, 1, "presentations/animals/KitchenSink/KitchenSink.png"*/);
+   //objWineCoolerFridge.rotateModel(180, 'x');
+    //objWineCoolerFridge.rotateModel(180, 'y');
+   objWineCoolerFridge.translateModel(-5.0f, 5.0f, -0.4f);
+
+  /*  ObjectInformation objHangingLights = ObjectInformation("furniture/RusticHangingKitchenLights/scene.gltf",
+                                                              glm::scale(glm::mat4(1.0f), glm::vec3(100.0f)),
+                                                              "furniture/RusticHangingKitchenLights/bolts.002_baseColor.jpeg",
+                                                              true);*/
+    ObjectInformation objTable = ObjectInformation("furniture/OrnamentalWoodenTable/RoundTable.obj",
+                                                           glm::scale(glm::mat4(1.0f), glm::vec3(50.0f)),
+                                                           "furniture/OrnamentalWoodenDiningTable/Table_Leg_Wood_BaseColor.png",
+                                                           false);
 
     listActualObjectInfos.push_back(objBaseKitchen);
     listActualObjectInfos.push_back(objFridge);
-    listObjectInfos.push_back(&listActualObjectInfos[0]);
-    listObjectInfos.push_back(&listActualObjectInfos[1]);
+    //listActualObjectInfos.push_back(objPlant);
+    listActualObjectInfos.push_back(objSink);
+    listActualObjectInfos.push_back(objDog);
+    listActualObjectInfos.push_back(objWineCoolerFridge);
+   // listActualObjectInfos.push_back(objHangingLights);
+   listActualObjectInfos.push_back(objTable);
+
+
+    for(int i = 0; i < listActualObjectInfos.size(); i++){
+        listObjectInfos.push_back(&listActualObjectInfos[i]);
+    }
 }
 
 void createLivingRoom(std::vector<ObjectInformation> &listActualObjectInfos, std::vector<ObjectInformation*> &listObjectInfos){
