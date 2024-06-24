@@ -219,6 +219,10 @@ private:
     std::vector<VkDeviceMemory> lightsBuffersMemory;
     std::vector<void*> lightsBuffersMapped;
 
+    std::vector<VkBuffer> timeBuffers;
+    std::vector<VkDeviceMemory> timeBuffersMemory;
+    std::vector<void*> timeBuffersMapped;
+
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
 
@@ -471,6 +475,7 @@ private:
             float deltaTime = currentTime - lastTime;
             lastTime = currentTime;
 
+
             closeEscape(window);
 
             if(CurrentScene.index == MenuScene.index){
@@ -490,6 +495,7 @@ private:
                 changeIsometricView(window, WIDTH, HEIGHT, normalProj);
                 regularProj(window, normalProj);
                 updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped, normalProj, pointLights, directionalLights);
+                updateTimeBuffer(currentFrame, timeBuffersMapped, currentTime);
             }
 
             glfwPollEvents();
@@ -849,6 +855,9 @@ private:
 
             vkDestroyBuffer(device, matrixUniformBuffers[i], nullptr);
             vkFreeMemory(device, matrixUniformBuffersMemory[i], nullptr);
+
+            vkDestroyBuffer(device, timeBuffers[i], nullptr);
+            vkFreeMemory(device, timeBuffersMemory[i], nullptr);
         }
 
         vkDestroyDescriptorPool(device, descriptorPool, nullptr);
@@ -1299,6 +1308,9 @@ private:
                              MAX_FRAMES_IN_FLIGHT);
         createMatrixUniformBuffer(device, physicalDevice, swapChainExtent, matrixUniformBuffers, matrixUniformBuffersMemory,
                                   matrixUniformBuffersMapped, MAX_FRAMES_IN_FLIGHT);
+        createTimeBuffer(device, physicalDevice, swapChainExtent, timeBuffers, timeBuffersMemory,
+                             timeBuffersMapped,
+                             MAX_FRAMES_IN_FLIGHT);
     }
 
     void UnLoadSceneApplication(){
@@ -1433,7 +1445,14 @@ private:
         matrixLayoutBinding.pImmutableSamplers = nullptr;
         matrixLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {skyBoxLayoutBinding, matrixLayoutBinding};
+        VkDescriptorSetLayoutBinding timeLayoutBinding{};
+        timeLayoutBinding.binding = 2;
+        timeLayoutBinding.descriptorCount = 1;
+        timeLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        timeLayoutBinding.pImmutableSamplers = nullptr;
+        timeLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings = {skyBoxLayoutBinding, matrixLayoutBinding, timeLayoutBinding};
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
@@ -1990,8 +2009,9 @@ private:
 
     void createObjectVector(){
         //createLivingRoom(listActualObjectInfos, listObjectInfos);
-        createKitchen(listActualObjectInfos, listObjectInfos);
-/*
+        //createKitchen(listActualObjectInfos, listObjectInfos);
+        createLivingRoom(listActualObjectInfos, listObjectInfos);
+        /*
         ObjectInformation pokerRoom{};
         pokerRoom.modelPath = "furniture/Poker Room/scene.gltf";
         pokerRoom.texturePath = "furniture/House/mondrian.png";
@@ -2764,7 +2784,12 @@ private:
             uniforBufferInfo.offset = 0;
             uniforBufferInfo.range = sizeof(UniformBufferObject);
 
-            std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+            VkDescriptorBufferInfo timeBufferInfo{};
+            timeBufferInfo.buffer = timeBuffers[i];
+            timeBufferInfo.offset = 0;
+            timeBufferInfo.range = sizeof(TimeBuffer);
+
+            std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
 
             descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptorWrites[0].dstSet = descriptorSetsSkyBox[i];
@@ -2781,6 +2806,14 @@ private:
             descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptorWrites[1].descriptorCount = 1;
             descriptorWrites[1].pBufferInfo = &uniforBufferInfo;
+
+            descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[2].dstSet = descriptorSetsSkyBox[i];
+            descriptorWrites[2].dstBinding = 2;
+            descriptorWrites[2].dstArrayElement = 0;
+            descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptorWrites[2].descriptorCount = 1;
+            descriptorWrites[2].pBufferInfo = &timeBufferInfo;
 
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
@@ -2969,7 +3002,10 @@ private:
         //updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped, normalProj);
 
         if(CurrentScene.index == ApplicationScene.index){
+            float currentTime = glfwGetTime();
+
             updateMatrixUniformBuffer(currentFrame, listActualObjectInfos, matrixUniformBuffersMapped);
+            updateTimeBuffer(currentFrame, timeBuffersMapped, currentTime);
         }
 
         vkResetFences(device, 1, &inFlightFences[currentFrame]);

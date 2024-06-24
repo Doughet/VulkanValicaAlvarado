@@ -57,6 +57,10 @@ struct MatrixBufferObject{
     glm::mat4 model[20];
 };
 
+struct TimeBuffer{
+    float time;
+};
+
 UniformBufferObject ubo{};
 UniformBufferObject aux{};
 
@@ -150,6 +154,19 @@ uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, V
     }
 
     throw std::runtime_error("failed to find suitable memory type!");
+}
+
+void updateTimeBuffer(uint32_t currentImage,
+                               std::vector<void*> &timeBufferMapped,
+                               float currentTime){
+
+
+    TimeBuffer tbo{
+    };
+
+    tbo.time = currentTime;
+
+    memcpy(timeBufferMapped[currentImage], &tbo, sizeof(tbo));
 }
 
 void updateMatrixUniformBuffer(uint32_t currentImage, std::vector<ObjectInformation> listActualObjectInfos,
@@ -542,6 +559,26 @@ void createMatrixUniformBuffer(VkDevice &device, VkPhysicalDevice &physicalDevic
 }
 
 
+void createTimeBuffer(VkDevice &device, VkPhysicalDevice &physicalDevice, VkExtent2D &swapChainExtent,
+                      std::vector<VkBuffer> &timeBuffers, std::vector<VkDeviceMemory> &timeBuffersMemory,
+                      std::vector<void*> &timeBuffersMapped,
+                      const int maxFramesInFlight){
+
+    TimeBuffer tbo {0};
+
+    VkDeviceSize bufferSize = sizeof(TimeBuffer);
+
+    timeBuffers.resize(maxFramesInFlight);
+    timeBuffersMemory.resize(maxFramesInFlight);
+    timeBuffersMapped.resize(maxFramesInFlight);
+
+    for (size_t i = 0; i < maxFramesInFlight; i++) {
+        createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                     timeBuffers[i], timeBuffersMemory[i], device, physicalDevice);
+        vkMapMemory(device, timeBuffersMemory[i], 0, bufferSize, 0, &timeBuffersMapped[i]);
+    }
+}
 
 void createUniformBuffers(VkDevice &device, VkPhysicalDevice &physicalDevice, VkExtent2D &swapChainExtent,
                           std::vector<VkBuffer> &uniformBuffers, std::vector<VkDeviceMemory> &uniformBuffersMemory,
