@@ -267,9 +267,26 @@ private:
     std::vector<ObjectInformation*> listSkyBoxInfos;
     std::vector<ObjectInformation> listActualSkyBoxInfos;
 
-    std::vector<Vertex> tempVerticesSB;
-    std::vector<skyBoxVertex> skyBoxVertices;
-    std::vector<uint32_t> skyBoxIndices;
+    std::vector<skyBoxVertex> skyBoxVertices = {
+            {{-1.0f,  -1.0f, 0.9f}, {0, 0}}, {{1.0f, -1.0f, 0.9f}, {1, 0}}, {{ 1.0f, 1.0f, 0.9f}, {1, 1}}, {{ -1.0f, 1.0f, 0.9f}, {0, 1}},
+            //{{ 1.0f,  1.0f, -1.0f}}, {{-1.0f,  1.0f, -1.0f}},
+            /*{{-1.0f, -1.0f,  1.0f}}, {{-1.0f, -1.0f, -1.0f}}, {{-1.0f,  1.0f, -1.0f}}, {{-1.0f,  1.0f, -1.0f}}, {{-1.0f,  1.0f,  1.0f}}, {{-1.0f, -1.0f,  1.0f}},
+            {{ 1.0f, -1.0f, -1.0f}}, {{ 1.0f, -1.0f,  1.0f}}, {{ 1.0f,  1.0f,  1.0f}}, {{ 1.0f,  1.0f,  1.0f}}, {{ 1.0f,  1.0f, -1.0f}}, {{ 1.0f, -1.0f, -1.0f}},
+            {{-1.0f, -1.0f,  1.0f}}, {{-1.0f,  1.0f,  1.0f}}, {{ 1.0f,  1.0f,  1.0f}}, {{ 1.0f,  1.0f,  1.0f}}, {{ 1.0f, -1.0f,  1.0f}}, {{-1.0f, -1.0f,  1.0f}},
+            {{-1.0f,  1.0f, -1.0f}}, {{ 1.0f,  1.0f, -1.0f}}, {{ 1.0f,  1.0f,  1.0f}}, {{ 1.0f,  1.0f,  1.0f}}, {{-1.0f,  1.0f,  1.0f}}, {{-1.0f,  1.0f, -1.0f}},
+            {{-1.0f, -1.0f, -1.0f}}, {{-1.0f, -1.0f,  1.0f}}, {{ 1.0f, -1.0f, -1.0f}}, {{ 1.0f, -1.0f, -1.0f}}, {{-1.0f, -1.0f,  1.0f}}, {{ 1.0f, -1.0f,  1.0f}},*/
+    };
+
+
+    std::vector<uint32_t> skyBoxIndices = {
+            0, 2, 1, 2, 0, 3
+    };
+
+    std::vector<std::string> facesSB = {
+            "presentations/animals/cat/catPresentation.png", "presentations/animals/cat/catPresentation.png",
+            "presentations/animals/cat/catPresentation.png", "presentations/animals/cat/catPresentation.png",
+            "presentations/animals/cat/catPresentation.png", "presentations/animals/cat/catPresentation.png"
+    };
 
     VkBuffer vertexBufferSB;
     VkDeviceMemory vertexBufferMemorySB;
@@ -301,14 +318,14 @@ private:
     float heightImage = (float)sizeImage / HEIGHT;
     float widthImage = (float)sizeImage / WIDTH;
     std::vector<textVertex> textVertices = {
-            {{-1, -1}, {1, 0}, 0},
-            {{ -1 + widthImage, -1}, {0, 0}, 0},
-            {{ -1 + widthImage,  -1 + heightImage}, {0, 1}, 0},
-            {{-1,  -1 + heightImage}, {1, 1}, 0},
-            {{-1 + widthImage, -1}, {1, 0}, 1},
-            {{ -1 + 2 * widthImage, -1}, {0, 0}, 1},
-            {{ -1 + 2 * widthImage,  -1 + heightImage}, {0, 1}, 1},
-            {{-1 + widthImage,  -1 + heightImage}, {1, 1}, 1}
+            {{-1, -1}, {0, 0}, 0},
+            {{ -1 + widthImage, -1}, {1, 0}, 0},
+            {{ -1 + widthImage,  -1 + heightImage}, {1, 1}, 0},
+            {{-1,  -1 + heightImage}, {0, 1}, 0},
+            {{-1 + widthImage, -1}, {0, 0}, 1},
+            {{ -1 + 2 * widthImage, -1}, {1, 0}, 1},
+            {{ -1 + 2 * widthImage,  -1 + heightImage}, {1, 1}, 1},
+            {{-1 + widthImage,  -1 + heightImage}, {0, 1}, 1}
     };
 
     std::vector<uint32_t > textIndices = {0, 2, 1, 2, 0, 3,
@@ -340,10 +357,10 @@ private:
     std::vector<VkDescriptorSet> descriptorSetsMenu;
 
     std::vector<menuVertex> menuVertices = {
-            {{-1, -1}, {1, 0}},
-            {{ 1, -1}, {0, 0}},
-            {{ 1,  1}, {0, 1}},
-            {{-1,  1}, {1, 1}},
+            {{-1, -1}, {0, 0}},
+            {{ 1, -1}, {1, 0}},
+            {{ 1,  1}, {1, 1}},
+            {{-1,  1}, {0, 1}},
     };
 
     std::vector<uint32_t > menuIndices = {0, 2, 1, 2, 0, 3};
@@ -1190,7 +1207,7 @@ private:
 
     void LoadSceneMenuInit(){
         createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, menuImage,
-                           menuImageMemory, "presentations/animals/cat/catPresentation.png");
+                           menuImageMemory, "presentations/menu.png");
         createTextureImageView(device, menuImage, mipLevels, menuImageView);
         createTextureSampler(physicalDevice, device, menuSampler);
 
@@ -1253,11 +1270,11 @@ private:
         createSkyBoxTextures(texturePathSB);
 
         createObjectLoader();
-        createSkyBoxLoader();
+        //createSkyBoxLoader();
 
 
         launchObjectLoader();
-        launchSkyBoxLoader();
+        //launchSkyBoxLoader();
 
         createVertexBuffer(vertices, vertexBuffer, vertexBufferMemory);
 
@@ -1759,9 +1776,9 @@ private:
 
         VkPipelineDepthStencilStateCreateInfo depthStencil{};
         depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        depthStencil.depthTestEnable = VK_TRUE;
-        depthStencil.depthWriteEnable = VK_TRUE;
-        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencil.depthTestEnable = VK_FALSE;
+        depthStencil.depthWriteEnable = VK_FALSE;
+        depthStencil.depthCompareOp = VK_COMPARE_OP_ALWAYS;
         depthStencil.depthBoundsTestEnable = VK_FALSE;
         depthStencil.stencilTestEnable = VK_FALSE;
 
@@ -1951,7 +1968,7 @@ private:
 
     void createSkyBoxTextures(std::string texturePathSB){
         createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, skyboxImage,
-                           skyboxImageMemory, "fonts/tata_0.png");
+                           skyboxImageMemory, "presentations/animals/cat/catPresentation.png");
         createTextureImageView(device, skyboxImage, mipLevels, skyboxImageView);
         createTextureSampler(physicalDevice, device, skyboxSampler);
     }
@@ -2005,7 +2022,7 @@ private:
         objHouse.isGltf = false;
         objHouse.normalPath = "";
 */
-
+/*
         ObjectInformation objGLTF {};
         objGLTF.modelPath = "furniture/Bed/scene.gltf";
         objGLTF.texturePath = "furniture/House/mondrian.png";
@@ -2014,6 +2031,7 @@ private:
         objGLTF.hasNormalMap = false;
         objGLTF.isGltf = true;
         objGLTF.normalPath = "";
+        */
 
 /*
         ObjectInformation objMorris {};
@@ -2025,6 +2043,7 @@ private:
         objMorris.normalPath = "furniture/MorrisChair/morrisChair_smallChairMat_Normal.tga.png";
 */
 
+/*
         ObjectInformation objTruck = ObjectInformation(
                 "Cars/keytruck.obj",
                 glm::scale(glm::mat4(1.0f), glm::vec3(100.0f, 100.0f, 100.0f)),
@@ -2049,7 +2068,7 @@ private:
                 0, 1, 3, 2, 3, 1
         };
 
-
+*/
         isStart = true;
 
         for (int i = 0; i < listObjectInfos.size(); ++i) {
@@ -2396,7 +2415,7 @@ private:
 
 */
     void createSkyBoxLoader(){
-        skyBoxLoader = ObjectLoader(&listSkyBoxInfos, &tempVerticesSB, &skyBoxIndices);
+        //skyBoxLoader = ObjectLoader(&listSkyBoxInfos, &tempVerticesSB, &skyBoxIndices);
     }
 
     void createObjectLoader(){
@@ -2406,7 +2425,7 @@ private:
     void launchSkyBoxLoader(){
         skyBoxLoader.loadAllElements();
         skyBoxLoader.fillVertexAndIndices();
-        skyBoxLoader.transformVertex(tempVerticesSB, skyBoxVertices);
+        //skyBoxLoader.transformVertex(tempVerticesSB, skyBoxVertices);
     }
 
     void launchObjectLoader(){

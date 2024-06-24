@@ -240,26 +240,6 @@ void createTextureSampler(VkPhysicalDevice &physicalDevice, VkDevice &device, Vk
 
 
 
-void loadTextures(std::vector<tinyobj::material_t> &materials,
-                  std::vector<VkImage> &textureImages,
-                  std::vector<VkImageView> &textureImageViews,
-                  std::vector<VkSampler> &textureSamplers){
-    textureImages.resize(materials.size());
-    textureImageViews.resize(materials.size());
-    textureSamplers.resize(materials.size());
-
-    //std::vector<std::string> = {};
-
-    for (size_t i = 0; i < materials.size(); ++i) {
-        const std::string& textureFile = materials[i].diffuse_texname;
-        if (!textureFile.empty()) {
-            // Load the texture using your preferred image loading library (e.g., stb_image)
-            // Create Vulkan image, image view, and sampler for each texture
-            //loadTexture(textureFile, textureImages[i], textureImageViews[i], textureSamplers[i]);
-        }
-    }
-}
-
 void deleteTextureImagesViews(VkDevice &device, uint32_t indexDelete, uint32_t &mipLevels,
                               std::vector<VkImageView> &textureImageViews){
     vkDestroyImageView(device, textureImageViews[indexDelete], nullptr);
@@ -374,6 +354,93 @@ void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCo
     }
 
     vkBindImageMemory(device, image, imageMemory, 0);
+}
+
+void createImages(uint32_t width, uint32_t height, uint32_t mipLevels, uint32_t arrayNumber, VkSampleCountFlagBits numSamples,
+                 VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
+                 VkImage& image, VkDeviceMemory& imageMemory, VkDevice &device, VkPhysicalDevice &physicalDevice) {
+    VkImageCreateInfo imageInfo{};
+    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType = VK_IMAGE_TYPE_2D;
+    imageInfo.extent.width = width;
+    imageInfo.extent.height = height;
+    imageInfo.extent.depth = 1;
+    imageInfo.mipLevels = mipLevels;
+    imageInfo.arrayLayers = arrayNumber;
+    imageInfo.format = format;
+    imageInfo.tiling = tiling;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageInfo.usage = usage;
+    imageInfo.samples = numSamples;
+    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    if (vkCreateImage(device, &imageInfo, nullptr, &image) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create image!");
+    }
+
+    VkMemoryRequirements memRequirements;
+    vkGetImageMemoryRequirements(device, image, &memRequirements);
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties, physicalDevice);
+
+    if (vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate image memory!");
+    }
+
+    vkBindImageMemory(device, image, imageMemory, 0);
+}
+
+
+void createTextureImagesSB(uint32_t &mipLevels, VkDevice &device, VkPhysicalDevice &physicalDevice,
+                         VkCommandPool &commandPool, VkQueue &graphicsQueue, VkImage &textureImage,
+                         VkDeviceMemory &textureImageMemory, std::vector<std::string> texturePaths){
+
+    int width, height, channels;
+    stbi_uc* pixels;
+    std::vector<stbi_uc*> facePixels;
+
+    for (const auto& face : texturePaths) {
+        pixels = stbi_load(face.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+        if (!pixels) {
+            throw std::runtime_error("Failed to load texture image!");
+        }
+        facePixels.push_back(pixels);
+    }
+
+    createImages(width, height, mipLevels, texturePaths.size(), VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM,
+                 VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory, device, physicalDevice);
+
+
+
+    VkDeviceSize imageSize = width * height * 4;
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+    createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                 stagingBuffer, stagingBufferMemory, device, physicalDevice);
+
+    void* data;
+    vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
+    memcpy(data, pixels, static_cast<size_t>(imageSize));
+    vkUnmapMemory(device, stagingBufferMemory);
+
+    stbi_image_free(pixels);
+
+    transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB,
+                          VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels,
+                          commandPool, device, graphicsQueue);
+    copyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(width),
+                      static_cast<uint32_t>(height), commandPool, device, graphicsQueue);
+    //transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
+
+    vkDestroyBuffer(device, stagingBuffer, nullptr);
+    vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+    generateMipmaps(textureImage, VK_FORMAT_R8G8B8A8_SRGB, width, height, mipLevels, physicalDevice,
+                    device, commandPool, graphicsQueue);
 }
 
 void createTextureImages(uint32_t &mipLevels, VkDevice &device, VkPhysicalDevice &physicalDevice,

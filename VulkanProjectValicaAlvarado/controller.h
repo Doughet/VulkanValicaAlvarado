@@ -52,10 +52,12 @@ void updateTransformationData(int pos, GLFWwindow * &window, std::vector<ObjectI
     const float fixedMoveSpeed = moveSpeed * deltaTime;
 
     const glm::mat4 M = listObjectInfos.at(pos)->modelMatrix;
-  //  printf(", : %d ," ,int(listObjectInfos.at(pos)->vertices.size()));
+    //printf(", : %d ," ,int(listObjectInfos.at(pos)->vertices.size()));
     if(listObjectInfos.at(pos)->modelSize == modelSize::TINY){
-        sizeSpeed = 0.6f;
+        sizeSpeed = 0.1f;
     }else if(listObjectInfos.at(pos)->modelSize == modelSize::SMALL){
+        sizeSpeed = 1.0f;
+    }else if(listObjectInfos.at(pos)->modelSize == modelSize::MEDIUM){
         sizeSpeed = 1.8f;
     }else if(listObjectInfos.at(pos)->modelSize == modelSize::MEDIUM){
         sizeSpeed = 2.3f;
@@ -64,7 +66,7 @@ void updateTransformationData(int pos, GLFWwindow * &window, std::vector<ObjectI
     }else if(listObjectInfos.at(pos)->modelSize == modelSize::GIGANTIC){
         sizeSpeed = 8.5f;
     }else if(listObjectInfos.at(pos)->modelSize == modelSize::GLTF){
-        sizeSpeed = 100000.0f;
+        sizeSpeed = 12.0f;
     }
 
     bool shiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;

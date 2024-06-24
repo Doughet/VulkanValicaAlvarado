@@ -19,53 +19,21 @@
    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*/
 #version 450
-//#define MAX_LIGHTS 128
 
 layout(location = 0) in vec3 position;
+layout(location = 1) in vec2 textureCoords;
 
-/*
-struct PointLight
-{
-    vec4 m_Position;  // ignore w
-    vec4 m_Color;     // w is intensity
-};
-
-struct DirectionalLight
-{
-    vec4 m_Direction;  // ignore w
-    vec4 m_Color;     // w is intensity
-};
-
-layout(set = 0, binding = 0) uniform GlobalUniformBuffer
-{
-    mat4 m_Projection;
-    mat4 m_View;
-
-    // point light
-    vec4 m_AmbientLightColor;
-    PointLight m_PointLights[MAX_LIGHTS];
-    DirectionalLight m_DirectionalLight;
-    int m_NumberOfActivePointLights;
-    int m_NumberOfActiveDirectionalLights;
-} ubo;
-
-layout(push_constant) uniform Push
-{
-    mat4 m_ModelMatrix;
-    mat4 m_NormalMatrix;
-} push;
-
-layout(location = 0)  out  vec3  fragUVW;
-*/
 layout(binding = 0) uniform UniformBufferObject {
     mat4 model;
     mat4 view;
     mat4 proj;
 } ubo;
 
+layout(location = 0) out vec2 textCoords;
 
-void main()
-{
+void main() {
+    textCoords = textureCoords;
+    vec4 pos = vec4(position, 1.0);
     // projection * view * model * position
-    gl_Position = ubo.proj * ubo.view * ubo.model * vec4(position, 1.0);
+    gl_Position = vec4(position, 1.0);
 }
