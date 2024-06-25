@@ -151,15 +151,24 @@ void updateTransformationData(int pos, GLFWwindow * &window, std::vector<ObjectI
             );
 }
 
-void addlight(bool &keyPressed, GLFWwindow *&window, std::vector<glm::vec3> & pointLights, std::vector<glm::vec3> & directionLights){
-    if(keyPressed == false) {
+void addlight(bool &keyPressed, GLFWwindow *&window, glm::vec3 & lightDirection, float & lightIntensity, float deltaTime){
+    if(true) {
         if(glfwGetKey(window, GLFW_KEY_K)) {
             keyPressed = true;
-            pointLights.push_back(glm::vec3(0.0, 1.0, 0.0));
-        }else if(glfwGetKey(window, GLFW_KEY_L)){
+            glm::mat4 rotation = glm::rotate(glm::mat4(0.1f), 2 * deltaTime, glm::vec3(0.0, 0.0, 1.0));
+
+            lightDirection = glm::normalize(rotation * glm::vec4 (lightDirection, 1.0f));
+        }else if(glfwGetKey(window, GLFW_KEY_M)){
             keyPressed = true;
-            directionLights.push_back(glm::vec3(0.0, 1.0, 1.0));
-            directionLights.push_back(glm::vec3(0.0, -1.0, -1.0));
+
+            if(lightIntensity < 1.0){
+                lightIntensity += deltaTime * 2;
+            }
+
+        }else if(glfwGetKey(window, GLFW_KEY_L)){
+            if(lightIntensity > 0.0){
+                lightIntensity -= deltaTime * 2;
+            }
         }
     }
     if(!glfwGetKey(window, GLFW_KEY_M) && !glfwGetKey(window, GLFW_KEY_L)){

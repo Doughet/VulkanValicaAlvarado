@@ -510,10 +510,16 @@ void createKitchen(std::vector<ObjectInformation> &listActualObjectInfos, std::v
             false);
     objBaseKitchen.scaleModel(20.0f);
 
-
+    ObjectInformation objMor = ObjectInformation("furniture/MorrisChairRemake/untitled.obj",
+                                                         glm::scale(glm::mat4(1.0f), glm::vec3(3.0f)),
+                                                         "furniture/MorrisChairRemake/bakingMorris.png",
+                                                         false);
+    objMor.scaleModel(20.0f);
 
     listActualObjectInfos.push_back(objBaseKitchen);
+    listActualObjectInfos.push_back(objMor);
     listObjectInfos.push_back(&listActualObjectInfos[0]);
+    listObjectInfos.push_back(&listActualObjectInfos[1]);
 }
 
 void createLivingRoom(std::vector<ObjectInformation> &listActualObjectInfos, std::vector<ObjectInformation*> &listObjectInfos){

@@ -300,9 +300,8 @@ private:
     std::string texturePathSB;
 
     //LIGHTS OBJECTS
-    std::vector<glm::vec3> directionalLights;
-    std::vector<glm::vec3> pointLights;
-
+    glm::vec3 lightDirection;
+    float lightIntensity;
 
     //TEXT ELEMENTS
     VkDescriptorSetLayout DSLText;
@@ -484,7 +483,7 @@ private:
 
             if(CurrentScene.index == ApplicationScene.index){
                 //lights management
-                addlight(keyPressedLight, window, pointLights, directionalLights);
+                addlight(keyPressedLight, window, lightDirection, lightIntensity, deltaTime);
 
                 changeCurrentModel(keyPressed, window, currentTransformationModel, listObjectInfos);
                 selectAddObjectIndex(keyPressedAddSelect, window, addObjectIndex, 0, loadablesVector.size()-1, mustChangeSelectedObject);
@@ -494,7 +493,7 @@ private:
                 changeOrthogonalView(window, WIDTH, HEIGHT, normalProj);
                 changeIsometricView(window, WIDTH, HEIGHT, normalProj);
                 regularProj(window, normalProj);
-                updateUniformBuffer(currentFrame, window, uniformBuffersMapped, lightsBuffersMapped, normalProj, pointLights, directionalLights);
+                updateUniformBuffer(currentFrame, window, currentTransformationModel, uniformBuffersMapped, lightsBuffersMapped, normalProj, lightDirection, lightIntensity);
                 updateTimeBuffer(currentFrame, timeBuffersMapped, currentTime);
 
                 glm::vec3 translation, scale;
@@ -1288,6 +1287,10 @@ private:
         createObjectLoader();
         //createSkyBoxLoader();
 
+        //LIGHTS
+        lightDirection = {0.0,1.0, 1.0};
+        lightIntensity = 0.0f;
+
 
         launchObjectLoader();
         //launchSkyBoxLoader();
@@ -1310,7 +1313,7 @@ private:
         createIndexBuffer(device, physicalDevice, textIndices, commandPool, graphicsQueue,
                           indexBufferText, indexBufferMemoryText);
 
-        createUniformBuffers(device, physicalDevice, swapChainExtent, uniformBuffers, uniformBuffersMemory,
+        createUniformBuffers(device, physicalDevice, swapChainExtent, currentTransformationModel, uniformBuffers, uniformBuffersMemory,
                              uniformBuffersMapped, lightsBuffers, lightsBuffersMemory, lightsBuffersMapped,
                              MAX_FRAMES_IN_FLIGHT);
         createMatrixUniformBuffer(device, physicalDevice, swapChainExtent, matrixUniformBuffers, matrixUniformBuffersMemory,
@@ -2015,8 +2018,8 @@ private:
     }
 
     void createObjectVector(){
-        createKitchen(listActualObjectInfos, listObjectInfos);
-        //createLivingRoom(listActualObjectInfos, listObjectInfos);
+        //createKitchen(listActualObjectInfos, listObjectInfos);
+        createLivingRoom(listActualObjectInfos, listObjectInfos);
         /*
         ObjectInformation pokerRoom{};
         pokerRoom.modelPath = "furniture/Poker Room/scene.gltf";
