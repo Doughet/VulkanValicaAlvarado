@@ -12,10 +12,11 @@ layout(location = 3) in vec3 fragColor;
 layout(location = 4) in flat int outIndex;
 layout(location = 5) in flat int outHasNormal;
 layout(location = 6) in vec3 outCamPos;
+layout(location = 7) in flat int currentSelected; // The camera position in view space
 
 layout(location = 0) out vec4 outColor;
 
-layout(binding = 2) uniform LightBufferObject {
+layout(binding = 2) uniform LightBufferObject{
     vec3 lightDir;
     vec3 lightPos;
     vec3 viewPos;
@@ -23,11 +24,8 @@ layout(binding = 2) uniform LightBufferObject {
     vec3 ambientColor;
     vec3 diffuseColor;
     vec3 specularColor;
-    vec3 directionDir[10];
-    vec3 pointPos[10];
-    int pointsNumber;
     float shininess;
-
+    float lightIntensity;
 } ubo2;
 
 vec3 BRDF(vec3 V, vec3 N, vec3 L, vec3 Md, vec3 Ms, float gamma) {
@@ -45,23 +43,9 @@ void Blinn(){
 
     vec3 lightColor = ubo2.lightColor.rgb;
     vec3 DiffSpec = vec3(0.0f);
+    vec3 L = normalize(ubo2.lightDir);
+    DiffSpec += BRDF(EyeDir, Norm, L, Albedo, vec3(metallic), pex);
 
-
-    //POINT LIGHTS
-    for (int i = 0; i < ubo2.pointsNumber; i++) {
-        vec3 L = normalize(ubo2.pointPos[i] - fragPos);
-        float distance = distance(ubo2.pointPos[i], fragPos);
-        float attenuation = 1.0 / (1.0 + pow(distance, 2.0));
-
-        DiffSpec += BRDF(EyeDir, Norm, L, Albedo * attenuation, vec3(metallic), pex);
-    }
-
-    //DIRECTIONAL LIGHTS
-    for (int i = 0; i < 10; i++) {
-        vec3 L = normalize(ubo2.directionDir[i]);
-
-        DiffSpec += BRDF(EyeDir, Norm, L, Albedo, vec3(metallic), pex);
-    }
 
 
     // A special type of non-uniform ambient color, invented for this course
@@ -76,9 +60,11 @@ void Blinn(){
     (Norm.y > 0 ? cyp : cyn) * (Norm.y * Norm.y) +
     (Norm.z > 0 ? czp : czn) * (Norm.z * Norm.z)) * Albedo;
 
-    vec3 result = DiffSpec * lightColor.rgb;
+    vec3 result = DiffSpec * lightColor.rgb * clamp(ubo2.lightIntensity, 0.0, 1.0);
 
-    outColor = vec4(clamp(result, 0.0f, 1.0f), 1.0f);
+    vec4 res4 = vec4(clamp(result, 0.0f, 1.0f), 1.0f);
+
+    outColor = res4 * float(outIndex != currentSelected) + vec4(0.0f, 1.0f, 0.0f, 1.0f) * float(outIndex == currentSelected);
 }
 
 void lambertModel(){

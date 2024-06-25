@@ -583,6 +583,9 @@ void createKitchen(std::vector<ObjectInformation> &listActualObjectInfos, std::v
                                                    "furniture/KitchenBin/T_bin_baseColor.png",
                                                    true);
     listActualObjectInfos.push_back(objBaseKitchen);
+    listActualObjectInfos.push_back(objMor);
+    listObjectInfos.push_back(&listActualObjectInfos[0]);
+    listObjectInfos.push_back(&listActualObjectInfos[1]);
     listActualObjectInfos.push_back(objFridge);
     //listActualObjectInfos.push_back(objPlant);
    listActualObjectInfos.push_back(objSink);

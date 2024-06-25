@@ -4,6 +4,7 @@ layout(binding = 0) uniform UniformBufferObject {
     mat4 model;
     mat4 view;
     mat4 proj;
+    int currentSelected;
 } ubo; // Camera
 
 layout(binding = 3) uniform MatrixBufferObject {
@@ -26,6 +27,7 @@ layout(location = 3) out vec3 fragColor; // The vertex color
 layout(location = 4) out int outIndex; // The model index
 layout(location = 5) out flat int outHasNormal; // The flag indicating if the vertex has a normal
 layout(location = 6) out vec3 outCamPos; // The camera position in view space
+layout(location = 7) out flat int currentSelected; // The camera position in view space
 
 
 void main() {
@@ -36,6 +38,8 @@ void main() {
     fragTexCoord = inTexCoord;
 
     mat3 normalMatrix = transpose(inverse(mat3(mubo.model[inIndex])));
+
+    currentSelected = ubo.currentSelected;
 
     fragNormal = normalize(normalMatrix * inNormal);
     fragColor = inColor;
