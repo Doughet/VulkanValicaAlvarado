@@ -500,7 +500,7 @@ private:
                 glm::quat rotation;
                 decomposeMatrix(listActualObjectInfos.at(0).modelMatrix, scale, rotation, translation);
 
-                printf("%f, %f, %f \n", translation.x, translation.y, translation.z);
+                //printf("%f, %f, %f \n", translation.x, translation.y, translation.z);
 
             }
 
@@ -2106,7 +2106,7 @@ private:
             if(listActualObjectInfos.at(i).hasNormalMap){
                 normalPaths.push_back(listActualObjectInfos.at(i).normalPath);
             }else{
-                normalPaths.push_back("furniture/MorrisChair/morrisChair_smallChairMat_Normal.tga.png");
+                normalPaths.push_back("animals/people/people_pal.png");
             }
         }
     }

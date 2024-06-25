@@ -202,7 +202,12 @@ void ObjectLoader::fillVertexAndIndices(){
 void ObjectLoader::addObject(ObjectInformation* objectInformation, std::vector<std::string> & texturePaths, std::vector<std::string> & normalPaths, std::vector<ObjectInformation*> &listObjectInfos, std::vector<Vertex> & vertices, std::vector<uint32_t> & indices){
 
     if(objectInformation->mustBeLoaded){
-        loadModel(objectInformation, listObjectInfos.size());
+
+        if(objectInformation->isGltf){
+            loadGLTFModel(objectInformation, listObjectInfos.size());
+        }else{
+            loadModel(objectInformation, listObjectInfos.size());
+        }
     }
 
     texturePaths.push_back(objectInformation->texturePath);
@@ -457,9 +462,210 @@ void ObjectLoader::createLoadablesVector(std::vector<ObjectInformation> & loadab
             "presentations/animals/cat/catPresentation.png"
     );
 
+
+    ObjectInformation objSofa = ObjectInformation(
+            "furniture/Sofa/scene.gltf",
+            glm::scale(glm::mat4(1.0f), glm::vec3(13.0f)),
+            "furniture/Sofa/Material_baseColor.jpeg",
+            true,
+            3,
+            "presentations/furniture/Sofa/ChairPresentation.png"
+    );
+    objSofa.scaleModel(15.0f);
+    objSofa.translateModel(0.0f, 0.0f, 0.1f);
+    objSofa.rotateModel(-83, 'z');
+
+    ObjectInformation objPiano = ObjectInformation(
+            "furniture/PianoRemake/pianoRemake.obj",
+            glm::scale(glm::mat4(1.0f), glm::vec3(13.0f)),
+            "furniture/PianoRemake/BakingDiffuse.png",
+            false,
+            3,
+            "presentations/furniture/PianoRemake/PianoRemakePresentation.png"
+    );
+    objPiano.scaleModel(15.0f);
+    objPiano.translateModel(0.0f, 0.0f, 0.1f);
+    objPiano.rotateModel(-83, 'z');
+
+
+    ObjectInformation objCarpet = ObjectInformation(
+            "furniture/Carpet/round-carpet.obj",
+            glm::scale(glm::mat4(1.0f), glm::vec3(13.0f)),
+            "furniture/Carpet/red_carpet.jpg",
+            false,
+            3,
+            "presentations/furniture/Carpet/CarpetPresentation.png"
+    );
+
+    ObjectInformation objChest = ObjectInformation(
+            "furniture/AccentChestFree/scene.gltf",
+            glm::scale(glm::mat4(1.0f), glm::vec3(13.0f)),
+            "furniture/AccentChestFree/accent_cabinet_Mat_baseColor.jpeg",
+            true,
+            3,
+            "presentations/furniture/Carpet/CarpetPresentation.png"
+    );
+    objChest.scaleModel(15.0f);
+    objChest.rotateModel(90, 'x');
+    objChest.translateModel(0.0f, 0.0f, 0.1f);
+
+
+    ObjectInformation objBamboo = ObjectInformation(
+            "furniture/Bamboo/bamboo.obj",
+            glm::scale(glm::mat4(1.0f), glm::vec3(1.0f)),
+            "furniture/Bamboo/bambooTexture.jpeg",
+            false,
+            3,
+            "presentations/furniture/Bamboo/BambooPresentation.png"
+    );
+
+    objBamboo.scaleModel(15.0f);
+    objBamboo.translateModel(0.0f, 0.0f, 0.1f);
+    objBamboo.rotateModel(-83, 'z');
+
+
+
+    ObjectInformation objChair = ObjectInformation(
+            "furniture/Chair/scene.gltf",
+            glm::scale(glm::mat4(1.0f), glm::vec3(13.0f)),
+            "furniture/Chair/Scene_-_Root_baseColor.png",
+            true,
+            3,
+            "presentations/furniture/Chair/ChairPresentation.png"
+    );
+
+    objChair.scaleModel(15.0f);
+    objChair.translateModel(0.0f, 0.0f, 0.1f);
+    objChair.rotateModel(-83, 'z');
+
+
+    ObjectInformation objChairKitchen = ObjectInformation(
+            "furniture/ClassicRoundTable/scene.gltf",
+            glm::scale(glm::mat4(1.0f), glm::vec3(13.0f)),
+            "furniture/ClassicRoundTable/plywood-cc0.001_baseColor.jpeg",
+            true,
+            3,
+            "presentations/furniture/ClassicRoundTable/RoundTablePresentation.png"
+    );
+
+    objChairKitchen.scaleModel(15.0f);
+    objChairKitchen.translateModel(0.0f, 0.0f, 0.1f);
+    objChairKitchen.rotateModel(-90, 'x');
+
+    ObjectInformation objConsoleTable = ObjectInformation(
+            "furniture/ConsoleTable/scene.gltf",
+            glm::scale(glm::mat4(1.0f), glm::vec3(13.0f)),
+            "furniture/ConsoleTable/ConsoleTable_baseColor.png",
+            true,
+            3,
+            "presentations/furniture/ConsoleTable/ConsoleTablePresentation.png"
+    );
+
+    objConsoleTable.scaleModel(15.0f);
+    objConsoleTable.translateModel(0.0f, 0.0f, 0.1f);
+    objConsoleTable.rotateModel(-83, 'z');
+
+
+
+    ObjectInformation objDinningCar = ObjectInformation(
+            "furniture/DiningCar/scene.gltf",
+            glm::scale(glm::mat4(1.0f), glm::vec3(13.0f)),
+            "furniture/DiningCar/Storage_Cart_Metal_baseColor.png",
+            true,
+            3,
+            "presentations/furniture/DiningCar/DiningCarPresentation.png"
+    );
+
+    objDinningCar.scaleModel(15.0f);
+    objDinningCar.translateModel(0.0f, 0.0f, 0.1f);
+    objDinningCar.rotateModel(-83, 'z');
+
+    ObjectInformation objGardeFaucet = ObjectInformation(
+            "furniture/GardenHouseFaucet/scene.gltf",
+            glm::scale(glm::mat4(1.0f), glm::vec3(13.0f)),
+            "furniture/GardenHouseFaucet/Scene_-_Root_baseColor.png",
+            true,
+            3,
+            "presentations/furniture/GardenFaucet/GardenFaucetPresentation.png"
+    );
+
+    objGardeFaucet.scaleModel(1.0f);
+    objGardeFaucet.translateModel(0.0f, 0.0f, 0.1f);
+    objGardeFaucet.rotateModel(-83, 'z');
+
+
+    ObjectInformation objHedge = ObjectInformation(
+            "furniture/Hedge/hedgeTextured.obj",
+            glm::scale(glm::mat4(1.0f), glm::vec3(6.0f)),
+            "furniture/Hedge/hedge-displacement-texture.jpeg",
+            false,
+            3,
+            "presentations/furniture/Hedge/HedgePresentation.png"
+    );
+
+    objHedge.scaleModel(1.0f);
+    objHedge.translateModel(0.0f, 0.0f, 0.1f);
+    objHedge.rotateModel(-83, 'z');
+
+
+
+    ObjectInformation objKitchenFridge = ObjectInformation(
+            "furniture/KitchenFridge/scene.gltf",
+            glm::scale(glm::mat4(1.0f), glm::vec3(13.0f)),
+            "furniture/KitchenFridge/baked_baseColor.png",
+            true,
+            3,
+            "presentations/furniture/KitchenFridge/KitchenFridgePresentation.png"
+    );
+
+    objKitchenFridge.scaleModel(15.0f);
+    objKitchenFridge.translateModel(0.0f, 0.0f, 0.1f);
+    objKitchenFridge.rotateModel(-83, 'z');
+
+
+    ObjectInformation objKitchenSink = ObjectInformation(
+            "furniture/KitchenSink/scene.gltf",
+            glm::scale(glm::mat4(1.0f), glm::vec3(13.0f)),
+            "furniture/KitchenSink/cabinet_baseColor.png",
+            true,
+            3,
+            "presentations/furniture/KitchenSink/KitchenSinkPresentation.png"
+    );
+    objKitchenSink.scaleModel(6.0f);
+    objKitchenSink.translateModel(0.0f, 0.0f, 0.1f);
+    objKitchenSink.rotateModel(-83, 'z');
+
+    ObjectInformation objMorrisChair = ObjectInformation(
+            "furniture/MorrisChairRemake/untitled.obj",
+            glm::scale(glm::mat4(1.0f), glm::vec3(13.0f)),
+            "furniture/MorrisChairRemake/bakingMorris.png",
+            false,
+            3,
+            "presentations/furniture/MorrisChairRemake/MorrisChairRemakePresentation.png"
+    );
+
+    objMorrisChair.scaleModel(15.0f);
+    objMorrisChair.translateModel(0.0f, 0.0f, 0.1f);
+    objMorrisChair.rotateModel(-83, 'z');
+
+
+
     loadables.push_back(objectCoconutTree);
     loadables.push_back(objectLaptop);
     loadables.push_back(objectCat);
+    loadables.push_back(objSofa);
+    loadables.push_back(objPiano);
+    loadables.push_back(objCarpet);
+    loadables.push_back(objBamboo);
+    loadables.push_back(objChair);
+    loadables.push_back(objChairKitchen);
+    loadables.push_back(objConsoleTable);
+    loadables.push_back(objDinningCar);
+    loadables.push_back(objGardeFaucet);
+    loadables.push_back(objHedge);
+    loadables.push_back(objKitchenFridge);
+    loadables.push_back(objKitchenSink);
+    loadables.push_back(objMorrisChair);
 }
 
 void createEmptyRoom(std::vector<ObjectInformation> &listActualObjectInfos, std::vector<ObjectInformation*> &listObjectInfos,
@@ -583,16 +789,13 @@ void createKitchen(std::vector<ObjectInformation> &listActualObjectInfos, std::v
                                                    "furniture/KitchenBin/T_bin_baseColor.png",
                                                    true);
     listActualObjectInfos.push_back(objBaseKitchen);
-    listActualObjectInfos.push_back(objMor);
-    listObjectInfos.push_back(&listActualObjectInfos[0]);
-    listObjectInfos.push_back(&listActualObjectInfos[1]);
     listActualObjectInfos.push_back(objFridge);
     //listActualObjectInfos.push_back(objPlant);
-   listActualObjectInfos.push_back(objSink);
+    listActualObjectInfos.push_back(objSink);
     listActualObjectInfos.push_back(objDog);
     listActualObjectInfos.push_back(objWineCoolerFridge);
    // listActualObjectInfos.push_back(objHangingLights);
-   listActualObjectInfos.push_back(objTable);
+    listActualObjectInfos.push_back(objTable);
     listActualObjectInfos.push_back(objToiletPaper);
     listActualObjectInfos.push_back(objToaster);
     listActualObjectInfos.push_back(objWatermelon);
