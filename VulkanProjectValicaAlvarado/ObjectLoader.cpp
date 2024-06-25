@@ -512,16 +512,16 @@ void createKitchen(std::vector<ObjectInformation> &listActualObjectInfos, std::v
     ObjectInformation objFridge = ObjectInformation("furniture/KitchenFridge/scene.gltf",
                                                          glm::scale(glm::mat4(1.0f), glm::vec3(60.0f)),
                                                          "furniture/KitchenFridge/baked_baseColor.png",
-                                                         true, 1, "presentation/furniture/FridgeKitchen/FridgeKitchen.png");
+                                                         true);//, 1, "presentation/furniture/FridgeKitchen/FridgeKitchen.png");
     objFridge.rotateModel(180, 'x');
     objFridge.rotateModel(180, 'y');
     objFridge.translateModel(-3.0f, 3.5f, 0.0f);
-/*
+
     ObjectInformation objPlant = ObjectInformation("furniture/BananaPlantWithPot/scene.gltf",
                                                     glm::scale(glm::mat4(1.0f), glm::vec3(5.0f)),
                                                     "furniture/BananaPlantPot/material_3_baseColor.jpeg",
                                                     true, 1, "presentations/furniture/BananaPlantWithPot/BananaPlantWithPot.png");
-    objPlant.rotateModel(180, 'x');*/
+    objPlant.rotateModel(180, 'x');
 
    ObjectInformation objSink = ObjectInformation("furniture/KitchenSink/scene.gltf",
                                                    glm::scale(glm::mat4(1.0f), glm::vec3(25.0f)),
@@ -543,7 +543,7 @@ void createKitchen(std::vector<ObjectInformation> &listActualObjectInfos, std::v
                                                  true/*, 1, "presentations/animals/KitchenSink/KitchenSink.png"*/);
    //objWineCoolerFridge.rotateModel(180, 'x');
     //objWineCoolerFridge.rotateModel(180, 'y');
-   objWineCoolerFridge.translateModel(-5.0f, 5.0f, -0.4f);
+  // objWineCoolerFridge.translateModel(-5.0f, 5.0f, -0.4f);
 
   /*  ObjectInformation objHangingLights = ObjectInformation("furniture/RusticHangingKitchenLights/scene.gltf",
                                                               glm::scale(glm::mat4(1.0f), glm::vec3(100.0f)),
@@ -554,16 +554,50 @@ void createKitchen(std::vector<ObjectInformation> &listActualObjectInfos, std::v
                                                            "furniture/OrnamentalWoodenDiningTable/Table_Leg_Wood_BaseColor.png",
                                                            false);
 
-
-
+    ObjectInformation objWatermelon = ObjectInformation("furniture/Watermelon/watermelon_full n half.obj",
+                                                   glm::scale(glm::mat4(1.0f), glm::vec3(50.0f)),
+                                                   "furniture/Watermelon/watermelon_full n half-TM_u0_v0.png",
+                                                   false);
+    ObjectInformation objToiletPaper = ObjectInformation("furniture/ToiletPaper/scene.gltf",
+                                                        glm::scale(glm::mat4(1.0f), glm::vec3(50.0f)),
+                                                        "furniture/toiletScottex/DefaultMaterial_baseColor.jpeg",
+                                                        true);
+    ObjectInformation objToaster = ObjectInformation("furniture/Toaster/scene.gltf",
+                                                         glm::scale(glm::mat4(1.0f), glm::vec3(50.0f)),
+                                                         "furniture/Toaster/toaster_baseColor.png",
+                                                         true);
+    ObjectInformation objStoneTiger = ObjectInformation("furniture/StoneTiger/scene.gltf",
+                                                     glm::scale(glm::mat4(1.0f), glm::vec3(50.0f)),
+                                                     "furniture/StoneTiger/Archmodels_64_040__0_baseColor.jpeg",
+                                                     true);
+    ObjectInformation objLaptop = ObjectInformation("furniture/Laptop/SAMSUNG_Laptop.obj",
+                                                        glm::scale(glm::mat4(1.0f), glm::vec3(50.0f)),
+                                                        "textures/furniture/Laptop/SLT_Dif.png",
+                                                        false);
+    ObjectInformation objChair = ObjectInformation("furniture/Laptop/scene.gltf",
+                                                    glm::scale(glm::mat4(1.0f), glm::vec3(50.0f)),
+                                                    "furniture/ChairKitchen/WoodenTexture.jpg",
+                                                    true);
+    ObjectInformation objBin = ObjectInformation("furniture/KitchenBin/scene.gltf",
+                                                   glm::scale(glm::mat4(1.0f), glm::vec3(50.0f)),
+                                                   "furniture/KitchenBin/T_bin_baseColor.png",
+                                                   true);
     listActualObjectInfos.push_back(objBaseKitchen);
     listActualObjectInfos.push_back(objFridge);
     //listActualObjectInfos.push_back(objPlant);
-    listActualObjectInfos.push_back(objSink);
+   listActualObjectInfos.push_back(objSink);
     listActualObjectInfos.push_back(objDog);
     listActualObjectInfos.push_back(objWineCoolerFridge);
    // listActualObjectInfos.push_back(objHangingLights);
    listActualObjectInfos.push_back(objTable);
+    listActualObjectInfos.push_back(objToiletPaper);
+    listActualObjectInfos.push_back(objToaster);
+    listActualObjectInfos.push_back(objWatermelon);
+    listActualObjectInfos.push_back(objStoneTiger);
+    listActualObjectInfos.push_back(objLaptop);
+    listActualObjectInfos.push_back(objChair);
+    listActualObjectInfos.push_back(objBin);
+
 
 
     for(int i = 0; i < listActualObjectInfos.size(); i++){
@@ -649,13 +683,7 @@ void createLivingRoom(std::vector<ObjectInformation> &listActualObjectInfos, std
     listActualObjectInfos.push_back(objSofa);
     //listActualObjectInfos.push_back(objTable);
 
-    listObjectInfos.push_back(&listActualObjectInfos[0]);
-    listObjectInfos.push_back(&listActualObjectInfos[1]);
-    listObjectInfos.push_back(&listActualObjectInfos[2]);
-    listObjectInfos.push_back(&listActualObjectInfos[3]);
-    listObjectInfos.push_back(&listActualObjectInfos[4]);
-    listObjectInfos.push_back(&listActualObjectInfos[5]);
-    listObjectInfos.push_back(&listActualObjectInfos[6]);
-    listObjectInfos.push_back(&listActualObjectInfos[7]);
-   // listObjectInfos.push_back(&listActualObjectInfos[8]);
+    for(int i = 0; i < listActualObjectInfos.size(); i++){
+        listObjectInfos.push_back(&listActualObjectInfos[i]);
+    }
 }

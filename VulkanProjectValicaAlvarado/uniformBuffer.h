@@ -84,8 +84,8 @@ void changeOrthogonalView(GLFWwindow* &window, int screenWidth, int screenHeight
 
         float orthoSize = 0.7f;
 
-       // ubo.proj[1][1] *= -1;
-       ubo.proj = glm::ortho(-orthoSize * screenWidth / static_cast<float>(screenHeight),
+        // ubo.proj[1][1] *= -1;
+        ubo.proj = glm::ortho(-orthoSize * screenWidth / static_cast<float>(screenHeight),
                               orthoSize * screenWidth / static_cast<float>(screenHeight),
                               -orthoSize, orthoSize, 0.01f,500.0f);
 
@@ -157,8 +157,8 @@ uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, V
 }
 
 void updateTimeBuffer(uint32_t currentImage,
-                               std::vector<void*> &timeBufferMapped,
-                               float currentTime){
+                      std::vector<void*> &timeBufferMapped,
+                      float currentTime){
 
 
     TimeBuffer tbo{
@@ -382,11 +382,11 @@ void recordCommandBufferApplication(VkCommandBuffer commandBuffer, uint32_t imag
 }
 
 void recordCommandBufferMenu(VkCommandBuffer commandBuffer, uint32_t imageIndex, VkRenderPass &renderPass,
-                                    std::vector<VkFramebuffer> &swapChainFramebuffers, VkExtent2D &swapChainExtent,
-                                    VkPipeline &graphicsPipelineMenu, VkBuffer &vertexBufferMenu, VkBuffer &indexBufferMenu,
-                                    VkPipelineLayout &pipelineLayoutMenu, std::vector<uint32_t> &indicesMenu,
-                                    std::vector<VkDescriptorSet> &descriptorSetsMenu,
-                                    uint32_t &currentFrame) {
+                             std::vector<VkFramebuffer> &swapChainFramebuffers, VkExtent2D &swapChainExtent,
+                             VkPipeline &graphicsPipelineMenu, VkBuffer &vertexBufferMenu, VkBuffer &indexBufferMenu,
+                             VkPipelineLayout &pipelineLayoutMenu, std::vector<uint32_t> &indicesMenu,
+                             std::vector<VkDescriptorSet> &descriptorSetsMenu,
+                             uint32_t &currentFrame) {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 

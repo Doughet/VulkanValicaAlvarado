@@ -357,8 +357,8 @@ void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCo
 }
 
 void createImages(uint32_t width, uint32_t height, uint32_t mipLevels, uint32_t arrayNumber, VkSampleCountFlagBits numSamples,
-                 VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
-                 VkImage& image, VkDeviceMemory& imageMemory, VkDevice &device, VkPhysicalDevice &physicalDevice) {
+                  VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
+                  VkImage& image, VkDeviceMemory& imageMemory, VkDevice &device, VkPhysicalDevice &physicalDevice) {
     VkImageCreateInfo imageInfo{};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -394,8 +394,8 @@ void createImages(uint32_t width, uint32_t height, uint32_t mipLevels, uint32_t 
 
 
 void createTextureImagesSB(uint32_t &mipLevels, VkDevice &device, VkPhysicalDevice &physicalDevice,
-                         VkCommandPool &commandPool, VkQueue &graphicsQueue, VkImage &textureImage,
-                         VkDeviceMemory &textureImageMemory, std::vector<std::string> texturePaths){
+                           VkCommandPool &commandPool, VkQueue &graphicsQueue, VkImage &textureImage,
+                           VkDeviceMemory &textureImageMemory, std::vector<std::string> texturePaths){
 
     int width, height, channels;
     stbi_uc* pixels;

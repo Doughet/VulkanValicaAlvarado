@@ -76,7 +76,7 @@ struct Scene{
             std::vector<VkPipelineLayout*> pipelineLayoutReferences,
             std::vector<VkDescriptorSetLayout*> descriptorSetLayoutsReferences,
             std::vector<std::vector<VkDescriptorSet>*> descriptorSetsReferences
-            ){
+    ){
         this->index = index;
         this->pipelineReferences = std::move(pipelineReferences);
         this->pipelineLayoutReferences = std::move(pipelineLayoutReferences);
@@ -334,7 +334,7 @@ private:
 
     std::vector<uint32_t > textIndices = {0, 2, 1, 2, 0, 3,
                                           4, 6, 5, 6, 4, 7,
-                                          };
+    };
 
 
     VkBuffer vertexBufferText;
@@ -1204,7 +1204,7 @@ private:
                 {&pipelineLayoutMenu},
                 {&DSLMenu},
                 {&descriptorSetsMenu}
-                );
+        );
 
         ApplicationScene = Scene(
                 1,
@@ -1212,7 +1212,7 @@ private:
                 {&pipelineLayout, &pipelineLayoutSkyBox, &pipelineLayoutText},
                 {&descriptorSetLayout, &DSLskyBox, &DSLText},
                 {&descriptorSets, &descriptorSetsSkyBox, &descriptorSetsMenu}
-                );
+        );
         CurrentScene = MenuScene;
     }
 
@@ -1316,8 +1316,8 @@ private:
         createMatrixUniformBuffer(device, physicalDevice, swapChainExtent, matrixUniformBuffers, matrixUniformBuffersMemory,
                                   matrixUniformBuffersMapped, MAX_FRAMES_IN_FLIGHT);
         createTimeBuffer(device, physicalDevice, swapChainExtent, timeBuffers, timeBuffersMemory,
-                             timeBuffersMapped,
-                             MAX_FRAMES_IN_FLIGHT);
+                         timeBuffersMapped,
+                         MAX_FRAMES_IN_FLIGHT);
     }
 
     void UnLoadSceneApplication(){
