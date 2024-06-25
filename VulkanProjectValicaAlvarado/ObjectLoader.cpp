@@ -695,15 +695,24 @@ void createEmptyRoom(std::vector<ObjectInformation> &listActualObjectInfos, std:
             true);
     floor.translateModel(0.0f, 0.0f, -96.0f);
 
+    ObjectInformation room = ObjectInformation(
+            "furniture/LivingRoom/livingRoomObject.obj",
+            glm::scale(glm::mat4(1.0f), glm::vec3(500, 400, 300)),
+            "furniture/LivingRoom/wood_livingroom.jpg",
+            false);
+    room.translateModel(0.33, -0.048, -0.36);
 
-    listActualObjectInfos.push_back(floor);
+
+    /*listActualObjectInfos.push_back(floor);
     listActualObjectInfos.push_back(objWall1);
-    listActualObjectInfos.push_back(objWall2);
+    listActualObjectInfos.push_back(objWall2);*/
+    listActualObjectInfos.push_back(room);
 
     if(!insideFunction){
-        listObjectInfos.push_back(&listActualObjectInfos[0]);
+        /*listObjectInfos.push_back(&listActualObjectInfos[0]);
         listObjectInfos.push_back(&listActualObjectInfos[1]);
-        listObjectInfos.push_back(&listActualObjectInfos[2]);
+        listObjectInfos.push_back(&listActualObjectInfos[2]);*/
+        listObjectInfos.push_back(&listActualObjectInfos[3]);
     }
 }
 
@@ -828,9 +837,9 @@ void createLivingRoom(std::vector<ObjectInformation> &listActualObjectInfos, std
     objCarpet.translateModel(0.0f, 0.0f, -7.5f);
 
     ObjectInformation objWildWestPiano = ObjectInformation(
-            "furniture/WildWestPiano/Piano.obj",
+            "furniture/PianoRemake/pianoRemake.obj",
             glm::scale(glm::mat4(1.0f), glm::vec3(200.0f)),
-            "furniture/WildWestPiano/Piano_Wood_BaseColor.png",
+            "furniture/PianoRemake/BakingDiffuse.png",
             false);
     objWildWestPiano.translateModel(7.8f, 0.0f, -0.4f);
     objWildWestPiano.rotateModel(90.0f, 'z');

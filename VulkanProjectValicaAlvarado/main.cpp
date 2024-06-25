@@ -164,10 +164,6 @@ private:
     VkImageView depthImageView;
 
     uint32_t mipLevels;
-    VkImage textureImage;
-    VkDeviceMemory textureImageMemory;
-    VkImageView textureImageView;
-    VkSampler textureSampler;
 
 
     //SCENES
@@ -181,13 +177,6 @@ private:
     std::vector<VkImageView> textureImageViews;
     std::vector<VkDeviceMemory> textureImageMemorys;
     std::vector<VkSampler> textureSamplers;
-
-
-    //NORMALS
-    std::vector<VkImage> normalImages;
-    std::vector<VkImageView> normalImageViews;
-    std::vector<VkDeviceMemory> normalImageMemorys;
-    std::vector<VkSampler> normalSamplers;
 
     std::vector<ObjectInformation*> listObjectInfos;
     std::vector<ObjectInformation> listActualObjectInfos;
@@ -500,7 +489,7 @@ private:
                 glm::quat rotation;
                 decomposeMatrix(listActualObjectInfos.at(0).modelMatrix, scale, rotation, translation);
 
-                //printf("%f, %f, %f \n", translation.x, translation.y, translation.z);
+                printf("%f, %f, %f \n", translation.x, translation.y, translation.z);
 
             }
 
@@ -575,16 +564,12 @@ private:
         //update the texture images and memories
         updateTextureImagesAdd(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImages,
                                textureImageMemorys, listActualObjectInfos[listActualObjectInfos.size() - 1].texturePath);
-        updateTextureImagesAdd(mipLevels, device, physicalDevice, commandPool, graphicsQueue, normalImages,
-                               normalImageMemorys, listActualObjectInfos[listActualObjectInfos.size() - 1].normalPath);
 
         //update the texture image views
         updateTextureImageViewsAdd(device, textureImages.at(textureImages.size() - 1), mipLevels, textureImageViews);
         //update the texture image samplers
-        updateTextureImageViewsAdd(device, normalImages.at(normalImages.size() - 1), mipLevels, normalImageViews);
         //update the texture image samplers
         updateTextureImageSamplersAdd(physicalDevice, device, textureSamplers);
-        updateTextureImageSamplersAdd(physicalDevice, device, normalSamplers);
         //update the descriptors
         recreateDescriptorsAndPipeline();
 
@@ -758,13 +743,10 @@ private:
         //TEXTURE IMAGE
         //TEXTURE MEMORY
         deleteTextureImages(device, textureImages, textureImageMemorys, posModel);
-        deleteTextureImages(device, normalImages, normalImageMemorys, posModel);
         //TEXTURE IMAGE VIEW
         deleteTextureImagesViews(device, posModel, mipLevels, textureImageViews);
-        deleteTextureImagesViews(device, posModel, mipLevels, normalImageViews);
         //TEXTURE SAMPLER
         deleteTextureImageSampler(device, textureSamplers, posModel);
-        deleteTextureImageSampler(device, normalSamplers, posModel);
 
         texturePaths.erase(texturePaths.begin() + posModel);
         normalPaths.erase(normalPaths.begin() + posModel);
@@ -852,59 +834,53 @@ private:
 
         vkDestroyRenderPass(device, renderPass, nullptr);
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            vkDestroyBuffer(device, uniformBuffers[i], nullptr);
-            vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
+        if(CurrentScene.index == ApplicationScene.index){
+            for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+                vkDestroyBuffer(device, uniformBuffers[i], nullptr);
+                vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
 
-            vkDestroyBuffer(device, lightsBuffers[i], nullptr);
-            vkFreeMemory(device, lightsBuffersMemory[i], nullptr);
+                vkDestroyBuffer(device, lightsBuffers[i], nullptr);
+                vkFreeMemory(device, lightsBuffersMemory[i], nullptr);
 
-            vkDestroyBuffer(device, matrixUniformBuffers[i], nullptr);
-            vkFreeMemory(device, matrixUniformBuffersMemory[i], nullptr);
+                vkDestroyBuffer(device, matrixUniformBuffers[i], nullptr);
+                vkFreeMemory(device, matrixUniformBuffersMemory[i], nullptr);
 
-            vkDestroyBuffer(device, timeBuffers[i], nullptr);
-            vkFreeMemory(device, timeBuffersMemory[i], nullptr);
+                vkDestroyBuffer(device, timeBuffers[i], nullptr);
+                vkFreeMemory(device, timeBuffersMemory[i], nullptr);
+            }
         }
+
 
         vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 
-        for (int i = 0; i < textureImages.size(); ++i) {
-            vkDestroySampler(device, textureSamplers[i], nullptr);
-            vkDestroyImageView(device, textureImageViews[i], nullptr);
+        if(CurrentScene.index == ApplicationScene.index){
+            for (int i = 0; i < textureImages.size(); ++i) {
+                vkDestroySampler(device, textureSamplers[i], nullptr);
+                vkDestroyImageView(device, textureImageViews[i], nullptr);
 
-            vkDestroyImage(device, textureImages[i], nullptr);
-            vkFreeMemory(device, textureImageMemorys[i], nullptr);
+                vkDestroyImage(device, textureImages[i], nullptr);
+                vkFreeMemory(device, textureImageMemorys[i], nullptr);
+            }
 
-            vkDestroySampler(device, normalSamplers[i], nullptr);
-            vkDestroyImageView(device, normalImageViews[i], nullptr);
+            vkDestroySampler(device, skyboxSampler, nullptr);
+            vkDestroyImageView(device, skyboxImageView, nullptr);
 
-            vkDestroyImage(device, normalImages[i], nullptr);
-            vkFreeMemory(device, normalImageMemorys[i], nullptr);
+            vkDestroyImage(device, skyboxImage, nullptr);
+            vkFreeMemory(device, skyboxImageMemory, nullptr);
+
+            vkDestroySampler(device, TextSampler[0], nullptr);
+            vkDestroyImageView(device, TextImageView[0], nullptr);
+
+            vkDestroyImage(device, TextImage[0], nullptr);
+            vkFreeMemory(device, TextImageMemory[0], nullptr);
+
+            vkDestroySampler(device, TextSampler[1], nullptr);
+            vkDestroyImageView(device, TextImageView[1], nullptr);
+
+            vkDestroyImage(device, TextImage[1], nullptr);
+            vkFreeMemory(device, TextImageMemory[1], nullptr);
         }
 
-        vkDestroySampler(device, textureSampler, nullptr);
-        vkDestroyImageView(device, textureImageView, nullptr);
-
-        vkDestroyImage(device, textureImage, nullptr);
-        vkFreeMemory(device, textureImageMemory, nullptr);
-
-        vkDestroySampler(device, skyboxSampler, nullptr);
-        vkDestroyImageView(device, skyboxImageView, nullptr);
-
-        vkDestroyImage(device, skyboxImage, nullptr);
-        vkFreeMemory(device, skyboxImageMemory, nullptr);
-
-        vkDestroySampler(device, TextSampler[0], nullptr);
-        vkDestroyImageView(device, TextImageView[0], nullptr);
-
-        vkDestroyImage(device, TextImage[0], nullptr);
-        vkFreeMemory(device, TextImageMemory[0], nullptr);
-
-        vkDestroySampler(device, TextSampler[1], nullptr);
-        vkDestroyImageView(device, TextImageView[1], nullptr);
-
-        vkDestroyImage(device, TextImage[1], nullptr);
-        vkFreeMemory(device, TextImageMemory[1], nullptr);
 
         //MENU
         vkDestroySampler(device, menuSampler, nullptr);
@@ -919,27 +895,28 @@ private:
         vkDestroyDescriptorSetLayout(device, DSLText, nullptr);
         vkDestroyDescriptorSetLayout(device, DSLMenu, nullptr);
 
-        vkDestroyBuffer(device, indexBuffer, nullptr);
-        vkFreeMemory(device, indexBufferMemory, nullptr);
+        if(CurrentScene.index == ApplicationScene.index){
+            vkDestroyBuffer(device, indexBuffer, nullptr);
+            vkFreeMemory(device, indexBufferMemory, nullptr);
 
-        vkDestroyBuffer(device, indexBufferSB, nullptr);
-        vkFreeMemory(device, indexBufferMemorySB, nullptr);
+            vkDestroyBuffer(device, indexBufferSB, nullptr);
+            vkFreeMemory(device, indexBufferMemorySB, nullptr);
 
-        vkDestroyBuffer(device, indexBufferText, nullptr);
-        vkFreeMemory(device, indexBufferMemoryText, nullptr);
+            vkDestroyBuffer(device, indexBufferText, nullptr);
+            vkFreeMemory(device, indexBufferMemoryText, nullptr);
+
+            vkDestroyBuffer(device, vertexBuffer, nullptr);
+            vkFreeMemory(device, vertexBufferMemory, nullptr);
+
+            vkDestroyBuffer(device, vertexBufferSB, nullptr);
+            vkFreeMemory(device, vertexBufferMemorySB, nullptr);
+
+            vkDestroyBuffer(device, vertexBufferText, nullptr);
+            vkFreeMemory(device, vertexBufferMemoryText, nullptr);
+        }
 
         vkDestroyBuffer(device, indexBufferMenu, nullptr);
         vkFreeMemory(device, indexBufferMemoryMenu, nullptr);
-
-
-        vkDestroyBuffer(device, vertexBuffer, nullptr);
-        vkFreeMemory(device, vertexBufferMemory, nullptr);
-
-        vkDestroyBuffer(device, vertexBufferSB, nullptr);
-        vkFreeMemory(device, vertexBufferMemorySB, nullptr);
-
-        vkDestroyBuffer(device, vertexBufferText, nullptr);
-        vkFreeMemory(device, vertexBufferMemoryText, nullptr);
 
         vkDestroyBuffer(device, vertexBufferMenu, nullptr);
         vkFreeMemory(device, vertexBufferMemoryMenu, nullptr);
@@ -1254,12 +1231,8 @@ private:
 
     void LoadSceneApplicationInit(){
         //CREATE TEXTURES AND NORMALS
-        createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImage,
-                           textureImageMemory, "fonts/tata_0.png");
         createTextureImages(mipLevels, device, physicalDevice, commandPool, graphicsQueue, textureImages,
                             textureImageMemorys, texturePaths);
-        createTextureImages(mipLevels, device, physicalDevice, commandPool, graphicsQueue, normalImages,
-                            normalImageMemorys, normalPaths);
 
         createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, TextImage[0],
                            TextImageMemory[0], "fonts/tata_0.png");
@@ -1268,16 +1241,12 @@ private:
 
         //TEXT IMAGE
 
-        createTextureImageView(device, textureImage, mipLevels, textureImageView);
         createTextureImageViews(device, textureImages, mipLevels, textureImageViews);
-        createTextureImageViews(device, normalImages, mipLevels, normalImageViews);
         createTextureImageView(device, TextImage[0], mipLevels, TextImageView[0]);
         createTextureImageView(device, TextImage[1], mipLevels, TextImageView[1]);
 
 
-        createTextureSampler(physicalDevice, device, textureSampler);
         createTextureSamplers(physicalDevice, device, textureSamplers, texturePaths.size());
-        createTextureSamplers(physicalDevice, device, normalSamplers, normalPaths.size());
         createTextureSampler(physicalDevice, device, TextSampler[0]);
         createTextureSampler(physicalDevice, device, TextSampler[1]);
 
@@ -1476,11 +1445,9 @@ private:
     void createDescriptorSetLayout() {
         std::vector<VkDescriptorSetLayoutBinding> bindings = {
                 {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr}, // UBO for vertex
-                {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr}, // Texture
-                {2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr}, // UBO for lights
-                {3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr}, // UBO for matrix
-                {4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast<uint32_t>(texturePaths.size()), VK_SHADER_STAGE_FRAGMENT_BIT, nullptr}, // Multiple textures
-                {5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast<uint32_t>(normalPaths.size()), VK_SHADER_STAGE_VERTEX_BIT, nullptr} // Multiple normals
+                {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr}, // UBO for lights
+                {2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr}, // UBO for matrix
+                {3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast<uint32_t>(texturePaths.size()), VK_SHADER_STAGE_FRAGMENT_BIT, nullptr}, // Multiple textures
         };
 
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
@@ -2018,8 +1985,8 @@ private:
     }
 
     void createObjectVector(){
-        //createKitchen(listActualObjectInfos, listObjectInfos);
-        createLivingRoom(listActualObjectInfos, listObjectInfos);
+        createKitchen(listActualObjectInfos, listObjectInfos);
+        //createLivingRoom(listActualObjectInfos, listObjectInfos);
         /*
         ObjectInformation pokerRoom{};
         pokerRoom.modelPath = "furniture/Poker Room/scene.gltf";
@@ -2885,18 +2852,12 @@ private:
             bufferInfo2.offset = 0;
             bufferInfo2.range = sizeof(LightsBufferObject);
 
-            VkDescriptorImageInfo imageInfo{};
-            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView = textureImageView;
-            imageInfo.sampler = textureSampler;
-
             VkDescriptorBufferInfo matrixBufferInfo{};
             matrixBufferInfo.buffer = matrixUniformBuffers[i];
             matrixBufferInfo.offset = 0;
             matrixBufferInfo.range = sizeof(MatrixBufferObject);
 
             std::vector<VkDescriptorImageInfo> imageInfos;
-            std::vector<VkDescriptorImageInfo> normalInfos;
 
             for (size_t j = 0; j < texturePaths.size(); ++j) {
                 VkDescriptorImageInfo imageInfoO;
@@ -2908,17 +2869,7 @@ private:
                 imageInfos.push_back(imageInfoO);
             }
 
-            for (size_t j = 0; j < normalPaths.size(); ++j) {
-                VkDescriptorImageInfo imageInfoO;
-
-                imageInfoO.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                imageInfoO.imageView = normalImageViews[j];
-                imageInfoO.sampler = normalSamplers[j];
-
-                normalInfos.push_back(imageInfoO);
-            }
-
-            std::array<VkWriteDescriptorSet, 6> descriptorWrites{};
+            std::array<VkWriteDescriptorSet, 4> descriptorWrites{};
 
             descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptorWrites[0].dstSet = descriptorSets[i];
@@ -2928,13 +2879,14 @@ private:
             descriptorWrites[0].descriptorCount = 1;
             descriptorWrites[0].pBufferInfo = &bufferInfo1;
 
+
             descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptorWrites[1].dstSet = descriptorSets[i];
             descriptorWrites[1].dstBinding = 1;
             descriptorWrites[1].dstArrayElement = 0;
-            descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptorWrites[1].descriptorCount = 1;
-            descriptorWrites[1].pImageInfo = &imageInfo;
+            descriptorWrites[1].pBufferInfo = &bufferInfo2;
 
             descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptorWrites[2].dstSet = descriptorSets[i];
@@ -2942,31 +2894,15 @@ private:
             descriptorWrites[2].dstArrayElement = 0;
             descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptorWrites[2].descriptorCount = 1;
-            descriptorWrites[2].pBufferInfo = &bufferInfo2;
+            descriptorWrites[2].pBufferInfo = &matrixBufferInfo;
 
             descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptorWrites[3].dstSet = descriptorSets[i];
-            descriptorWrites[3].dstBinding = 3;
+            descriptorWrites[3].dstBinding = 3; // The same as the layout binding index
             descriptorWrites[3].dstArrayElement = 0;
-            descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            descriptorWrites[3].descriptorCount = 1;
-            descriptorWrites[3].pBufferInfo = &matrixBufferInfo;
-
-            descriptorWrites[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrites[4].dstSet = descriptorSets[i];
-            descriptorWrites[4].dstBinding = 4; // The same as the layout binding index
-            descriptorWrites[4].dstArrayElement = 0;
-            descriptorWrites[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            descriptorWrites[4].descriptorCount = texturePaths.size();
-            descriptorWrites[4].pImageInfo = imageInfos.data();
-
-            descriptorWrites[5].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrites[5].dstSet = descriptorSets[i];
-            descriptorWrites[5].dstBinding = 5; // The same as the layout binding index
-            descriptorWrites[5].dstArrayElement = 0;
-            descriptorWrites[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            descriptorWrites[5].descriptorCount = normalPaths.size();
-            descriptorWrites[5].pImageInfo = normalInfos.data();
+            descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            descriptorWrites[3].descriptorCount = texturePaths.size();
+            descriptorWrites[3].pImageInfo = imageInfos.data();
 
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }

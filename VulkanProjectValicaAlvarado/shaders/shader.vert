@@ -7,7 +7,7 @@ layout(binding = 0) uniform UniformBufferObject {
     int currentSelected;
 } ubo; // Camera
 
-layout(binding = 3) uniform MatrixBufferObject {
+layout(binding = 2) uniform MatrixBufferObject {
     mat4 model[20]; // Matrix containing all the models
 } mubo;
 
