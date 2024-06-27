@@ -478,7 +478,9 @@ private:
                 selectAddObjectIndex(keyPressedAddSelect, window, addObjectIndex, 0, loadablesVector.size()-1, mustChangeSelectedObject);
                 addObject(keyPressedAdd, window, addObjectIndex, mustAddObject);
                 deleteObject(keyPressedDelete, window, mustDelete);
-                updateTransformationData(currentTransformationModel, window, listObjectInfos, deltaTime);
+                if(!listObjectInfos.empty()){
+                    updateTransformationData(currentTransformationModel, window, listObjectInfos, deltaTime);
+                }
                 changeOrthogonalView(window, WIDTH, HEIGHT, normalProj);
                 changeIsometricView(window, WIDTH, HEIGHT, normalProj);
                 regularProj(window, normalProj);
@@ -487,9 +489,9 @@ private:
 
                 glm::vec3 translation, scale;
                 glm::quat rotation;
-                decomposeMatrix(listActualObjectInfos.at(0).modelMatrix, scale, rotation, translation);
+                //decomposeMatrix(listActualObjectInfos.at(2).modelMatrix, scale, rotation, translation);
 
-                printf("%f, %f, %f \n", translation.x, translation.y, translation.z);
+                //printf("%f, %f, %f \n", translation.x, translation.y, translation.z);
 
             }
 
@@ -501,7 +503,8 @@ private:
                 int a = 0;
             }
 
-            if(mustDelete){
+            if(mustDelete && !listActualObjectInfos.empty() && currentTransformationModel >= 0
+            && currentTransformationModel < listActualObjectInfos.size()){
                 deleteModel(currentTransformationModel);
                 mustDelete = false;
                 currentTransformationModel = 0;
@@ -749,7 +752,6 @@ private:
         deleteTextureImageSampler(device, textureSamplers, posModel);
 
         texturePaths.erase(texturePaths.begin() + posModel);
-        normalPaths.erase(normalPaths.begin() + posModel);
 
         // 3: Remove Matrix  and move all the following matrix one step to the left
 
@@ -1235,9 +1237,9 @@ private:
                             textureImageMemorys, texturePaths);
 
         createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, TextImage[0],
-                           TextImageMemory[0], "fonts/tata_0.png");
+                           TextImageMemory[0], "presentations/furniture/CoconutTree/coconutPresentation.png");
         createTextureImage(mipLevels, device, physicalDevice, commandPool, graphicsQueue, TextImage[1],
-                           TextImageMemory[1], "fonts/tata_0.png");
+                           TextImageMemory[1], "presentations/furniture/CoconutTree/coconutPresentation.png");
 
         //TEXT IMAGE
 
@@ -1985,8 +1987,8 @@ private:
     }
 
     void createObjectVector(){
-        createKitchen(listActualObjectInfos, listObjectInfos);
-        //createLivingRoom(listActualObjectInfos, listObjectInfos);
+        //createKitchen(listActualObjectInfos, listObjectInfos);
+        createLivingRoom(listActualObjectInfos, listObjectInfos);
         /*
         ObjectInformation pokerRoom{};
         pokerRoom.modelPath = "furniture/Poker Room/scene.gltf";

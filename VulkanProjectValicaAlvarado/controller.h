@@ -214,7 +214,7 @@ void changeCurrentModel(bool &keyPressed, GLFWwindow *&window, int &currentTrans
             currentTransformationModel++;
         }
     }
-    if(!glfwGetKey(window, GLFW_KEY_9) && !glfwGetKey(window, GLFW_KEY_8) && listObjectInfos.at(currentTransformationModel)->isGltf){
+    if(!glfwGetKey(window, GLFW_KEY_9) && !glfwGetKey(window, GLFW_KEY_8) && !listObjectInfos.empty() && listObjectInfos.at(currentTransformationModel)->isGltf){
         if(listObjectInfos.at(currentTransformationModel)->vertices.size() <= 2000){
             listObjectInfos.at(currentTransformationModel)->modelSize = modelSize::TINY;
         }else if(listObjectInfos.at(currentTransformationModel)->vertices.size() <= 4000){
@@ -227,7 +227,7 @@ void changeCurrentModel(bool &keyPressed, GLFWwindow *&window, int &currentTrans
             listObjectInfos.at(currentTransformationModel)->modelSize = modelSize::GIGANTIC;
         }
         keyPressed = false;
-    }else if(!glfwGetKey(window, GLFW_KEY_9) && !glfwGetKey(window, GLFW_KEY_8)){
+    }else if(!glfwGetKey(window, GLFW_KEY_9) && !glfwGetKey(window, GLFW_KEY_8) && !listObjectInfos.empty()){
         listObjectInfos.at(currentTransformationModel)->modelSize = modelSize::GLTF;
         keyPressed = false;
     }
